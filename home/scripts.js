@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Carregar posts do localStorage
     loadPosts();
+    //teste testado
     
     // Event listener para o botão de publicar
     postButton.addEventListener('click', function() {
