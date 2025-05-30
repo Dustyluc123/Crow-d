@@ -1,0 +1,58 @@
+:root {
+  --roxo: #6a0dad;
+  --cinza-escuro: #333333;
+  --branco: #ffffff;
+  --primary-color: #5b5ad3;
+  --primary-hover: #8483de;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #141351;
+  color: var(--branco);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.verificacao-container {
+  background-image: url('img/Design\\ sem\\ nome2.png'); /* ajuste o caminho conforme necessário */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+#status {
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--branco);
+}

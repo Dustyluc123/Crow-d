@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuário - Crow-d</title>
+    <link rel="stylesheet" href="../home/home.css">
+    <link rel="stylesheet" href="../profile/profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    
+    <style>
+        /* Estilos específicos para a página de perfil público */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 30px;
+            border: 4px solid var(--primary-color);
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 5px;
+            color: var(--text-primary);
+        }
+        
+        .profile-school {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin: 0 0 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .profile-school i {
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+        
+        .profile-hobbies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .hobby-tag {
+            background-color: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .profile-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .profile-btn i {
+            margin-right: 5px;
+        }
+        
+        .follow-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .follow-btn:hover {
+            background-color: var(--primary-color-dark);
+        }
+        
+        .message-btn {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .message-btn:hover {
+            background-color: var(--bg-secondary);
+        }
+        
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        
+        .profile-tab {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .profile-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        
+        .profile-tab:hover:not(.active) {
+            color: var(--text-primary);
+            border-bottom-color: var(--border-color);
+        }
+        
+        .profile-content {
+            margin-bottom: 30px;
+        }
+        
+        .profile-section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+        
+        .friend-item {
+            text-align: center;
+        }
+        
+        .friend-photo {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 2px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+        
+        .friend-photo:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+        
+        .friend-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .no-content {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-photo {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .profile-actions {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER / MENU DE NAVEGAÇÃO -->
+    <header>
+        <div class="logo">
+            <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
+            <span>Crow-d</span>
+        </div>
+        <nav class="main-nav">
+            <a href="../home/home.html"><i class="fas fa-home"></i> Feed</a>
+            <a href="../friends/amigos.html"><i class="fas fa-user-friends"></i> Amigos</a>
+            <a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i> Mensagens</a>
+            <a href="../editprofile/edit-profile.html" class="profile-link"><i class="fas fa-user"></i> Perfil</a>
+        </nav>
+        <div class="user-actions">
+            <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <div class="main-container">
+        <main class="feed">
+            <!-- Cabeçalho do perfil -->
+            <div class="profile-header">
+                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-photo" id="profilePhoto">
+                
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profileName">Carregando...</h1>
+                    <div class="profile-school" id="profileSchool">
+                        <i class="fas fa-school"></i>
+                        <span>Carregando...</span>
+                    </div>
+                    
+                    <div class="profile-hobbies" id="profileHobbies">
+                        <!-- Hobbies serão carregados dinamicamente -->
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button class="profile-btn follow-btn" id="followBtn">
+                            <i class="fas fa-user-plus"></i> Seguir
+                        </button>
+                        <button class="profile-btn message-btn" id="messageBtn">
+                            <i class="fas fa-comment"></i> Mensagem
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abas do perfil -->
+            <div class="profile-tabs">
+                <div class="profile-tab active" data-tab="posts">Publicações</div>
+                <div class="profile-tab" data-tab="friends">Amigos</div>
+            </div>
+            
+            <!-- Conteúdo do perfil -->
+            <div class="profile-content">
+                <!-- Aba de publicações -->
+                <div class="profile-section" id="postsSection">
+                    <h2 class="section-title"><i class="fas fa-newspaper"></i> Publicações</h2>
+                    <div class="posts-container" id="postsContainer">
+                        <div class="loading-indicator">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Aba de amigos -->
+                <div class="profile-section" id="friendsSection" style="display: none;">
+                    <h2 class="section-title"><i class="fas fa-user-friends"></i> Amigos</h2>
+                    <div class="friends-grid" id="friendsGrid">
+                        <div class="loading-indicator">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando amigos...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Templates -->
+    <template id="post-template">
+        <div class="post">
+            <div class="post-header">
+                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="post-author-photo">
+                <div class="post-author-info">
+                    <h3 class="post-author-name">Nome do Autor</h3>
+                    <span class="post-timestamp">Há 2 horas</span>
+                </div>
+            </div>
+            <div class="post-content">
+                Conteúdo da publicação...
+            </div>
+            <div class="post-media-container"></div>
+            <div class="post-actions">
+                <button class="post-action-btn like-btn">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">0</span>
+                </button>
+                <button class="post-action-btn comment-btn">
+                    <i class="far fa-comment"></i>
+                    <span class="comment-count">0</span>
+                </button>
+            </div>
+            <div class="post-comments" style="display: none;">
+                <div class="comments-list"></div>
+                <div class="comment-input-container">
+                    <img src="../img/Design sem nome2.png" alt="Sua foto" class="comment-user-photo">
+                    <input type="text" class="comment-text" placeholder="Escreva um comentário...">
+                    <button class="send-comment-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="comment-template">
+        <div class="comment">
+            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="comment-author-photo">
+            <div class="comment-content">
+                <div class="comment-author-name">Nome do Autor</div>
+                <div class="comment-text">Conteúdo do comentário...</div>
+                <div class="comment-actions">
+                    <span class="comment-timestamp">Há 1 hora</span>
+                    <button class="comment-like-btn">
+                        <i class="far fa-heart"></i>
+                        <span class="comment-like-count">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // Sistema de perfil público para o Crow-d com Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuração do Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+                authDomain: "tcclogin-7e7b8.firebaseapp.com",
+                projectId: "tcclogin-7e7b8",
+                storageBucket: "tcclogin-7e7b8.appspot.com",
+                messagingSenderId: "1066633833169",
+                appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+            };
+
+            // Inicializar Firebase
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            const storage = firebase.storage();
+
+            // Referências aos elementos do DOM
+            const profilePhoto = document.getElementById('profilePhoto');
+            const profileName = document.getElementById('profileName');
+            const profileSchool = document.getElementById('profileSchool').querySelector('span');
+            const profileHobbies = document.getElementById('profileHobbies');
+            const followBtn = document.getElementById('followBtn');
+            const messageBtn = document.getElementById('messageBtn');
+            const postsContainer = document.getElementById('postsContainer');
+            const friendsGrid = document.getElementById('friendsGrid');
+            const postsSection = document.getElementById('postsSection');
+            const friendsSection = document.getElementById('friendsSection');
+            const profileTabs = document.querySelectorAll('.profile-tab');
+            const logoutButton = document.getElementById('logout-btn');
+            const postTemplate = document.getElementById('post-template');
+            const commentTemplate = document.getElementById('comment-template');
+
+            // Variáveis globais
+            let currentUser = null;
+            let currentUserProfile = null;
+            let profileUser = null;
+            let profileUserId = null;
+            let postsListener = null;
+            let isFollowing = false;
+
+            // Verificar autenticação do usuário
+            auth.onAuthStateChanged(async function(user) {
+                if (user) {
+                    // Usuário está logado
+                    currentUser = user;
+                    
+                    // Carregar perfil do usuário atual
+                    await loadCurrentUserProfile(user.uid);
+                    
+                    // Obter ID do usuário do perfil a partir da URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    profileUserId = urlParams.get('uid');
+                    
+                    if (!profileUserId) {
+                        // Se não houver ID na URL, redirecionar para a página inicial
+                        window.location.href = '../home/home.html';
+                        return;
+                    }
+                    
+                    // Verificar se é o próprio perfil do usuário
+                    if (profileUserId === currentUser.uid) {
+                        // Redirecionar para a página de edição de perfil
+                        window.location.href = '../editprofile/edit-profile.html';
+                        return;
+                    }
+                    
+                    // Carregar perfil do usuário
+                    await loadProfileUser(profileUserId);
+                    
+                    // Verificar se o usuário atual segue o usuário do perfil
+                    checkFollowStatus();
+                    
+                    // Carregar publicações do usuário
+                    loadUserPosts();
+                    
+                    // Carregar amigos do usuário
+                    loadUserFriends();
+                } else {
+                    // Usuário não está logado, redirecionar para login
+                    window.location.href = '../login/login.html';
+                }
+            });
+
+            // Event listener para o botão de logout
+            if (logoutButton) {
+                logoutButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    auth.signOut()
+                        .then(() => {
+                            window.location.href = '../login/login.html';
+                        })
+                        .catch(error => {
+                            console.error('Erro ao fazer logout:', error);
+                            alert('Erro ao fazer logout. Tente novamente.');
+                        });
+                });
+            }
+
+            // Event listener para as abas do perfil
+            profileTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remover classe 'active' de todas as abas
+                    profileTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Adicionar classe 'active' à aba clicada
+                    this.classList.add('active');
+                    
+                    // Mostrar seção correspondente
+                    const tabName = this.dataset.tab;
+                    
+                    if (tabName === 'posts') {
+                        postsSection.style.display = 'block';
+                        friendsSection.style.display = 'none';
+                    } else if (tabName === 'friends') {
+                        postsSection.style.display = 'none';
+                        friendsSection.style.display = 'block';
+                    }
+                });
+            });
+
+            // Event listener para o botão de seguir
+            if (followBtn) {
+                followBtn.addEventListener('click', toggleFollow);
+            }
+
+            // Event listener para o botão de mensagem
+            if (messageBtn) {
+                messageBtn.addEventListener('click', function() {
+                    // Redirecionar para a página de mensagens com o ID do usuário
+                    window.location.href = `../mensagen/mensagens.html?uid=${profileUserId}`;
+                });
+            }
+
+            // Função para carregar o perfil do usuário atual
+            async function loadCurrentUserProfile(userId) {
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    
+                    if (doc.exists) {
+                        currentUserProfile = doc.data();
+                    } else {
+                        console.log('Perfil do usuário atual não encontrado.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar perfil do usuário atual:', error);
+                }
+            }
+
+            // Função para carregar o perfil do usuário
+            async function loadProfileUser(userId) {
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    
+                    if (doc.exists) {
+                        profileUser = doc.data();
+                        
+                        // Atualizar elementos do DOM com os dados do perfil
+                        updateProfileUI();
+                    } else {
+                        console.log('Perfil do usuário não encontrado.');
+                        // Redirecionar para a página inicial
+                        window.location.href = '../home/home.html';
+                    }
+                } catch (error) {
+                    console.error('Erro ao carregar perfil do usuário:', error);
+                    alert('Erro ao carregar perfil. Tente novamente mais tarde.');
+                }
+            }
+
+            // Função para atualizar a interface do perfil
+            function updateProfileUI() {
+                // Atualizar foto do perfil
+                if (profileUser.photoURL) {
+                    profilePhoto.src = profileUser.photoURL;
+                }
+                
+                // Atualizar nome do perfil
+                profileName.textContent = profileUser.nickname || 'Usuário';
+                
+                // Atualizar escola
+                profileSchool.textContent = profileUser.school || 'Escola não informada';
+                
+                // Atualizar hobbies
+                profileHobbies.innerHTML = '';
+                
+                // Adicionar hobbies padrão
+                if (profileUser.hobbies && profileUser.hobbies.length > 0) {
+                    profileUser.hobbies.forEach(hobby => {
+                        const hobbyTag = document.createElement('span');
+                        hobbyTag.className = 'hobby-tag';
+                        hobbyTag.textContent = hobby;
+                        profileHobbies.appendChild(hobbyTag);
+                    });
+                }
+                
+                // Adicionar hobbies personalizados
+                if (profileUser.customHobbies && profileUser.customHobbies.length > 0) {
+                    profileUser.customHobbies.forEach(hobby => {
+                        const hobbyTag = document.createElement('span');
+                        hobbyTag.className = 'hobby-tag';
+                        hobbyTag.textContent = hobby;
+                        profileHobbies.appendChild(hobbyTag);
+                    });
+                }
+                
+                // Se não houver hobbies
+                if ((!profileUser.hobbies || profileUser.hobbies.length === 0) && 
+                    (!profileUser.customHobbies || profileUser.customHobbies.length === 0)) {
+                    const hobbyTag = document.createElement('span');
+                    hobbyTag.className = 'hobby-tag';
+                    hobbyTag.textContent = 'Nenhum hobby informado';
+                    profileHobbies.appendChild(hobbyTag);
+                }
+            }
+
+            // Função para verificar se o usuário atual segue o usuário do perfil
+            async function checkFollowStatus() {
+                try {
+                    // Verificar se o usuário atual segue o usuário do perfil
+                    const followDoc = await db.collection('users').doc(currentUser.uid)
+                        .collection('following').doc(profileUserId).get();
+                    
+                    isFollowing = followDoc.exists;
+                    
+                    // Atualizar botão de seguir
+                    updateFollowButton();
+                } catch (error) {
+                    console.error('Erro ao verificar status de seguir:', error);
+                }
+            }
+
+            // Função para atualizar o botão de seguir
+            function updateFollowButton() {
+                if (isFollowing) {
+                    followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+                    followBtn.classList.add('following');
+                } else {
+                    followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+                    followBtn.classList.remove('following');
+                }
+            }
+
+            // Função para alternar seguir/deixar de seguir
+            async function toggleFollow() {
+                try {
+                    if (isFollowing) {
+                        // Deixar de seguir
+                        await db.collection('users').doc(currentUser.uid)
+                            .collection('following').doc(profileUserId).delete();
+                        
+                        await db.collection('users').doc(profileUserId)
+                            .collection('followers').doc(currentUser.uid).delete();
+                        
+                        isFollowing = false;
+                    } else {
+                        // Seguir
+                        await db.collection('users').doc(currentUser.uid)
+                            .collection('following').doc(profileUserId).set({
+                                userId: profileUserId,
+                                nickname: profileUser.nickname || 'Usuário',
+                                photoURL: profileUser.photoURL || null,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        
+                        await db.collection('users').doc(profileUserId)
+                            .collection('followers').doc(currentUser.uid).set({
+                                userId: currentUser.uid,
+                                nickname: currentUserProfile.nickname || 'Usuário',
+                                photoURL: currentUserProfile.photoURL || null,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        
+                        // Criar notificação para o usuário
+                        await db.collection('users').doc(profileUserId)
+                            .collection('notifications').add({
+                                type: 'follow',
+                                fromUserId: currentUser.uid,
+                                fromUserName: currentUserProfile.nickname || 'Usuário',
+                                fromUserPhoto: currentUserProfile.photoURL || null,
+                                content: 'começou a seguir você',
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false
+                            });
+                        
+                        isFollowing = true;
+                    }
+                    
+                    // Atualizar botão de seguir
+                    updateFollowButton();
+                } catch (error) {
+                    console.error('Erro ao alternar seguir:', error);
+                    alert('Erro ao atualizar status de seguir. Tente novamente.');
+                }
+            }
+
+            // Função para carregar publicações do usuário
+            function loadUserPosts() {
+                // Limpar container de posts
+                postsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
+                
+                // Remover listener anterior se existir
+                if (postsListener) {
+                    postsListener();
+                }
+                
+                // Criar listener para posts em tempo real
+                postsListener = db.collection('posts')
+                    .where('authorId', '==', profileUserId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(10)
+                    .onSnapshot(snapshot => {
+                        // Limpar container de posts
+                        postsContainer.innerHTML = '';
+                        
+                        // Verificar se há posts
+                        if (snapshot.empty) {
+                            postsContainer.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Este usuário ainda não fez nenhuma publicação.</div>';
+                            return;
+                        }
+                        
+                        // Adicionar cada post ao DOM
+                        snapshot.forEach(doc => {
+                            const post = {
+                                id: doc.id,
+                                ...doc.data()
+                            };
+                            
+                            addPostToDOM(post);
+                        });
+                    }, error => {
+                        console.error('Erro ao carregar posts:', error);
+                        postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações. Tente novamente mais tarde.</div>';
+                    });
+            }
+
+            // Função para adicionar um post ao DOM
+            function addPostToDOM(post) {
+                // Clonar template de post
+                const postClone = postTemplate.content.cloneNode(true);
+                
+                // Referências aos elementos do post
+                const postElement = postClone.querySelector('.post');
+                const authorPhotoElement = postClone.querySelector('.post-author-photo');
+                const authorNameElement = postClone.querySelector('.post-author-name');
+                const timestampElement = postClone.querySelector('.post-timestamp');
+                const contentElement = postClone.querySelector('.post-content');
+                const mediaContainer = postClone.querySelector('.post-media-container');
+                const likeButton = postClone.querySelector('.like-btn');
+                const likeCount = postClone.querySelector('.like-count');
+                const commentButton = postClone.querySelector('.comment-btn');
+                const commentCount = postClone.querySelector('.comment-count');
+                const commentsSection = postClone.querySelector('.post-comments');
+                const commentsList = postClone.querySelector('.comments-list');
+                const commentInput = postClone.querySelector('.comment-text');
+                const commentUserPhoto = postClone.querySelector('.comment-user-photo');
+                
+                // Definir ID do post
+                postElement.dataset.postId = post.id;
+                
+                // Definir foto do autor
+                if (post.authorPhoto) {
+                    authorPhotoElement.src = post.authorPhoto;
+                }
+                
+                // Definir nome do autor
+                authorNameElement.textContent = post.authorName;
+                
+                // Definir timestamp
+                if (post.timestamp) {
+                    const date = post.timestamp.toDate();
+                    timestampElement.textContent = formatTimestamp(date);
+                } else {
+                    timestampElement.textContent = 'Agora mesmo';
+                }
+                
+                // Definir conteúdo do post
+                contentElement.textContent = post.content;
+                
+                // Adicionar mídia se existir
+                if (post.mediaURL) {
+                    if (post.mediaType === 'image') {
+                        const img = document.createElement('img');
+                        img.src = post.mediaURL;
+                        img.alt = 'Imagem da publicação';
+                        img.className = 'post-image';
+                        mediaContainer.appendChild(img);
+                        mediaContainer.style.display = 'block';
+                    } else if (post.mediaType === 'video') {
+                        const video = document.createElement('video');
+                        video.src = post.mediaURL;
+                        video.controls = true;
+                        video.className = 'post-video';
+                        mediaContainer.appendChild(video);
+                        mediaContainer.style.display = 'block';
+                    }
+                }
+                
+                // Definir contagem de likes
+                likeCount.textContent = post.likes || 0;
+                
+                // Verificar se o usuário atual já curtiu o post
+                if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
+                    likeButton.classList.add('liked');
+                    likeButton.querySelector('i').className = 'fas fa-heart';
+                }
+                
+                // Definir contagem de comentários
+                commentCount.textContent = post.commentCount || 0;
+                
+                // Definir foto do usuário atual no input de comentário
+                if (currentUserProfile && currentUserProfile.photoURL) {
+                    commentUserPhoto.src = currentUserProfile.photoURL;
+                }
+                
+                // Event listener para o botão de curtir
+                likeButton.addEventListener('click', function() {
+                    toggleLike(post.id);
+                });
+                
+                // Event listener para o botão de comentar
+                commentButton.addEventListener('click', function() {
+                    // Alternar visibilidade da seção de comentários
+                    if (commentsSection.style.display === 'none' || commentsSection.style.display === '') {
+                        commentsSection.style.display = 'block';
+                        // Focar no input de comentário
+                        commentInput.focus();
+                        // Carregar comentários
+                        loadComments(post.id, commentsList);
+                    } else {
+                        commentsSection.style.display = 'none';
+                    }
+                });
+                
+                // Event listener para o input de comentário
+                commentInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const content = this.value.trim();
+                        if (content) {
+                            addComment(post.id, content);
+                            this.value = '';
+                        }
+                    }
+                });
+                
+                // Adicionar post ao container
+                postsContainer.appendChild(postClone);
+            }
+
+            // Função para carregar comentários de um post
+            function loadComments(postId, commentsList) {
+                // Limpar lista de comentários
+                commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
+                
+                // Carregar comentários do post
+                db.collection('posts').doc(postId)
+                    .collection('comments')
+                    .orderBy('timestamp', 'asc')
+                    .get()
+                    .then(snapshot => {
+                        // Limpar lista de comentários
+                        commentsList.innerHTML = '';
+                        
+                        // Verificar se há comentários
+                        if (snapshot.empty) {
+                            commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+                            return;
+                        }
+                        
+                        // Adicionar cada comentário ao DOM
+                        snapshot.forEach(doc => {
+                            const comment = {
+                                id: doc.id,
+                                ...doc.data()
+                            };
+                            
+                            addCommentToDOM(postId, comment, commentsList);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar comentários:', error);
+                        commentsList.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+                    });
+            }
+
+            // Função para adicionar um comentário ao DOM
+            function addCommentToDOM(postId, comment, commentsList) {
+                // Clonar template de comentário
+                const commentClone = commentTemplate.content.cloneNode(true);
+                
+                // Referências aos elementos do comentário
+                const commentElement = commentClone.querySelector('.comment');
+                const authorPhotoElement = commentClone.querySelector('.comment-author-photo');
+                const authorNameElement = commentClone.querySelector('.comment-author-name');
+                const contentElement = commentClone.querySelector('.comment-text');
+                const timestampElement = commentClone.querySelector('.comment-timestamp');
+                const likeButton = commentClone.querySelector('.comment-like-btn');
+                const likeCount = commentClone.querySelector('.comment-like-count');
+                
+                // Definir IDs
+                commentElement.dataset.commentId = comment.id;
+                
+                // Definir foto do autor
+                if (comment.authorPhoto) {
+                    authorPhotoElement.src = comment.authorPhoto;
+                }
+                
+                // Definir nome do autor
+                authorNameElement.textContent = comment.authorName;
+                
+                // Definir conteúdo do comentário
+                contentElement.textContent = comment.content;
+                
+                // Definir timestamp
+                if (comment.timestamp) {
+                    const date = comment.timestamp.toDate();
+                    timestampElement.textContent = formatTimestamp(date);
+                } else {
+                    timestampElement.textContent = 'Agora mesmo';
+                }
+                
+                // Definir contagem de likes
+                likeCount.textContent = comment.likes || 0;
+                
+                // Verificar se o usuário atual já curtiu o comentário
+                if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {
+                    likeButton.classList.add('liked');
+                    likeButton.querySelector('i').className = 'fas fa-heart';
+                }
+                
+                // Event listener para o botão de curtir comentário
+                likeButton.addEventListener('click', function() {
+                    toggleCommentLike(postId, comment.id);
+                });
+                
+                // Adicionar comentário à lista
+                commentsList.appendChild(commentClone);
+            }
+
+            // Função para adicionar um comentário a um post
+            async function addComment(postId, content) {
+                try {
+                    // Verificar se o usuário está autenticado
+                    if (!currentUser || !currentUserProfile) {
+                        alert('Você precisa estar logado para comentar.');
+                        return;
+                    }
+                    
+                    // Criar objeto de comentário
+                    const comment = {
+                        content,
+                        authorId: currentUser.uid,
+                        authorName: currentUserProfile.nickname || 'Usuário',
+                        authorPhoto: currentUserProfile.photoURL || null,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        likes: 0,
+                        likedBy: []
+                    };
+                    
+                    // Gerar ID único para o comentário
+                    const commentId = `${currentUser.uid}_${Date.now()}`;
+                    
+                    // Adicionar comentário ao Firestore
+                    await db.collection('posts').doc(postId)
+                        .collection('comments').doc(commentId).set(comment);
+                    
+                    // Incrementar contagem de comentários no post
+                    await db.collection('posts').doc(postId).update({
+                        commentCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    
+                    // Obter informações do post para a notificação
+                    const postDoc = await db.collection('posts').doc(postId).get();
+                    const post = postDoc.data();
+                    
+                    // Se o post não pertence ao usuário atual, criar notificação
+                    if (post.authorId !== currentUser.uid) {
+                        await db.collection('users').doc(post.authorId)
+                            .collection('notifications').add({
+                                type: 'comment',
+                                postId: postId,
+                                fromUserId: currentUser.uid,
+                                fromUserName: currentUserProfile.nickname || 'Usuário',
+                                fromUserPhoto: currentUserProfile.photoURL || null,
+                                content: content.substring(0, 50) + (content.length > 50 ? '...' : ''),
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                read: false
+                            });
+                    }
+                    
+                    // Obter a lista de comentários para adicionar o novo comentário ao DOM
+                    const commentsList = document.querySelector(`.post[data-post-id="${postId}"] .comments-list`);
+                    
+                    // Adicionar o comentário ao DOM para exibição imediata
+                    comment.id = commentId;
+                    addCommentToDOM(postId, comment, commentsList);
+                    
+                    // Fazer scroll para o novo comentário
+                    const commentsSection = document.querySelector(`.post[data-post-id="${postId}"] .post-comments`);
+                    if (commentsSection) {
+                        commentsSection.scrollTop = commentsSection.scrollHeight;
+                    }
+                    
+                    console.log('Comentário adicionado com sucesso:', commentId);
+                } catch (error) {
+                    console.error('Erro ao adicionar comentário:', error);
+                    alert('Erro ao adicionar comentário. Tente novamente.');
+                }
+            }
+
+            // Função para alternar like em um post
+            async function toggleLike(postId) {
+                try {
+                    // Verificar se o usuário está autenticado
+                    if (!currentUser) {
+                        alert('Você precisa estar logado para curtir publicações.');
+                        return;
+                    }
+                    
+                    // Referência ao documento do post
+                    const postRef = db.collection('posts').doc(postId);
+                    
+                    // Obter dados atuais do post
+                    const postDoc = await postRef.get();
+                    const post = postDoc.data();
+                    
+                    // Verificar se o usuário já curtiu o post
+                    const likedBy = post.likedBy || [];
+                    const alreadyLiked = likedBy.includes(currentUser.uid);
+                    
+                    // Atualizar UI imediatamente
+                    const likeButton = document.querySelector(`.post[data-post-id="${postId}"] .like-btn`);
+                    const likeCount = document.querySelector(`.post[data-post-id="${postId}"] .like-count`);
+                    
+                    if (alreadyLiked) {
+                        // Remover like
+                        await postRef.update({
+                            likes: firebase.firestore.FieldValue.increment(-1),
+                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                        });
+                        
+                        // Atualizar UI
+                        likeButton.classList.remove('liked');
+                        likeButton.querySelector('i').className = 'far fa-heart';
+                        likeCount.textContent = Math.max(0, parseInt(likeCount.textContent) - 1);
+                    } else {
+                        // Adicionar like
+                        await postRef.update({
+                            likes: firebase.firestore.FieldValue.increment(1),
+                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        });
+                        
+                        // Atualizar UI
+                        likeButton.classList.add('liked');
+                        likeButton.querySelector('i').className = 'fas fa-heart';
+                        likeCount.textContent = parseInt(likeCount.textContent) + 1;
+                        
+                        // Se o post não pertence ao usuário atual, criar notificação
+                        if (post.authorId !== currentUser.uid) {
+                            await db.collection('users').doc(post.authorId)
+                                .collection('notifications').add({
+                                    type: 'like',
+                                    postId: postId,
+                                    fromUserId: currentUser.uid,
+                                    fromUserName: currentUserProfile.nickname || 'Usuário',
+                                    fromUserPhoto: currentUserProfile.photoURL || null,
+                                    content: 'curtiu sua publicação',
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                    read: false
+                                });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao alternar like:', error);
+                    alert('Erro ao curtir publicação. Tente novamente.');
+                }
+            }
+
+            // Função para alternar like em um comentário
+            async function toggleCommentLike(postId, commentId) {
+                try {
+                    // Verificar se o usuário está autenticado
+                    if (!currentUser) {
+                        alert('Você precisa estar logado para curtir comentários.');
+                        return;
+                    }
+                    
+                    // Referência ao documento do comentário
+                    const commentRef = db.collection('posts').doc(postId)
+                        .collection('comments').doc(commentId);
+                    
+                    // Obter dados atuais do comentário
+                    const commentDoc = await commentRef.get();
+                    const comment = commentDoc.data();
+                    
+                    // Verificar se o usuário já curtiu o comentário
+                    const likedBy = comment.likedBy || [];
+                    const alreadyLiked = likedBy.includes(currentUser.uid);
+                    
+                    // Atualizar UI imediatamente
+                    const likeButton = document.querySelector(`.comment[data-comment-id="${commentId}"] .comment-like-btn`);
+                    const likeCount = document.querySelector(`.comment[data-comment-id="${commentId}"] .comment-like-count`);
+                    
+                    if (alreadyLiked) {
+                        // Remover like
+                        await commentRef.update({
+                            likes: firebase.firestore.FieldValue.increment(-1),
+                            likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                        });
+                        
+                        // Atualizar UI
+                        likeButton.classList.remove('liked');
+                        likeButton.querySelector('i').className = 'far fa-heart';
+                        likeCount.textContent = Math.max(0, parseInt(likeCount.textContent) - 1);
+                    } else {
+                        // Adicionar like
+                        await commentRef.update({
+                            likes: firebase.firestore.FieldValue.increment(1),
+                            likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                        });
+                        
+                        // Atualizar UI
+                        likeButton.classList.add('liked');
+                        likeButton.querySelector('i').className = 'fas fa-heart';
+                        likeCount.textContent = parseInt(likeCount.textContent) + 1;
+                        
+                        // Se o comentário não pertence ao usuário atual, criar notificação
+                        if (comment.authorId !== currentUser.uid) {
+                            await db.collection('users').doc(comment.authorId)
+                                .collection('notifications').add({
+                                    type: 'comment_like',
+                                    postId: postId,
+                                    commentId: commentId,
+                                    fromUserId: currentUser.uid,
+                                    fromUserName: currentUserProfile.nickname || 'Usuário',
+                                    fromUserPhoto: currentUserProfile.photoURL || null,
+                                    content: 'curtiu seu comentário',
+                                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                    read: false
+                                });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao alternar like em comentário:', error);
+                    alert('Erro ao curtir comentário. Tente novamente.');
+                }
+            }
+
+            // Função para carregar amigos do usuário
+            async function loadUserFriends() {
+                try {
+                    // Limpar grid de amigos
+                    friendsGrid.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>';
+                    
+                    // Carregar seguidores
+                    const followersSnapshot = await db.collection('users').doc(profileUserId)
+                        .collection('followers').limit(12).get();
+                    
+                    // Carregar seguindo
+                    const followingSnapshot = await db.collection('users').doc(profileUserId)
+                        .collection('following').limit(12).get();
+                    
+                    // Verificar se há amigos
+                    if (followersSnapshot.empty && followingSnapshot.empty) {
+                        friendsGrid.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Este usuário ainda não tem amigos.</div>';
+                        return;
+                    }
+                    
+                    // Limpar grid de amigos
+                    friendsGrid.innerHTML = '';
+                    
+                    // Adicionar seguidores ao DOM
+                    followersSnapshot.forEach(doc => {
+                        const follower = doc.data();
+                        addFriendToDOM(follower);
+                    });
+                    
+                    // Adicionar seguindo ao DOM (evitando duplicatas)
+                    const addedIds = new Set(Array.from(followersSnapshot.docs).map(doc => doc.id));
+                    
+                    followingSnapshot.forEach(doc => {
+                        if (!addedIds.has(doc.id)) {
+                            const following = doc.data();
+                            addFriendToDOM(following);
+                            addedIds.add(doc.id);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar amigos:', error);
+                    friendsGrid.innerHTML = '<div class="error-message">Erro ao carregar amigos. Tente novamente mais tarde.</div>';
+                }
+            }
+
+            // Função para adicionar um amigo ao DOM
+            function addFriendToDOM(friend) {
+                // Criar elemento de amigo
+                const friendElement = document.createElement('div');
+                friendElement.className = 'friend-item';
+                
+                // Definir HTML do amigo
+                friendElement.innerHTML = `
+                    <a href="user.html?uid=${friend.userId}">
+                        <img src="${friend.photoURL || '../img/Design sem nome2.png'}" alt="Foto de perfil" class="friend-photo">
+                        <p class="friend-name">${friend.nickname || 'Usuário'}</p>
+                    </a>
+                `;
+                
+                // Adicionar ao grid de amigos
+                friendsGrid.appendChild(friendElement);
+            }
+
+            // Função para formatar timestamp
+            function formatTimestamp(date) {
+                if (!date) return '';
+                
+                const now = new Date();
+                const diff = now - date;
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                
+                if (days > 7) {
+                    return date.toLocaleDateString('pt-BR');
+                } else if (days > 0) {
+                    return `${days}d atrás`;
+                } else if (hours > 0) {
+                    return `${hours}h atrás`;
+                } else if (minutes > 0) {
+                    return `${minutes}min atrás`;
+                } else {
+                    return 'Agora mesmo';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+ 1. Introdução
+Este guia foi criado para ajudar todos os membros do projeto Memória Viva – TCC a usarem o GitHub de forma prática e eficiente. Aqui você vai aprender a:
+Clonar um repositório
+Fazer alterações locais
+Enviar alterações para o GitHub
+Resolver erros comuns (como o de autenticação)
+Programar pelo celular 📱​
+💻 2. Para quem usa computador
+2.1 Instalando o Git Bash
+Acesse: https://git-scm.com/
+Baixe conforme seu sistema operacional (Windows, macOS ou Linux)
+Instale e abra o Git Bash
+2.2 Clonando o repositório
+git clone https://github.com/memoriaviva-org/memoria-viva.git
+
+​
+Substitua o link se for outro repositório. Após clonar, entre na pasta:
+cd memoria-viva
+
+​
+2.3 Atualizando o repositório local
+Antes de qualquer edição:
+git pull
+
+​
+Isso garante que você esteja com a versão mais atual do projeto.
+2.4 Fazendo alterações
+Use seu editor de código , como o Visual Studio Code, pra editar os arquivos.
+2.5 Salvando e enviando alterações
+git add .
+git commit -m "Descreva aqui o que foi alterado"
+git push
+
+​
+📝 Exemplos de mensagens de commit:
+Corrigido bug na tela de login
+Adicionada funcionalidade de upload de imagem
+2.6 Diferença entre git add . e git add nome-do-arquivo
+git add . → Adiciona tudo que foi modificado
+git add nome-do-arquivo → Adiciona só um arquivo específico
+🔧 Dica: use git add nome-do-arquivo quando quiser mais controle sobre os commits!
+📱 3. Para quem vai programar pelo celular
+3.1 Aplicativos recomendados
+Dcoder, Compiler IDE – Para editar código
+GitHub Mobile – Para revisar pull requests
+Termux – Terminal Linux com suporte a Git e muito mais
+3.2 Usando o Termux (Android)
+1. Instale e configure o Git
+pkg update
+pkg install git
+
+​
+2. Clone o repositório
+git clone https://github.com/memoriaviva-org/memoria-viva.git
+cd memoria-viva
+
+​
+3. Atualize antes de editar
+git pull
+
+​
+4. Edite os arquivos
+Use editores como vim, nano, ou edite fora e depois envie pro Termux.
+5. Adicione e envie alterações
+git add .
+git commit -m "Alterações feitas"
+git push
+
+​
+5. atualizar arquivos 
+git pull origin main --rebase

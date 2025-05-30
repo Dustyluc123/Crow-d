@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redefinir Senha - Crow-d</title>
+  <link rel="stylesheet" href="esqueceu-senha.css" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <script>
+    // Configuração Firebase (igual ao login e cadastro)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+      authDomain: "tcclogin-7e7b8.firebaseapp.com",
+      projectId: "tcclogin-7e7b8",
+      storageBucket: "tcclogin-7e7b8.appspot.com",
+      messagingSenderId: "1066633833169",
+      appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function enviarEmailRedefinicao() {
+      const email = document.getElementById('email').value;
+      if (!email) {
+        alert('Por favor, informe o seu email.');
+        return;
+      }
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          alert('Email de redefinição enviado! Verifique sua caixa de entrada.');
+          document.getElementById('email').value = '';
+        })
+        .catch((error) => {
+          alert('Erro ao enviar email: ' + error.message);
+        });
+    }
+  </script>
+</head>
+<body>
+  <div class="reset-password-container">
+    <h1>Redefinir Senha</h1>
+    <p>Digite seu e-mail para receber um link de redefinição de senha.</p>
+
+    <div class="input-group">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" placeholder="seuemail@exemplo.com" required />
+    </div>
+
+    <button onclick="enviarEmailRedefinicao()">Enviar email</button>
+
+    <p><a href="../login/login.html">Voltar para login</a></p>
+  </div>
+</body>
+</html>

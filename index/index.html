@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crow-d - Conectando Estudantes</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo"><strong>Crow-d</strong></div>
+    <nav>
+      <a href="#quem-somos">Quem somos</a>
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#contato">Contato</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Bem-vindo à Crow-d</h1>
+    <p>Uma rede social exclusiva para estudantes, feita para conectar ideias, paixões e talentos.</p>
+    <div class="hero-buttons">
+      <a href="../login/login.html">Entrar</a>
+      <a href="../cadastro/cadastro.html">Cadastre-se</a>
+    </div>
+  </section>
+
+  <!-- CARROSSEL DE IMAGENS -->
+  <section class="carousel">
+    <button class="carousel-button left" onclick="moveSlide(-1)">&#10094;</button>
+    <div class="carousel-images" id="carousel">
+      <img src="../img/img1.jpg" alt="Imagem 1">
+      <img src="../img/img2.jpg" alt="Imagem 2">
+      <img src="../img/school-3980940.jpg" alt="Imagem 3">
+    </div>
+    <button class="carousel-button right" onclick="moveSlide(1)">&#10095;</button>
+  </section>
+  
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="feature">
+      <h2>Encontre pessoas com os mesmos hobbies</h2>
+      <p>Use nossos filtros inteligentes para se conectar com colegas que compartilham seus interesses.</p>
+    </div>
+    <div class="feature">
+      <h2>Compartilhe projetos e ideias</h2>
+      <p>Crie posts, comente, curta e ajude a construir uma comunidade colaborativa.</p>
+    </div>
+    <div class="feature">
+      <h2>Feito por estudantes, para estudantes</h2>
+      <p>Desenvolvido dentro da escola, pensando nas suas necessidades e na sua rotina.</p>
+    </div>
+  </section>
+  
+  <!-- QUEM SOMOS -->
+  <section id="quem-somos" class="team-section">
+    <h2>Quem Somos</h2>
+    <div class="team-grid">
+      <div class="team-member">
+        <div class="member-photo1">
+         
+        </div>
+        <div class="member-info">
+          <h3>Lucas Barreto</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo2">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="member-info">
+          <h3>Lucas da Silva</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo3">
+          
+        </div>
+        <div class="member-info">
+          <h3>João Guilherme</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo4">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="member-info">
+          <h3>Antônio</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo5">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="member-info">
+          <h3>Ângela</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo6">
+          
+        </div>
+        <div class="member-info">
+          <h3>Iza</h3>
+        </div>
+      </div>
+      
+      <div class="team-member">
+        <div class="member-photo7">
+         
+        </div>
+        <div class="member-info">
+          <h3>Isaac</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- FUNCIONALIDADES -->
+  <section id="funcionalidades" class="features-section">
+    <h2>Funcionalidades</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3>Conecte-se com Colegas</h3>
+        <p>Encontre e conecte-se com outros estudantes que compartilham seus interesses e hobbies.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-newspaper"></i>
+        </div>
+        <h3>Feed Personalizado</h3>
+        <p>Veja publicações relevantes baseadas nos seus interesses e conexões.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <h3>Grupos de Interesse</h3>
+        <p>Participe de grupos temáticos para discutir assuntos específicos com outros estudantes.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <h3>Eventos</h3>
+        <p>Descubra e participe de eventos escolares, visualizando-os em um mapa interativo.</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-comment"></i>
+        </div>
+        <h3>Mensagens</h3>
+        <p>Converse diretamente com seus amigos e colegas de forma privada e segura.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTATO -->
+  <section id="contato" class="features">
+    <div class="feature">
+      <h2>Entre em Contato</h2>
+      <p>Tem alguma dúvida ou sugestão? Envie uma mensagem para nossa equipe!</p>
+      <p>Email: crowd0302@gmail.com</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Crow-d. Todos os direitos reservados.</p>
+  </footer>
+
+<script src="scripts.js"></script>
+</body>
+</html>

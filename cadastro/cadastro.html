@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro - Crow-d</title>
+  <link rel="stylesheet" href="cadastro.css" />
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="cadastro-container">
+    <h1>Cadastre-se no Crow-d</h1>
+    <p class="form-title">Preencha os campos abaixo para criar sua conta</p>
+
+    <form id="cadastro-form">
+      <div class="input-group">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" required />
+      </div>
+
+      <div class="input-group">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" required />
+      </div>
+
+      <div class="input-group">
+        <label for="confirmarSenha">Confirme a senha</label>
+        <input type="password" id="confirmarSenha" name="confirmarSenha" required />
+      </div>
+
+      <button type="submit">Continuar</button>
+    </form>
+
+    <p>Já tem uma conta? <a href="../login/login.html">Entrar</a></p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+      authDomain: "tcclogin-7e7b8.firebaseapp.com",
+      projectId: "tcclogin-7e7b8",
+      storageBucket: "tcclogin-7e7b8.appspot.com",
+      messagingSenderId: "1066633833169",
+      appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.getElementById('cadastro-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const confirmarSenha = document.getElementById('confirmarSenha').value;
+
+      if (senha !== confirmarSenha) {
+        alert('As senhas não coincidem. Por favor, verifique.');
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          user.sendEmailVerification()
+            .then(() => {
+              localStorage.setItem('emailParaVerificacao', email);
+              window.location.href = '../verificaEmail/verificandoEmail.html';
+            })
+            .catch((error) => {
+              alert('Erro ao enviar e-mail de verificação: ' + error.message);
+            });
+        })
+        .catch((error) => {
+          if (error.code === 'auth/email-already-in-use') {
+            alert('Este email já está cadastrado. Tente fazer login ou use outro email.');
+          } else {
+            alert('Erro ao cadastrar: ' + error.message);
+          }
+        });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Perfil - Crow-d</title>
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-header">
+            <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
+            <h1>Crie seu perfil na Crow-d</h1>
+            <p>Personalize seu perfil para encontrar estudantes com interesses similares</p>
+        </div>
+
+        <form id="profileForm">
+            <div class="profile-section">
+                <h2><i class="fas fa-user"></i> Informações Básicas</h2>
+                
+                <div class="profile-photo-container">
+                    <div class="profile-photo-preview">
+                        <img id="photoPreview" src="../img/Design sem nome2.png" alt="Foto de perfil">
+                    </div>
+                    <div class="photo-url-input">
+                        <label for="photoURL">URL da foto de perfil</label>
+                        <input type="url" id="photoURL" name="photoURL" placeholder="Cole a URL da sua imagem aqui">
+                        <small>Cole o link de uma imagem da web para usar como foto de perfil</small>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="nickname">Apelido</label>
+                    <input type="text" id="nickname" name="nickname" placeholder="Como quer ser chamado?" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="bio">Biografia</label>
+                    <textarea id="bio" name="bio" placeholder="Conte um pouco sobre você..." rows="3"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="school">Escola</label>
+                    <select id="school" name="school" required>
+                        <option value="">Selecione uma ETEC...</option>
+                        <option value="ETEC Albert Einstein">ETEC Albert Einstein</option>
+                        <option value="ETEC Carlos de Campos">ETEC Carlos de Campos</option>
+                        <option value="ETEC Getúlio Vargas">ETEC Getúlio Vargas</option>
+                        <option value="ETEC Guaracy Silveira">ETEC Guaracy Silveira</option>
+                        <option value="ETEC Jardim Ângela">ETEC Jardim Ângela</option>
+                        <option value="ETEC José Rocha Mendes">ETEC José Rocha Mendes</option>
+                        <option value="ETEC Parque Belém">ETEC Parque Belém</option>
+                        <option value="ETEC Parque da Juventude">ETEC Parque da Juventude</option>
+                        <option value="ETEC Paulistano">ETEC Paulistano</option>
+                        <option value="ETEC Prof. Adhemar Batista Heméritas">ETEC Prof. Adhemar Batista Heméritas</option>
+                        <option value="ETEC Prof. Aprígio Gonzaga">ETEC Prof. Aprígio Gonzaga</option>
+                        <option value="ETEC Prof. Basilides de Godoy">ETEC Prof. Basilides de Godoy</option>
+                        <option value="ETEC Prof. Camargo Aranha">ETEC Prof. Camargo Aranha</option>
+                        <option value="ETEC Prof. Horácio Augusto da Silveira">ETEC Prof. Horácio Augusto da Silveira</option>
+                        <option value="ETEC Santa Ifigênia">ETEC Santa Ifigênia</option>
+                        <option value="ETEC São Paulo">ETEC São Paulo</option>
+                        <option value="ETEC Zona Leste">ETEC Zona Leste</option>
+                        <option value="ETEC Zona Sul">ETEC Zona Sul</option>
+                        <option value="ETEC de Artes">ETEC de Artes</option>
+                        <option value="ETEC de Cidade Tiradentes">ETEC de Cidade Tiradentes</option>
+                        <option value="ETEC de Guaianazes">ETEC de Guaianazes</option>
+                        <option value="ETEC de Heliópolis">ETEC de Heliópolis</option>
+                        <option value="ETEC de Itaquera">ETEC de Itaquera</option>
+                        <option value="ETEC de Sapopemba">ETEC de Sapopemba</option>
+                        <option value="ETEC de Vila Formosa">ETEC de Vila Formosa</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="grade">Série/Ano</label>
+                    <select id="grade" name="grade">
+                        <option value="">Selecione...</option>
+                        <option value="1EM">1º ano - Ensino Médio</option>
+                        <option value="2EM">2º ano - Ensino Médio</option>
+                        <option value="3EM">3º ano - Ensino Médio</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2><i class="fas fa-star"></i> Seus Hobbies</h2>
+                <p class="section-subtitle">Selecione seus interesses para conectar com outros estudantes</p>
+                
+                <div class="hobbies-container">
+                    <div class="hobby-category">
+                        <h3>Esportes</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Futebol">
+                                <span class="hobby-name">Futebol</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Basquete">
+                                <span class="hobby-name">Basquete</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Vôlei">
+                                <span class="hobby-name">Vôlei</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Natação">
+                                <span class="hobby-name">Natação</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Skate">
+                                <span class="hobby-name">Skate</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="hobby-category">
+                        <h3>Artes</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Desenho">
+                                <span class="hobby-name">Desenho</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Pintura">
+                                <span class="hobby-name">Pintura</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Fotografia">
+                                <span class="hobby-name">Fotografia</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Dança">
+                                <span class="hobby-name">Dança</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Teatro">
+                                <span class="hobby-name">Teatro</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="hobby-category">
+                        <h3>Música</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Tocar instrumento">
+                                <span class="hobby-name">Tocar instrumento</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Cantar">
+                                <span class="hobby-name">Cantar</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Compor">
+                                <span class="hobby-name">Compor</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Ouvir música">
+                                <span class="hobby-name">Ouvir música</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="hobby-category">
+                        <h3>Tecnologia</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Programação">
+                                <span class="hobby-name">Programação</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Jogos">
+                                <span class="hobby-name">Jogos</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Robótica">
+                                <span class="hobby-name">Robótica</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Design">
+                                <span class="hobby-name">Design</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="hobby-category">
+                        <h3>Leitura e Escrita</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Livros">
+                                <span class="hobby-name">Livros</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Poesia">
+                                <span class="hobby-name">Poesia</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Histórias">
+                                <span class="hobby-name">Histórias</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Quadrinhos">
+                                <span class="hobby-name">Quadrinhos</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="hobby-category">
+                        <h3>Outros</h3>
+                        <div class="hobby-options">
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Culinária">
+                                <span class="hobby-name">Culinária</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Jardinagem">
+                                <span class="hobby-name">Jardinagem</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Voluntariado">
+                                <span class="hobby-name">Voluntariado</span>
+                            </label>
+                            <label class="hobby-option">
+                                <input type="checkbox" name="hobbies" value="Viagens">
+                                <span class="hobby-name">Viagens</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="custom-hobby">
+                    <label for="customHobby">Adicionar outro hobby:</label>
+                    <div class="custom-hobby-input">
+                        <input type="text" id="customHobby" placeholder="Digite um hobby...">
+                        <button type="button" id="addCustomHobby">Adicionar</button>
+                    </div>
+                    <div id="customHobbiesList" class="hobby-tags"></div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2><i class="fas fa-sliders-h"></i> Preferências</h2>
+                
+                <div class="input-group">
+                    <label>Visibilidade do perfil</label>
+                    <div class="radio-options">
+                        <label class="radio-option">
+                            <input type="radio" name="visibility" value="public" checked>
+                            <span>Público</span>
+                            <small>Todos os estudantes podem ver seu perfil</small>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="visibility" value="friends">
+                            <span>Apenas amigos</span>
+                            <small>Somente seus amigos podem ver seu perfil completo</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="secondary-btn" onclick="window.location.href='../login/login.html'">Voltar</button>
+                <button type="submit" class="primary-btn">Salvar perfil</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>

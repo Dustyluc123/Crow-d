@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verificando E-mail - Crow-d</title>
+  <link rel="stylesheet" href="verificandoEmail.css"> <!-- opcional -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="verificando-container">
+    <h1>Confirmação de E-mail</h1>
+    <p>Enviamos um link de verificação para seu e-mail. Por favor, verifique sua caixa de entrada.</p>
+    <p>Após confirmar, você será redirecionado automaticamente.</p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+      authDomain: "tcclogin-7e7b8.firebaseapp.com",
+      projectId: "tcclogin-7e7b8",
+      storageBucket: "tcclogin-7e7b8.appspot.com",
+      messagingSenderId: "1066633833169",
+      appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Aguarda autenticação do usuário
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        const interval = setInterval(() => {
+          user.reload().then(() => {
+            if (user.emailVerified) {
+              clearInterval(interval);
+              alert("E-mail verificado com sucesso!");
+              window.location.href = "../profile/profile.html";
+            }
+          });
+        }, 3000); // Verifica a cada 3 segundos
+      } else {
+        alert("Nenhum usuário autenticado.");
+        window.location.href = "../login/login.html";
+      }
+    });
+  </script>
+</body>
+</html>

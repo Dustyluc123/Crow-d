@@ -1,0 +1,108 @@
+:root {
+    --roxo: #6a0dad;
+    --cinza-escuro: #333333;
+    --branco: #ffffff;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #141351;
+    color: var(--branco);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-container {
+    background-image: url('Design\ sem\ nome2.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.social-login {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.social-login button {
+    background-color: #5b5ad3;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 300px;
+    /* Define uma largura máxima para os botões */
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.social-login button img {
+    width: 24px;
+    /* Define a largura da imagem */
+    height: auto;
+    /* Mantém a proporção da imagem */
+    margin-right: 0.5rem;
+}
+
+
+.input-group {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+button {
+    background-color: #5b5ad3;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+}
+
+button:hover {
+    background-color: #8483de ;
+}
+
+p {
+    margin-top: 1rem;
+}
+
+a {
+    color: var(--branco);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
