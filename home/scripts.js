@@ -522,57 +522,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Função para carregar comentários de um post
-  async function loadComments(postId) {
-    try {
-      const commentsList = document.querySelector(
-        `.post[data-post-id="${postId}"] .comments-list`
-      );
+  // Função para carregar comentários em tempo real
+function loadComments(postId) {
+  const commentsList = document.querySelector(`.post[data-post-id="${postId}"] .comments-list`);
+  if (!commentsList) return;
 
-      if (!commentsList) return;
+  commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
 
-      // Exibir indicador de carregamento
-      commentsList.innerHTML =
-        '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
-
-      // Buscar comentários no Firestore
-      const commentsSnapshot = await db
-        .collection("posts")
-        .doc(postId)
-        .collection("comments")
-        .orderBy("timestamp", "asc")
-        .get();
-
-      // Limpar lista de comentários
-      commentsList.innerHTML = "";
-
-      // Verificar se há comentários
-      if (commentsSnapshot.empty) {
-        commentsList.innerHTML =
-          '<div class="no-comments">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+  // Listener em tempo real
+  return db
+    .collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("timestamp", "asc")
+    .onSnapshot((snapshot) => {
+      commentsList.innerHTML = ""; // limpa antes de adicionar tudo novamente
+      if (snapshot.empty) {
+        commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
         return;
       }
 
-      // Adicionar cada comentário ao DOM
-      commentsSnapshot.forEach((doc) => {
-        const comment = {
-          id: doc.id,
-          ...doc.data(),
-        };
-
+      snapshot.forEach((doc) => {
+        const comment = { id: doc.id, ...doc.data() };
         addCommentToDOM(postId, comment, commentsList);
       });
-    } catch (error) {
-      console.error("Erro ao carregar comentários:", error);
-      const commentsList = document.querySelector(
-        `.post[data-post-id="${postId}"] .comments-list`
-      );
-      if (commentsList) {
-        commentsList.innerHTML =
-          '<div class="error-message">Erro ao carregar comentários. Tente novamente mais tarde.</div>';
-      }
-    }
-  }
+    }, (error) => {
+      console.error("Erro ao escutar comentários:", error);
+      commentsList.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+    });
+}
 
   // Função para adicionar um comentário ao DOM
   function addCommentToDOM(postId, comment, commentsList) {
