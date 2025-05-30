@@ -768,4 +768,203 @@ document.addEventListener('DOMContentLoaded', function() {
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+
+    // Função completa addMessageToDOM(message)
+    function addMessageToDOM(message) {
+    // Verificar se a mensagem já existe no DOM
+    if (document.querySelector(`.message[data-message-id="${message.id}"]`)) {
+        return;
+    }
+
+    // Criar elemento de mensagem
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${message.senderId === currentUser.uid ? 'message-sent' : 'message-received'}`;
+    messageElement.dataset.messageId = message.id;
+
+    // Usar a função utilitária para obter uma data segura
+    const date = safeGetDate(message.timestamp);
+    const timeString = formatTimestamp(date, true);
+
+    // Garantir que o texto da mensagem não seja undefined
+    const messageText = message.text || '';
+
+    // Definir HTML da mensagem
+    messageElement.innerHTML = `
+        <div class="message-content">
+            ${messageText}
+        </div>
+        <div class="message-time">${timeString}</div>
+        ${message.senderId === currentUser.uid ? `
+            <div class="message-actions">
+                <button class="message-delete-btn" title="Excluir mensagem">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        ` : `
+            <div class="message-actions">
+                <button class="message-report-btn" title="Denunciar mensagem">
+                    <i class="fas fa-flag"></i>
+                </button>
+            </div>
+        `}
+    `;
+
+    // Event listener para deletar
+    const deleteBtn = messageElement.querySelector('.message-delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            deleteMessage(message.id);
+        });
+    }
+
+    // Event listener para denunciar
+    const reportBtn = messageElement.querySelector('.message-report-btn');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', () => {
+            reportMessage(message.id);
+        });
+    }
+
+    // Adicionar ao DOM
+    chatMessages.appendChild(messageElement);
+}
+
+// Função deleteMessage(messageId)
+
+async function deleteMessage(messageId) {
+    if (!currentChatId || !currentUser) return;
+
+    try {
+        const messageRef = db.collection('conversations').doc(currentChatId)
+                             .collection('messages').doc(messageId);
+
+        await messageRef.delete();
+
+        // Remover do DOM
+        const messageElement = document.querySelector(`.message[data-message-id="${messageId}"]`);
+        if (messageElement) {
+            messageElement.remove();
+        }
+
+        // Verificar se há mensagens restantes
+        const messagesSnapshot = await db.collection('conversations').doc(currentChatId)
+                                         .collection('messages')
+                                         .orderBy('timestamp', 'desc')
+                                         .limit(1)
+                                         .get();
+
+        let newLastMessage = 'Nenhuma mensagem ainda';
+        let newLastMessageTime = firebase.firestore.FieldValue.serverTimestamp();
+        let newLastSenderId = null;
+
+        if (!messagesSnapshot.empty) {
+            const lastMessageData = messagesSnapshot.docs[0].data();
+            newLastMessage = lastMessageData.text || '';
+            newLastMessageTime = lastMessageData.timestamp;
+            newLastSenderId = lastMessageData.senderId;
+        } else {
+            const conversationDoc = await db.collection('conversations').doc(currentChatId).get();
+            if (conversationDoc.exists && conversationDoc.data().createdAt) {
+                newLastMessageTime = conversationDoc.data().createdAt;
+            }
+        }
+
+        // Atualizar conversa
+        await db.collection('conversations').doc(currentChatId).update({
+            lastMessage: newLastMessage,
+            lastMessageTime: newLastMessageTime,
+            lastSenderId: newLastSenderId
+        });
+
+        console.log(`Mensagem ${messageId} excluída com sucesso.`);
+    } catch (error) {
+        console.error("Erro ao excluir mensagem:", error);
+        alert("Erro ao excluir mensagem. Tente novamente.");
+    }
+}
+// Função para adicionar uma mensagem ao DOM
+function addMessageToDOM(message) {
+    // Verificar se a mensagem já existe no DOM
+    if (document.querySelector(`.message[data-message-id="${message.id}"]`)) {
+        return;
+    }
+    
+    // Criar elemento de mensagem
+    const messageElement = document.createElement('div');
+    messageElement.className = `message ${message.senderId === currentUser.uid ? 'message-sent' : 'message-received'}`;
+    messageElement.dataset.messageId = message.id;
+    
+    // Usar a função utilitária para obter uma data segura
+    const date = safeGetDate(message.timestamp);
+    const timeString = formatTimestamp(date, true);
+    
+    // Garantir que o texto da mensagem não seja undefined
+    const messageText = message.text || '';
+    
+    // Definir HTML da mensagem, incluindo o botão que aparece no hover
+    messageElement.innerHTML = `
+        <div class="message-content">
+            ${messageText}
+        </div>
+        <div class="message-time">${timeString}</div>
+        ${message.senderId === currentUser.uid ? `
+            <button class="message-delete-btn" title="Excluir mensagem"><i class="fas fa-trash"></i></button>
+        ` : `
+            <button class="message-report-btn" title="Denunciar mensagem"><i class="fas fa-flag"></i></button>
+        `}
+    `;
+    
+    // Adicionar event listener para o botão de excluir, se existir
+    const deleteBtn = messageElement.querySelector('.message-delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(event) {
+            event.stopPropagation(); // evita disparar outros eventos
+            deleteMessage(message.id);
+        });
+    }
+    
+    // Adicionar event listener para botão denunciar (se quiser)
+    const reportBtn = messageElement.querySelector('.message-report-btn');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            reportMessage(message.id);
+        });
+    }
+    
+    // Adicionar a mensagem no container de mensagens
+    chatMessages.appendChild(messageElement);
+}
+
+// Função para excluir uma mensagem
+async function deleteMessage(messageId) {
+    if (!currentChatId || !currentUser) return;
+
+    if (!confirm('Tem certeza que deseja excluir esta mensagem?')) {
+        return;
+    }
+
+    try {
+        const messageRef = db.collection('conversations').doc(currentChatId)
+                             .collection('messages').doc(messageId);
+
+        await messageRef.delete();
+
+        // Remover mensagem do DOM
+        const messageElement = document.querySelector(`.message[data-message-id="${messageId}"]`);
+        if (messageElement) {
+            messageElement.remove();
+        }
+
+        console.log('Mensagem excluída com sucesso');
+    } catch (error) {
+        console.error('Erro ao excluir mensagem:', error);
+        alert('Erro ao excluir mensagem. Tente novamente.');
+    }
+}
+
+
+
+
+
 });
