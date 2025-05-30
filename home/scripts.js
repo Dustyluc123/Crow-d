@@ -646,26 +646,7 @@ function loadComments(postId) {
           commentCount: firebase.firestore.FieldValue.increment(1),
         });
 
-      // Obter a lista de comentários para adicionar o novo comentário ao DOM
-      const commentsList = document.querySelector(
-        `.post[data-post-id="${postId}"] .comments-list`
-      );
 
-      // Adicionar o comentário ao DOM para exibição imediata
-      const newComment = {
-        id: commentRef.id,
-        ...commentData,
-        timestamp: new Date(), // Usar data local para exibição imediata
-      };
-      addCommentToDOM(postId, newComment, commentsList);
-
-      // Fazer scroll para o novo comentário
-      const commentsSection = document.querySelector(
-        `.post[data-post-id="${postId}"] .post-comments`
-      );
-      if (commentsSection) {
-        commentsSection.scrollTop = commentsSection.scrollHeight;
-      }
 
       // Obter dados do post para notificação
       const postDoc = await db.collection("posts").doc(postId).get();
