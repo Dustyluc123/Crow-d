@@ -523,34 +523,45 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Função para carregar comentários em tempo real
-function loadComments(postId) {
-  const commentsList = document.querySelector(`.post[data-post-id="${postId}"] .comments-list`);
-  if (!commentsList) return;
-
-  commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
-
-  // Listener em tempo real
-  return db
-    .collection("posts")
-    .doc(postId)
-    .collection("comments")
-    .orderBy("timestamp", "asc")
-    .onSnapshot((snapshot) => {
-      commentsList.innerHTML = ""; // limpa antes de adicionar tudo novamente
-      if (snapshot.empty) {
-        commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
-        return;
-      }
-
-      snapshot.forEach((doc) => {
-        const comment = { id: doc.id, ...doc.data() };
-        addCommentToDOM(postId, comment, commentsList);
+  function loadComments(postId) {
+    const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+    const commentsList = postElement.querySelector(".comments-list");
+    const commentInput = postElement.querySelector(".comment-text");
+  
+    if (!commentsList || !commentInput) return;
+  
+    // Salvar texto atual digitado
+    const draftText = commentInput.value;
+  
+    commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
+  
+    return db
+      .collection("posts")
+      .doc(postId)
+      .collection("comments")
+      .orderBy("timestamp", "asc")
+      .onSnapshot((snapshot) => {
+        commentsList.innerHTML = "";
+  
+        if (snapshot.empty) {
+          commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
+          return;
+        }
+  
+        snapshot.forEach((doc) => {
+          const comment = { id: doc.id, ...doc.data() };
+          addCommentToDOM(postId, comment, commentsList);
+        });
+  
+        // Restaurar o que estava digitado
+        commentInput.value = draftText;
+      }, (error) => {
+        console.error("Erro ao escutar comentários:", error);
+        commentsList.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
       });
-    }, (error) => {
-      console.error("Erro ao escutar comentários:", error);
-      commentsList.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
-    });
-}
+  }
+  
+  
 
   // Função para adicionar um comentário ao DOM
   function addCommentToDOM(postId, comment, commentsList) {
