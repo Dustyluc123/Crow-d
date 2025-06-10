@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste do Seletor de Emojis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .input-area {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .emoji-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .emoji-btn:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.1);
+        }
+
+        .emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            width: 320px;
+            height: 280px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .emoji-picker.active {
+            display: flex;
+        }
+
+        .emoji-categories {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 8px;
+            border-bottom: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+
+        .emoji-category-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emoji-category-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .emoji-category-btn.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .emoji-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            padding: 12px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .emoji-item {
+            font-size: 20px;
+            text-align: center;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+        }
+
+        .emoji-item:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.2);
+        }
+
+        .send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .send-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .messages {
+            min-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+
+        .message {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin: 5px 0;
+            max-width: 70%;
+            margin-left: auto;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Teste do Seletor de Emojis</h1>
+        <p>Clique no botão 😊 para abrir o seletor de emojis e teste a funcionalidade!</p>
+        
+        <div class="messages" id="messages">
+            <p><strong>Área de mensagens:</strong></p>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" class="message-input" id="messageInput" placeholder="Digite sua mensagem...">
+            <button id="emoji-btn" class="emoji-btn" title="Adicionar emoji">😊</button>
+            <button class="send-btn" onclick="sendMessage()">Enviar</button>
+            
+            <!-- Seletor de emojis -->
+            <div id="emoji-picker" class="emoji-picker">
+                <div class="emoji-categories">
+                    <button class="emoji-category-btn active" data-category="smileys" title="Smileys">😊</button>
+                    <button class="emoji-category-btn" data-category="people" title="Pessoas">👤</button>
+                    <button class="emoji-category-btn" data-category="animals" title="Animais">🐶</button>
+                    <button class="emoji-category-btn" data-category="food" title="Comida">🍔</button>
+                    <button class="emoji-category-btn" data-category="activities" title="Atividades">⚽</button>
+                    <button class="emoji-category-btn" data-category="travel" title="Viagem">🚗</button>
+                    <button class="emoji-category-btn" data-category="objects" title="Objetos">💡</button>
+                    <button class="emoji-category-btn" data-category="symbols" title="Símbolos">❤️</button>
+                </div>
+                <div id="emoji-grid" class="emoji-grid">
+                    <!-- Emojis serão carregados dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Emojis organizados por categoria
+        const emojiCategories = {
+            smileys: ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐", "🥴", "🤢", "🤮", "🤧", "😷", "🤒", "🤕"],
+            people: ["👶", "🧒", "👦", "👧", "🧑", "👱", "👨", "🧔", "👩", "🧓", "👴", "👵", "🙍", "🙎", "🙅", "🙆", "💁", "🙋", "🧏", "🙇", "🤦", "🤷", "👮", "🕵️", "💂", "👷", "🤴", "👸", "👳", "👲", "🧕", "🤵", "👰", "🤰", "🤱", "👼", "🎅", "🤶", "🦸", "🦹", "🧙", "🧚", "🧛", "🧜", "🧝", "🧞", "🧟", "💆", "💇", "🚶", "🏃", "💃", "🕺", "🕴️", "👯", "🧖", "🧗", "🤺", "🏇", "⛷️", "🏂", "🏌️", "🏄", "🚣", "🏊", "⛹️", "🏋️", "🚴", "🚵", "🤸", "🤼", "🤽", "🤾", "🤹", "🧘", "🛀", "🛌"],
+            animals: ["🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", "🐜", "🦟", "🦗", "🕷️", "🕸️", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", "🦓", "🦍", "🦧", "🐘", "🦛", "🦏", "🐪", "🐫", "🦒", "🦘", "🐃", "🐂", "🐄", "🐎", "🐖", "🐏", "🐑", "🦙", "🐐", "🦌", "🐕", "🐩", "🦮", "🐕‍🦺", "🐈", "🐓", "🦃", "🦚", "🦜", "🦢", "🦩", "🕊️", "🐇", "🦝", "🦨", "🦡", "🦦", "🦥", "🐁", "🐀", "🐿️"],
+            food: ["🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐", "🍈", "🍒", "🍑", "🥭", "🍍", "🥥", "🥝", "🍅", "🍆", "🥑", "🥦", "🥬", "🥒", "🌶️", "🫑", "🌽", "🥕", "🫒", "🧄", "🧅", "🥔", "🍠", "🥐", "🥯", "🍞", "🥖", "🥨", "🧀", "🥚", "🍳", "🧈", "🥞", "🧇", "🥓", "🥩", "🍗", "🍖", "🦴", "🌭", "🍔", "🍟", "🍕", "🫓", "🥪", "🥙", "🧆", "🌮", "🌯", "🫔", "🥗", "🥘", "🫕", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🦪", "🍤", "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍢", "🍡", "🍧", "🍨", "🍦", "🥧", "🧁", "🍰", "🎂", "🍮", "🍭", "🍬", "🍫", "🍿", "🍩", "🍪", "🌰", "🥜", "🍯"],
+            activities: ["⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱", "🪀", "🏓", "🏸", "🏒", "🏑", "🥍", "🏏", "🪃", "🥅", "⛳", "🪁", "🏹", "🎣", "🤿", "🥊", "🥋", "🎽", "🛹", "🛷", "⛸️", "🥌", "🎿", "⛷️", "🏂", "🪂", "🏋️‍♀️", "🏋️", "🏋️‍♂️", "🤸‍♀️", "🤸", "🤸‍♂️", "⛹️‍♀️", "⛹️", "⛹️‍♂️", "🤺", "🤾‍♀️", "🤾", "🤾‍♂️", "🏌️‍♀️", "🏌️", "🏌️‍♂️", "🏇", "🧘‍♀️", "🧘", "🧘‍♂️", "🏄‍♀️", "🏄", "🏄‍♂️", "🏊‍♀️", "🏊", "🏊‍♂️", "🤽‍♀️", "🤽", "🤽‍♂️", "🚣‍♀️", "🚣", "🚣‍♂️", "🧗‍♀️", "🧗", "🧗‍♂️", "🚵‍♀️", "🚵", "🚵‍♂️", "🚴‍♀️", "🚴", "🚴‍♂️", "🏆", "🥇", "🥈", "🥉", "🏅", "🎖️", "🏵️", "🎗️", "🎫", "🎟️", "🎪", "🤹", "🤹‍♀️", "🤹‍♂️", "🎭", "🩰", "🎨", "🎬", "🎤", "🎧", "🎼", "🎵", "🎶", "🥁", "🪘", "🎹", "🎷", "🎺", "🪗", "🎸", "🪕", "🎻"],
+            travel: ["🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐", "🛻", "🚚", "🚛", "🚜", "🏍️", "🛵", "🚲", "🛴", "🛹", "🛼", "🚁", "🛸", "✈️", "🛩️", "🛫", "🛬", "🪂", "💺", "🚀", "🛰️", "🚉", "🚞", "🚝", "🚄", "🚅", "🚈", "🚂", "🚆", "🚇", "🚊", "🚟", "🚠", "🚡", "🛤️", "🛣️", "🛑", "🚥", "🚦", "🚧", "⚓", "⛵", "🛶", "🚤", "🛳️", "⛴️", "🚢", "🏗️", "🏭", "🏠", "🏡", "🏘️", "🏚️", "🏗️", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩", "💒", "🏛️", "⛪", "🕌", "🕍", "🛕", "🕋", "⛩️", "🛤️", "🛣️", "🗾", "🏔️", "⛰️", "🌋", "🗻", "🏕️", "🏖️", "🏜️", "🏝️", "🏞️"],
+            objects: ["⌚", "📱", "📲", "💻", "⌨️", "🖥️", "🖨️", "🖱️", "🖲️", "🕹️", "🗜️", "💽", "💾", "💿", "📀", "📼", "📷", "📸", "📹", "🎥", "📽️", "🎞️", "📞", "☎️", "📟", "📠", "📺", "📻", "🎙️", "🎚️", "🎛️", "🧭", "⏱️", "⏲️", "⏰", "🕰️", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯️", "🪔", "🧯", "🛢️", "💸", "💵", "💴", "💶", "💷", "🪙", "💰", "💳", "💎", "⚖️", "🪜", "🧰", "🔧", "🔨", "⚒️", "🛠️", "⛏️", "🪓", "🪚", "🔩", "⚙️", "🪤", "🧱", "⛓️", "🧲", "🔫", "💣", "🧨", "🪓", "🔪", "🗡️", "⚔️", "🛡️", "🚬", "⚰️", "🪦", "⚱️", "🏺", "🔮", "📿", "🧿", "💈", "⚗️", "🔭", "🔬", "🕳️", "🩹", "🩺", "💊", "💉", "🩸", "🧬", "🦠", "🧫", "🧪", "🌡️", "🧹", "🪣", "🧽", "🧴", "🛎️", "🔑", "🗝️", "🚪", "🪑", "🛋️", "🛏️", "🛌", "🧸", "🪆", "🖼️", "🪞", "🪟", "🛍️", "🛒", "🎁", "🎈", "🎏", "🎀", "🪄", "🪅", "🎊", "🎉", "🪩", "🎎", "🏮", "🎐", "🧧", "✉️", "📩", "📨", "📧", "💌", "📥", "📤", "📦", "🏷️", "🪧", "📪", "📫", "📬", "📭", "📮", "📯", "📜", "📃", "📄", "📑", "🧾", "📊", "📈", "📉", "🗒️", "🗓️", "📆", "📅", "🗑️", "📇", "🗃️", "🗳️", "🗄️", "📋", "📁", "📂", "🗂️", "🗞️", "📰", "📓", "📔", "📒", "📕", "📗", "📘", "📙", "📚", "📖", "🔖", "🧷", "🔗", "📎", "🖇️", "📐", "📏", "🧮", "📌", "📍", "✂️", "🖊️", "🖋️", "✒️", "🖌️", "🖍️", "📝", "✏️", "🔍", "🔎", "🔏", "🔐", "🔒", "🔓"],
+            symbols: ["❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❣️", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐", "⛎", "♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓", "🆔", "⚛️", "🉑", "☢️", "☣️", "📴", "📳", "🈶", "🈚", "🈸", "🈺", "🈷️", "✴️", "🆚", "💮", "🉐", "㊙️", "㊗️", "🈴", "🈵", "🈹", "🈲", "🅰️", "🅱️", "🆎", "🆑", "🅾️", "🆘", "❌", "⭕", "🛑", "⛔", "📛", "🚫", "💯", "💢", "♨️", "🚷", "🚯", "🚳", "🚱", "🔞", "📵", "🚭", "❗", "❕", "❓", "❔", "‼️", "⁉️", "🔅", "🔆", "〽️", "⚠️", "🚸", "🔱", "⚜️", "🔰", "♻️", "✅", "🈯", "💹", "❇️", "✳️", "❎", "🌐", "💠", "Ⓜ️", "🌀", "💤", "🏧", "🚾", "♿", "🅿️", "🛗", "🈳", "🈂️", "🛂", "🛃", "🛄", "🛅", "🚹", "🚺", "🚼", "⚧️", "🚻", "🚮", "🎦", "📶", "🈁", "🔣", "ℹ️", "🔤", "🔡", "🔠", "🆖", "🆗", "🆙", "🆒", "🆕", "🆓", "0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟", "🔢", "#️⃣", "*️⃣", "⏏️", "▶️", "⏸️", "⏯️", "⏹️", "⏺️", "⏭️", "⏮️", "⏩", "⏪", "⏫", "⏬", "◀️", "🔼", "🔽", "➡️", "⬅️", "⬆️", "⬇️", "↗️", "↘️", "↙️", "↖️", "↕️", "↔️", "↪️", "↩️", "⤴️", "⤵️", "🔀", "🔁", "🔂", "🔄", "🔃", "🎵", "🎶", "➕", "➖", "➗", "✖️", "🟰", "♾️", "💲", "💱", "™️", "©️", "®️", "〰️", "➰", "➿", "🔚", "🔙", "🔛", "🔝", "🔜", "✔️", "☑️", "🔘", "🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "⚫", "⚪", "🟤", "🔺", "🔻", "🔸", "🔹", "🔶", "🔷", "🔳", "🔲", "▪️", "▫️", "◾", "◽", "◼️", "◻️", "🟥", "🟧", "🟨", "🟩", "🟦", "🟪", "⬛", "⬜", "🟫", "🔈", "🔇", "🔉", "🔊", "🔔", "🔕", "📣", "📢", "👁️‍🗨️", "💬", "💭", "🗯️", "♠️", "♣️", "♥️", "♦️", "🃏", "🎴", "🀄", "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛", "🕜", "🕝", "🕞", "🕟", "🕠", "🕡", "🕢", "🕣", "🕤", "🕥", "🕦", "🕧"]
+        };
+        
+        let currentEmojiCategory = "smileys";
+
+        // Elementos DOM
+        const emojiBtn = document.getElementById("emoji-btn");
+        const emojiPicker = document.getElementById("emoji-picker");
+        const emojiGrid = document.getElementById("emoji-grid");
+        const emojiCategoryBtns = document.querySelectorAll(".emoji-category-btn");
+        const messageInput = document.getElementById("messageInput");
+        const messagesArea = document.getElementById("messages");
+        
+        // Inicializar funcionalidade de emojis
+        initializeEmojiPicker();
+        
+        function initializeEmojiPicker() {
+            // Event listener para o botão de emoji
+            if (emojiBtn) {
+                emojiBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    emojiPicker.classList.toggle("active");
+                    if (emojiPicker.classList.contains("active")) {
+                        renderEmojis(currentEmojiCategory);
+                    }
+                });
+            }
+
+            // Event listener para fechar o seletor de emojis ao clicar fora
+            document.addEventListener("click", function(e) {
+                if (emojiPicker && !emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+                    emojiPicker.classList.remove("active");
+                }
+            });
+
+            // Event listeners para os botões de categoria de emoji
+            emojiCategoryBtns.forEach(button => {
+                button.addEventListener("click", function() {
+                    emojiCategoryBtns.forEach(btn => btn.classList.remove("active"));
+                    this.classList.add("active");
+                    currentEmojiCategory = this.dataset.category;
+                    renderEmojis(currentEmojiCategory);
+                });
+            });
+            
+            // Renderizar emojis iniciais
+            renderEmojis(currentEmojiCategory);
+        }
+
+        // Função para renderizar emojis na grade
+        function renderEmojis(category) {
+            if (!emojiGrid) return;
+            
+            emojiGrid.innerHTML = "";
+            const emojis = emojiCategories[category] || emojiCategories.smileys;
+            
+            emojis.forEach(emoji => {
+                const span = document.createElement("span");
+                span.textContent = emoji;
+                span.classList.add("emoji-item");
+                span.title = emoji; // Tooltip com o emoji
+                span.addEventListener("click", function() {
+                    insertEmoji(emoji);
+                });
+                emojiGrid.appendChild(span);
+            });
+        }
+
+        // Função para inserir emoji no campo de texto
+        function insertEmoji(emoji) {
+            if (!messageInput) return;
+            
+            const start = messageInput.selectionStart;
+            const end = messageInput.selectionEnd;
+            const text = messageInput.value;
+            
+            messageInput.value = text.substring(0, start) + emoji + text.substring(end);
+            messageInput.focus();
+            messageInput.setSelectionRange(start + emoji.length, start + emoji.length);
+            
+            // Fechar o seletor de emojis
+            emojiPicker.classList.remove("active");
+        }
+
+        // Função para enviar mensagem
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                const messageDiv = document.createElement("div");
+                messageDiv.className = "message";
+                messageDiv.textContent = text;
+                messagesArea.appendChild(messageDiv);
+                messageInput.value = "";
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
+        }
+
+        // Event listener para Enter no input
+        messageInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
+
