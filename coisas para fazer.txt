@@ -1,0 +1,55 @@
+to do
+
+Geral 
+1- tira os alertas e criar nossos proprios
+
+///Index
+
+1-fotos do integrandes do grupo 
+2-mudar carrossel 
+
+///Login
+1- espaço entre os botoes 
+2-contraste 
+
+///Cadastro 
+
+2-contraste
+
+///Home
+1-mudar layout de comentar 
+2-tirar o botão "meu hobbies"
+3-republicar posts
+4-salvar posts
+5-espaço entre posts 
+
+///Friends
+1-tirar o botão "meu hobbies"
+2-botão de buscar amigos
+3-e adiconar amigos
+
+///Mensagen
+1-melhorar layout(linha entre cada conversa, no tema claro problema de cores )
+2-melhorias talvez(de apagar mensagem e emoji)
+
+// criar parte de notificacao 
+
+///editprofile
+
+1-re fazer com  essa ideia "FAZER A PARTE DE PERFIL GRATIS SEM STORAGE E URL
+
+Essa é uma excelente pergunta e uma preocupação muito válida. Você está certo, o Firebase Storage tem um generoso nível gratuito, mas ele pode gerar custos se o aplicativo crescer muito.
+
+Sim, existe uma alternativa totalmente gratuita que podemos implementar agora mesmo.
+
+A Solução Gratuita: Armazenar a Imagem no Banco de Dados
+
+Em vez de enviar a imagem para um serviço de armazenamento de arquivos, podemos convertê-la em um formato de texto chamado Base64 (ou Data URL) e salvar esse texto diretamente no campo avatarUrl do seu perfil no Firestore.
+
+Vantagens: É 100% gratuito, pois estamos usando apenas o Firestore, que já está configurado. Não requer regras de segurança adicionais.
+Desvantagens: Aumenta o tamanho do documento do usuário no banco de dados. Para fotos de perfil, que geralmente são pequenas, isso não é um problema. Mas não seria ideal para imagens de alta resolução.
+Para nossa aplicação, essa é uma solução perfeita. Vou fazer as seguintes alterações:
+
+Modificar a Lógica de Upload: Em src/lib/auth.ts, vou remover a lógica de upload para o Firebase Storage. Em vez disso, vou adicionar uma pequena função que converte o arquivo de imagem em um texto Base64.
+Remover o Firebase Storage: Como não vamos mais usá-lo, vou remover a inicialização do Storage em src/lib/firebase.ts para manter o código limpo.
+O restante do aplicativo, incluindo o diálogo de edição, já funciona perfeitamente com essa abordagem."
