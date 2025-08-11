@@ -9,7 +9,23 @@ document.addEventListener("DOMContentLoaded", function () {
     messagingSenderId: "1066633833169",
     appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0",
   };
-
+  function showCustomAlert(message) {
+    const modal = document.getElementById('customAlertModal');
+    const messageEl = document.getElementById('customAlertMessage');
+    const closeBtn = document.getElementById('customAlertClose');
+  
+    messageEl.textContent = message;
+    modal.style.display = 'block';
+  
+    closeBtn.onclick = function() {
+      modal.style.display = 'none';
+    }
+  }
+  
+  // Para usar, substitua:
+  // alert('Sua mensagem aqui');
+  // Por:
+  // showCustomAlert('Sua mensagem aqui');
   // Inicializar Firebase
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
