@@ -102,6 +102,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Atualizar foto nos posts
+    async function updateUserPhotoInPosts(newPhotoURL) {
+        try {
+            const postsSnapshot = await db.collection('posts')
+                .where('authorId', '==', currentUser.uid)
+                .get();
+
+            if (postsSnapshot.empty) {
+                console.log('Nenhum post encontrado para atualizar.');
+                return;
+            }
+
+            const batch = db.batch();
+            postsSnapshot.forEach(doc => {
+                const postRef = db.collection('posts').doc(doc.id);
+                batch.update(postRef, { authorPhoto: newPhotoURL });
+            });
+
+            await batch.commit();
+            console.log(`Foto atualizada em ${postsSnapshot.size} posts.`);
+        } catch (error) {
+            console.error('Erro ao atualizar foto nos posts:', error);
+        }
+    }
+
     async function saveProfile() {
         try {
             isSubmitting = true;
@@ -141,6 +166,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             await db.collection('users').doc(currentUser.uid).set(profileData, { merge: true });
+
+            // Se a foto mudou, atualizar nos posts
+            if (photoData !== currentUserProfile?.photoURL) {
+                await updateUserPhotoInPosts(photoData);
+            }
 
             alert('Perfil salvo com sucesso!');
             window.location.href = '../home/home.html';
