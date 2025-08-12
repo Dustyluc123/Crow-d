@@ -12,7 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <style>
 
         /* Estilos específicos para a página de mensagens */
@@ -324,6 +324,18 @@ body.dark-mode ::-webkit-scrollbar-track {
 body.dark-mode ::-webkit-scrollbar-thumb {
     background-color: #555;
 }
+.chat-input-area {
+    position: relative; /* Necessário para posicionar o seletor de emojis */
+}
+
+emoji-picker {
+    position: absolute;
+    bottom: 65px; /* Posição acima do campo de texto */
+    left: 15px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+}
 
 </style>
 </head>
@@ -372,6 +384,10 @@ body.dark-mode ::-webkit-scrollbar-thumb {
                     </div>
                     
                     <div class="chat-input-area">
+                        <emoji-picker class="light" style="display: none;"></emoji-picker> 
+                    
+                        <button id="emoji-btn" class="chat-action-btn"><i class="fas fa-smile"></i></button>
+                    
                         <input type="text" class="chat-input" placeholder="Digite uma mensagem...">
                         <button class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
                     </div>
@@ -381,6 +397,9 @@ body.dark-mode ::-webkit-scrollbar-thumb {
     </div>
     <script src="script.js"></script>
     <script src="../config/darkmode.js"></script>
-    
+    <div class="chat-input-area">
+    <input type="text" class="chat-input" placeholder="Digite uma mensagem...">
+    <button class="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+</div>
 </body>
 </html>

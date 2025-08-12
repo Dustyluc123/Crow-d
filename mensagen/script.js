@@ -1,3 +1,9 @@
+// ... outras referências
+const logoutButton = document.querySelector('.logout-btn');
+// Adicione as linhas abaixo
+const emojiBtn = document.getElementById('emoji-btn');
+const emojiPicker = document.querySelector('emoji-picker');
+
 // Sistema de mensagens em tempo real para o Crow-d com Firebase
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração do Firebase
@@ -90,6 +96,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Event listener para o botão de emoji
+if (emojiBtn && emojiPicker) {
+    emojiBtn.addEventListener('click', (event) => {
+        event.stopPropagation(); // Impede que o clique feche o seletor imediatamente
+        const isVisible = emojiPicker.style.display !== 'none';
+        emojiPicker.style.display = isVisible ? 'none' : 'block';
+    });
+
+    // Adiciona o emoji selecionado ao campo de texto
+    emojiPicker.addEventListener('emoji-click', event => {
+        chatInput.value += event.detail.emoji.unicode;
+    });
+
+    // Fecha o seletor de emojis se clicar fora dele
+    document.addEventListener('click', (event) => {
+        if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
+            emojiPicker.style.display = 'none';
+        }
+    });
+}
 
     // Função para verificar parâmetros da URL
     function checkUrlParams() {
@@ -453,4 +480,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function scrollToBottom() {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
+    
+    
 });
