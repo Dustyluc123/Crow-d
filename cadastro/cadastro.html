@@ -6,7 +6,7 @@
   <title>Cadastro - Crow-d</title>
   <link rel="stylesheet" href="cadastro.css" />
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
@@ -32,6 +32,14 @@
       </div>
 
       <button type="submit">Continuar</button>
+
+      <!-- Botão Google no estilo que você passou -->
+    <div class="social-login">
+      <button id="login-google" type="button">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
+        Entrar com Google
+      </button>
+    </div>
     </form>
 
     <p>Já tem uma conta? <a href="../login/login.html">Entrar</a></p>
@@ -50,6 +58,27 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    const googleBtn = document.getElementById('login-google');
+
+    // Login com Google
+    googleBtn.addEventListener('click', async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const isNewUser = result.additionalUserInfo.isNewUser;
+        if (isNewUser) {
+          window.location.href = '../profile/profile.html';
+        } else {
+          window.location.href = '../home/home.html';
+        }
+      } catch (error) {
+        alert('Erro ao fazer login com Google: ' + error.message);
+      }
+    });
+
+    // Cadastro com e-mail
     document.getElementById('cadastro-form').addEventListener('submit', function (e) {
       e.preventDefault();
 
@@ -65,7 +94,6 @@
       auth.createUserWithEmailAndPassword(email, senha)
         .then((userCredential) => {
           const user = userCredential.user;
-
           user.sendEmailVerification()
             .then(() => {
               localStorage.setItem('emailParaVerificacao', email);
