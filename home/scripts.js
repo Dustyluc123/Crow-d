@@ -567,6 +567,7 @@ document.addEventListener("DOMContentLoaded", function () {
         snapshot.forEach((doc) => {
           const comment = { id: doc.id, ...doc.data() };
           addCommentToDOM(postId, comment, commentsList);
+          
         });
   
         // Restaurar o que estava digitado
@@ -579,6 +580,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
   
 
+  // Função para adicionar um comentário ao DOM
   // Função para adicionar um comentário ao DOM
   function addCommentToDOM(postId, comment, commentsList) {
     if (!commentTemplate || !commentsList) return;
@@ -594,6 +596,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const contentElement = commentClone.querySelector(".comment-text");
     const likeButton = commentClone.querySelector(".comment-like-btn");
     const likeCount = commentClone.querySelector(".comment-like-count");
+
+    // ==========================================================
+    // ESTA É A PARTE IMPORTANTE QUE ESTAVA FALTANDO
+    // Adiciona a ação de clique ao botão de curtir
+    likeButton.addEventListener("click", function () {
+      toggleCommentLike(postId, comment.id);
+    });
+    // ==========================================================
 
     // Definir IDs
     commentElement.dataset.commentId = comment.id;

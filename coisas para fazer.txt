@@ -35,6 +35,10 @@ Geral
 
 ///editprofile
 
+
+///confing 
+1-excluir conta
+
 1-re fazer com  essa ideia "FAZER A PARTE DE PERFIL GRATIS SEM STORAGE E URL
 
 Essa é uma excelente pergunta e uma preocupação muito válida. Você está certo, o Firebase Storage tem um generoso nível gratuito, mas ele pode gerar custos se o aplicativo crescer muito.

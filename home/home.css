@@ -23,6 +23,7 @@
 }
 
 body {
+    
     font-family: Arial, sans-serif;
     background-color: var(--light-bg);
     color: var(--dark-text);
@@ -249,6 +250,7 @@ body.dark-mode .sidebar ul li a:hover {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0; /* <<< ADICIONE ESTA LINHA */
 }
 
 /* CRIAR PUBLICAÇÃO */
@@ -408,6 +410,7 @@ body.dark-mode .post-content {
 }
 
 .post-content p {
+    overflow-wrap: break-word; /* << ADICIONE ESTA LINHA */
     margin-bottom: 15px;
     line-height: 1.5;
 }
@@ -423,6 +426,7 @@ body.dark-mode .post-content {
 }
 
 .post-comments {
+    display: none;
     margin-top: 15px;
     border-top: 1px solid var(--light-border);
     padding-top: 15px;
@@ -462,6 +466,8 @@ body.dark-mode .post-comments {
 }
 
 .post-comments .comment-text {
+    overflow-wrap: break-word; /* << ADICIONE ESTA LINHA */
+     margin-bottom: 15px;
     flex: 1; /* Faz o input ocupar todo o espaço restante */
     border: 1px solid var(--light-border);
     border-radius: 20px; /* Bordas arredondadas */
@@ -508,10 +514,17 @@ body.dark-mode .comment-input {
 
 /* Em home/home.css */
 .comment-content {
-    background-color: var(--light-bg); /* Fundo mais suave */
-    padding: 10px 15px; /* Ajuste no padding */
-    border-radius: 15px; /* Bordas mais arredondadas */
-    flex: 1;
+   
+        background-color: var(--light-bg);
+        padding: 10px;
+        border-radius: var(--border-radius);
+        flex: 1;
+        transition: background-color 0.3s;
+        /* ADICIONE AS 3 LINHAS ABAIXO */
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* Esta linha cria o espaçamento! */
+    
 }
 .comment-author-name {
     font-weight: bold; /* Dar mais destaque ao nome */
@@ -533,8 +546,8 @@ body.dark-mode .comment-author-name {
 }
 
 .comment-text {
-    margin: 0 0 5px 0;
-    font-size: 0.9rem;
+    
+    font-size: 1rem;
     color: var(--dark-text);
     transition: color 0.3s;
 }
@@ -977,4 +990,16 @@ body.dark-mode .error-message {
     text-align: center;
     border-radius: 10px;
 }
-
+.comment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto; /* Empurra o rodapé para o fundo */
+}
+.post-comments .comment-input {
+    overflow-wrap: break-word;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px; /* << ADICIONE ESTA LINHA */
+}
