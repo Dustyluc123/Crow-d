@@ -963,6 +963,9 @@ async function deleteMessage(messageId) {
         console.error('Erro ao excluir mensagem:', error);
         alert('Erro ao excluir mensagem. Tente novamente.');
     }
+    
+   
+
 }
 
 

@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <style>
+
         /* Estilos específicos para a página de mensagens */
         .messages-container {
             display: flex;
@@ -306,7 +307,75 @@
 }
 
         
-    </style>
+    
+/* Estilo geral da barra de rolagem */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-color);
+}
+
+/* Ajustes específicos para modo escuro */
+body.dark-mode ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background-color: #555;
+}
+
+/* Ajustes para modo claro */
+body.light-mode {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #222;
+    --text-secondary: #555;
+    --border-color: #ddd;
+}
+
+/* Botões e mensagens mais definidos no modo claro */
+body.light-mode .message-sent .message-content {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+body.light-mode .message-received .message-content {
+    background-color: #e9ecef;
+    color: var(--text-primary);
+}
+
+
+/* Hover no modo claro (quando não está no modo escuro) */
+body:not(.dark-mode) .conversation-item:hover,
+body:not(.dark-mode) .conversation-item.active {
+    background-color: #f0f2f5; /* cor de destaque */
+}
+
+/* Borda arredondada no campo de digitar no modo claro */
+body:not(.dark-mode) .chat-input {
+    border-radius: 20px;
+    border: 1px solid #888; /* borda mais escura */
+    background-color: var(--bg-primary);
+}
+
+
+
+
+
+
+</style>
 </head>
 <body>
     <!-- HEADER / MENU DE NAVEGAÇÃO -->
