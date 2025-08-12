@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="../home/page-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTTXJNJvT1+2Bhx4+gVZCJkYPjz9MoE0nK0j3hML6GH3V5CFzT0wE1uPaBJ6nQpdhS0GkL3c4A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -185,9 +184,15 @@
         }
         
         .message-received .message-content {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
+            background-color: #e9ecef; /* Cor de fundo para o balão */
+            color: #333;
             border-bottom-left-radius: 5px;
+        }
+
+        /* Adicionado para o modo escuro */
+        body.dark-mode .message-received .message-content {
+            background-color: #36373d;
+            color: #ffffff;
         }
         
         .message-time {
@@ -209,20 +214,6 @@
         
         .message:hover .message-actions {
              opacity: 1;
-        }
-
-        
-        .report-btn {
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
-            cursor: pointer;
-            padding: 5px;
-            font-size: 14px;
-        }
-        
-        .report-btn:hover {
-            color: #f44336;
         }
         
         .chat-input-area {
@@ -305,8 +296,6 @@
 .message-delete-btn:hover {
     color: #e74c3c;
 }
-
-        
     
 /* Estilo geral da barra de rolagem */
 ::-webkit-scrollbar {
@@ -336,55 +325,9 @@ body.dark-mode ::-webkit-scrollbar-thumb {
     background-color: #555;
 }
 
-/* Ajustes para modo claro */
-body.light-mode {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --text-primary: #222;
-    --text-secondary: #555;
-    --border-color: #ddd;
-}
-
-/* Botões e mensagens mais definidos no modo claro */
-body.light-mode .message-sent .message-content {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-body.light-mode .message-received .message-content {
-    background-color: #e9ecef;
-    color: var(--text-primary);
-}
-
-
-/* Hover no modo claro (quando não está no modo escuro) */
-body:not(.dark-mode) .conversation-item:hover,
-body:not(.dark-mode) .conversation-item.active {
-    background-color: #f0f2f5; /* cor de destaque */
-}
-
-/* Borda arredondada no campo de digitar no modo claro */
-body:not(.dark-mode) .chat-input {
-    border-radius: 20px;
-    border: 1px solid #888; /* borda mais escura */
-    background-color: var(--bg-primary);
-}
-
-.message-received .message-content {
-    background-color: #e9ecef; /* Cor de fundo cinza claro para o balão */
-    color: #333; /* Cor do texto escura para garantir a legibilidade */
-    border-bottom-left-radius: 5px;
-}
-
-
-
-
-
-
 </style>
 </head>
 <body>
-    <!-- HEADER / MENU DE NAVEGAÇÃO -->
     <header>
         <div class="logo">
             <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -401,19 +344,14 @@ body:not(.dark-mode) .chat-input {
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-container">
-        <!-- CONTEÚDO CENTRAL -->
         <main class="feed">
             <h1 class="page-title"><i class="fas fa-comment"></i> Mensagens</h1>
             
             <div class="messages-container">
-                <!-- Lista de conversas -->
                 <div class="conversations-list">
-                    <!-- Conversas serão carregadas dinamicamente via JavaScript -->
-                </div>
+                    </div>
                 
-                <!-- Área de chat -->
                 <div class="chat-area">
                     <div class="chat-header">
                         <img src="../img/Design sem nome2.png" alt="Avatar" class="chat-avatar">
@@ -430,7 +368,6 @@ body:not(.dark-mode) .chat-input {
                     </div>
                     
                     <div class="chat-messages">
-                        <!-- Mensagens serão carregadas dinamicamente via JavaScript -->
                         <div class="no-messages">Selecione uma conversa para começar a conversar</div>
                     </div>
                     
@@ -445,6 +382,5 @@ body:not(.dark-mode) .chat-input {
     <script src="script.js"></script>
     <script src="../config/darkmode.js"></script>
     
-
 </body>
 </html>
