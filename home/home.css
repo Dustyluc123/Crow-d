@@ -453,6 +453,27 @@ body.dark-mode .post-comments {
     color: var(--dark-text);
     transition: border-color 0.3s, background-color 0.3s, color 0.3s;
 }
+/* Em home/home.css - Adicione estes estilos */
+
+.post-comments .comment-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-comments .comment-text {
+    flex: 1; /* Faz o input ocupar todo o espaço restante */
+    border: 1px solid var(--light-border);
+    border-radius: 20px; /* Bordas arredondadas */
+    padding: 10px 15px;
+    background-color: var(--light-bg-secondary);
+    outline: none;
+}
+
+body.dark-mode .post-comments .comment-text {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+}
 
 body.dark-mode .comment-input {
     background-color: var(--dark-bg-tertiary);
