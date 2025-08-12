@@ -511,18 +511,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Processar alterações
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
-                        const message = {
-                            id: change.doc.id,
-                            ...change.doc.data()
-                        };
-                        
-                        // Verificar se já processamos esta mensagem
+                        const message = { id: change.doc.id, ...change.doc.data() };
                         if (!messagesSent.has(message.id)) {
-                            // Adicionar mensagem ao DOM
                             addMessageToDOM(message);
                         }
                     }
+                    else if (change.type === 'removed') {
+                        // Remove a mensagem da tela quando for excluída
+                        const messageElement = document.querySelector(`.message[data-message-id="${change.doc.id}"]`);
+                        if (messageElement) {
+                            messageElement.remove();
+                        }
+                    }
                 });
+                
                 
                 // Scroll para a última mensagem
                 scrollToBottom();
