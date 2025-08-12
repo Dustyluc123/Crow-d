@@ -9,8 +9,7 @@ Geral
 2-mudar carrossel 
 
 ///Login
-1- espaço entre os botoes 
-2-contraste 
+1-centralizar
 
 ///Cadastro 
 
