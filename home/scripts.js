@@ -237,60 +237,61 @@ document.addEventListener("DOMContentLoaded", function () {
   // Função para carregar posts
   function loadPosts() {
        if (postsContainer) {
-      postsContainer.innerHTML =
-        '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
+        postsContainer.innerHTML =
+            '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
     }
 
     if (postsListener) {
-      postsListener();
+        postsListener();
     }
 
     postsListener = db
-      .collection("posts")
-      .orderBy("timestamp", "desc")
-      .limit(20)
-      .onSnapshot(
-        (snapshot) => {
-          // Limpa o container apenas na primeira carga
-          if (postsContainer.querySelector('.loading-posts')) {
-            postsContainer.innerHTML = "";
-          }
+        .collection("posts")
+        .orderBy("timestamp", "desc") // Busca os mais novos primeiro, está CORRETO.
+        .limit(20)
+        .onSnapshot(
+            (snapshot) => {
+                // Remove o "Carregando..." apenas na primeira vez.
+                const loadingIndicator = postsContainer.querySelector('.loading-posts');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
 
-          snapshot.docChanges().forEach((change) => {
-            const postData = { id: change.doc.id, ...change.doc.data() };
-            const existingPostElement = postsContainer.querySelector(`.post[data-post-id="${postData.id}"]`);
+                snapshot.docChanges().forEach((change) => {
+                    const postData = { id: change.doc.id, ...change.doc.data() };
+                    const existingPostElement = postsContainer.querySelector(`.post[data-post-id="${postData.id}"]`);
 
-            if (change.type === "added") {
-              // Adiciona o novo post no início do feed
-              const newPostElement = addPostToDOM(postData);
-              postsContainer.insertBefore(newPostElement, postsContainer.firstChild);
+                    if (change.type === "added") {
+                        const newPostElement = addPostToDOM(postData);
+                        
+                        // A MÁGICA ACONTECE AQUI:
+                        // Esta lógica insere o post na posição correta, seja no
+                        // carregamento inicial ou quando um novo post é criado.
+                        const referenceNode = postsContainer.children[change.newIndex];
+                        postsContainer.insertBefore(newPostElement, referenceNode);
+
+                    } else if (change.type === "modified") {
+                        if (existingPostElement) {
+                            const likeCountElement = existingPostElement.querySelector(".like-count");
+                            const commentCountElement = existingPostElement.querySelector(".comment-count");
+                            if (likeCountElement) likeCountElement.textContent = postData.likes || 0;
+                            if (commentCountElement) commentCountElement.textContent = postData.commentCount || 0;
+                        }
+                    } else if (change.type === "removed") {
+                        if (existingPostElement) {
+                            existingPostElement.remove();
+                        }
+                    }
+                });
+            },
+            (error) => {
+                console.error("Erro ao carregar posts:", error);
+                if (postsContainer) {
+                    postsContainer.innerHTML =
+                        '<div class="error-message">Erro ao carregar publicações. Tente novamente mais tarde.</div>';
+                }
             }
-            if (change.type === "modified") {
-              // Se o post já existe, apenas atualiza as contagens
-              if (existingPostElement) {
-                const likeCountElement = existingPostElement.querySelector(".like-count");
-                const commentCountElement = existingPostElement.querySelector(".comment-count");
-                
-                if (likeCountElement) likeCountElement.textContent = postData.likes || 0;
-                if (commentCountElement) commentCountElement.textContent = postData.commentCount || 0;
-              }
-            }
-            if (change.type === "removed") {
-              // Remove o post se ele for deletado
-              if (existingPostElement) {
-                existingPostElement.remove();
-              }
-            }
-          });
-        },
-        (error) => {
-          console.error("Erro ao carregar posts:", error);
-          if (postsContainer) {
-            postsContainer.innerHTML =
-              '<div class="error-message">Erro ao carregar publicações. Tente novamente mais tarde.</div>';
-          }
-        }
-      );
+        );
   }
 
   // Função para criar um novo post
@@ -473,6 +474,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Adicionar post ao container
     postsContainer.appendChild(postClone);
+    
     return postElement; 
   }
 

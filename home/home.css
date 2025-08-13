@@ -360,11 +360,16 @@ body.dark-mode .post-action:hover {
     box-shadow: var(--box-shadow);
     padding: 20px;
     transition: background-color 0.3s, box-shadow 0.3s;
+     /* ADICIONE AS 2 LINHAS ABAIXO */
+    border-bottom: 1px solid var(--light-border);
+    padding-bottom: 25px;
 }
 
 body.dark-mode .post {
     background-color: var(--dark-bg-secondary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      /* ADICIONE ESTA LINHA PARA A COR DA BORDA NO MODO ESCURO */
+    border-bottom-color: var(--dark-border);
 }
 
 .post-header {
