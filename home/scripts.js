@@ -78,6 +78,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const commentTemplate = document.getElementById("comment-template");
   const suggestionTemplate = document.getElementById("suggestion-template");
 
+  const loadingMoreIndicator = document.getElementById("loading-more-indicator"); // <--- ADICIONE ESTA LINHA
+
+  // ...
+
   // Variáveis globais
   let currentUser = null;
   let currentUserProfile = null;
