@@ -1152,3 +1152,33 @@ body.dark-mode .modal-actions {
         transform: translateX(100%);
     }
 }
+
+/* Estilo para o cabeçalho da republicação */
+.repost-header {
+    font-size: 0.9rem;
+    color: var(--light-text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.dark-mode .repost-header {
+    color: var(--dark-text-secondary);
+}
+
+.repost-header i {
+    color: #17bf63; /* Verde do Twitter/X */
+}
+
+/* Contêiner para a postagem original dentro da republicação */
+.original-post-container {
+    border: 1px solid var(--light-border);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-top: 10px;
+}
+
+body.dark-mode .original-post-container {
+    border-color: var(--dark-border);
+}

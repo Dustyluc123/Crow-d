@@ -348,47 +348,64 @@ document.addEventListener("DOMContentLoaded", function () {
   function addPostToDOM(post) {
     if (!postsContainer || !postTemplate) return;
 
-    // Clonar template
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
 
-    // Referências aos elementos do post
+    // Se for uma republicação, adicione o cabeçalho
+    if (post.isRepost) {
+        const repostHeader = document.createElement('div');
+        repostHeader.className = 'repost-header';
+        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
+        
+        // Insere o cabeçalho antes do cabeçalho original do post
+        postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
+
+        // Cria um container para o post original
+        const originalPostContainer = document.createElement('div');
+        originalPostContainer.className = 'original-post-container';
+        
+        // Move o conteúdo original (cabeçalho, texto, etc.) para dentro do container
+        const originalPostHeader = postClone.querySelector('.post-header');
+        const originalPostContent = postClone.querySelector('.post-content');
+        
+        originalPostContainer.appendChild(originalPostHeader);
+        originalPostContainer.appendChild(originalPostContent);
+        
+        // Adiciona o container ao post principal
+        postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
+
+
+        // Modifica os dados do post para mostrar o conteúdo original
+        post.content = post.originalPost.content;
+        post.authorName = post.originalPost.authorName;
+        post.authorPhoto = post.originalPost.authorPhoto;
+        post.timestamp = post.originalPost.timestamp;
+        post.authorId = post.originalPost.authorId;
+    }
+
     const authorPhotoElement = postClone.querySelector(".post-author-photo");
     const authorNameElement = postClone.querySelector(".post-author-name");
     const timestampElement = postClone.querySelector(".post-timestamp");
     const contentElement = postClone.querySelector(".post-text");
-    const mediaElement = postClone.querySelector(".post-media");
     const likeButton = postClone.querySelector(".like-btn");
     const likeCount = postClone.querySelector(".like-count");
     const commentButton = postClone.querySelector(".comment-btn");
     const commentCount = postClone.querySelector(".comment-count");
+    const repostButton = postClone.querySelector(".repost-btn"); // Pega o novo botão
+    const commentsSection = postClone.querySelector(".post-comments");
     const commentInput = postClone.querySelector(".comment-text");
     const sendCommentButton = postClone.querySelector(".send-comment-btn");
     const commentUserPhoto = postClone.querySelector(".comment-user-photo");
-    const commentsSection = postClone.querySelector(".post-comments");
-    const commentsList = postClone.querySelector(".comments-list");
 
-    // Definir IDs
     postElement.dataset.postId = post.id;
     postElement.dataset.authorId = post.authorId;
 
-    // Definir foto do autor
-    if (post.authorPhoto) {
-      authorPhotoElement.src = post.authorPhoto;
-    }
+    if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
+    authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
 
-    // Adicionar evento de clique para redirecionar ao perfil do autor
-    authorPhotoElement.addEventListener("click", function() {
-      redirectToUserProfile(post.authorId);
-    });
-
-    // Definir nome do autor
     authorNameElement.textContent = post.authorName;
-    authorNameElement.addEventListener("click", function() {
-      redirectToUserProfile(post.authorId);
-    });
+    authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
 
-    // Definir timestamp
     if (post.timestamp) {
       const date = post.timestamp instanceof Date ? post.timestamp : post.timestamp.toDate();
       timestampElement.textContent = formatTimestamp(date);
@@ -396,88 +413,54 @@ document.addEventListener("DOMContentLoaded", function () {
       timestampElement.textContent = "Agora mesmo";
     }
 
-    // Definir conteúdo do post
     contentElement.textContent = post.content;
-
-    // Definir mídia (se houver)
-    if (post.mediaURL) {
-      if (post.mediaType === "image") {
-        const img = document.createElement("img");
-        img.src = post.mediaURL;
-        img.alt = "Imagem do post";
-        img.className = "post-image";
-        mediaElement.appendChild(img);
-        mediaElement.style.display = "block";
-      } else if (post.mediaType === "video") {
-        const video = document.createElement("video");
-        video.src = post.mediaURL;
-        video.controls = true;
-        video.className = "post-video";
-        mediaElement.appendChild(video);
-        mediaElement.style.display = "block";
-      }
-    }
-
-    // Definir contagem de likes
     likeCount.textContent = post.likes || 0;
 
-    // Verificar se o usuário atual já curtiu o post
     if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
       likeButton.classList.add("liked");
       likeButton.querySelector("i").className = "fas fa-heart";
     }
 
-    // Definir contagem de comentários
     commentCount.textContent = post.commentCount || 0;
 
-    // Definir foto do usuário atual no campo de comentário
     if (currentUserProfile && currentUserProfile.photoURL) {
       commentUserPhoto.src = currentUserProfile.photoURL;
     }
 
-    // Adicionar event listener para o botão de curtir
-    likeButton.addEventListener("click", function () {
-      toggleLike(post.id);
-    });
+    likeButton.addEventListener("click", () => toggleLike(post.id));
+    
+    // Adiciona o evento de clique ao botão de republicar
+    repostButton.addEventListener("click", () => repostPost(post.id));
 
-    // Adicionar event listener para o botão de comentar
-    commentButton.addEventListener("click", function () {
-      // Alternar visibilidade da seção de comentários
+    commentButton.addEventListener("click", () => {
       commentsSection.classList.toggle("active");
-
-      // Se a seção de comentários estiver visível, carregar comentários
       if (commentsSection.classList.contains("active")) {
         loadComments(post.id);
         commentInput.focus();
       }
     });
 
-    // Adicionar event listener para o campo de comentário
-    commentInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
+    sendCommentButton.addEventListener("click", () => {
         const content = commentInput.value.trim();
         if (content) {
-          addComment(post.id, content);
-          commentInput.value = "";
+            addComment(post.id, content);
+            commentInput.value = "";
         }
-      }
+    });
+    
+    commentInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            const content = commentInput.value.trim();
+            if (content) {
+                addComment(post.id, content);
+                commentInput.value = "";
+            }
+        }
     });
 
-    // Adicionar event listener para o botão de enviar comentário
-    sendCommentButton.addEventListener("click", function () {
-      const content = commentInput.value.trim();
-      if (content) {
-        addComment(post.id, content);
-        commentInput.value = "";
-      }
-    });
-
-    // Adicionar post ao container
-    postsContainer.appendChild(postClone);
-
+    postsContainer.prepend(postClone);
     return postElement; 
-  }
-
+}
   // Função para redirecionar para o perfil do usuário
   function redirectToUserProfile(userId) {
     window.location.href = `../pages/user.html?uid=${userId}`;
@@ -1040,4 +1023,70 @@ document.addEventListener("DOMContentLoaded", function () {
           showToast("Erro ao enviar solicitação. Tente novamente.");
     }
   }
+
+    async function repostPost(postId) {
+        try {
+            if (!currentUser || !currentUserProfile) {
+                showCustomAlert("Você precisa estar logado para republicar.");
+                return;
+            }
+
+            const postRef = db.collection("posts").doc(postId);
+            const postDoc = await postRef.get();
+
+            if (!postDoc.exists) {
+                showCustomAlert("Esta publicação não existe mais.");
+                return;
+            }
+            
+            const originalPostData = postDoc.data();
+
+            // Evitar que alguém republique a própria republicação
+            if (originalPostData.isRepost) {
+                showCustomAlert("Não é possível republicar uma republicação.");
+                return;
+            }
+
+            const repostData = {
+                isRepost: true,
+                originalPostId: postId,
+                originalPost: {
+                    content: originalPostData.content,
+                    authorName: originalPostData.authorName,
+                    authorPhoto: originalPostData.authorPhoto,
+                    authorId: originalPostData.authorId,
+                    timestamp: originalPostData.timestamp,
+                },
+                authorId: currentUser.uid, // O autor da republicação
+                authorName: currentUserProfile.nickname || "Usuário",
+                authorPhoto: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                likes: 0,
+                likedBy: [],
+                commentCount: 0,
+            };
+
+            await db.collection("posts").add(repostData);
+
+            // Notificar o autor original
+            if (originalPostData.authorId !== currentUser.uid) {
+                await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
+                    type: "repost",
+                    postId: postId,
+                    fromUserId: currentUser.uid,
+                    fromUserName: currentUserProfile.nickname || "Usuário",
+                    fromUserPhoto: currentUserProfile.photoURL || null,
+                    content: "republicou sua publicação.",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+            }
+            
+            showToast("Publicação republicada com sucesso!", "success");
+
+        } catch (error) {
+            console.error("Erro ao republicar:", error);
+            showCustomAlert("Ocorreu um erro ao republicar. Tente novamente.");
+        }
+    }
 });
