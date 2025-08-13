@@ -94,6 +94,37 @@ document.addEventListener("DOMContentLoaded", function () {
   let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
   const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
 
+  // Em home/scripts.js
+
+  // --- FUNÇÃO PARA ROLAR E DESTACAR O POST DA URL ---
+  function checkAndScrollToPost() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const postIdFromUrl = urlParams.get('post');
+
+    // Se não houver 'post' na URL, não faz nada
+    if (!postIdFromUrl) return;
+
+    const postElement = document.querySelector(`.post[data-post-id="${postIdFromUrl}"]`);
+    
+    // Se o elemento do post foi encontrado na página
+    if (postElement) {
+      // Rola a tela até o post
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Adiciona um destaque temporário
+      postElement.style.transition = 'background-color 0.5s ease-in-out';
+      postElement.style.backgroundColor = 'rgba(91, 90, 211, 0.2)'; // Um tom de roxo claro
+      
+      setTimeout(() => {
+          postElement.style.backgroundColor = ''; // Remove o destaque após 2.5 segundos
+      }, 2500);
+
+      // Limpa o parâmetro da URL para não ativar novamente ao recarregar a página
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+
   // Função para formatar timestamp
   function formatTimestamp(date) {
     // Verificar se date é um objeto Date válido
@@ -150,6 +181,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Adiciona o detector de scroll à janela
     window.addEventListener('scroll', handleScroll);
 
+    setTimeout(checkAndScrollToPost, 500); 
   } else {
     // Remove o detector de scroll se o usuário deslogar
     window.removeEventListener('scroll', handleScroll);
@@ -317,6 +349,8 @@ async function loadMorePosts() {
 
         lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
 
+        checkAndScrollToPost(); // <--- ADICIONE ESTA LINHA
+
     } catch (error) {
         console.error("Erro ao carregar mais posts:", error);
     } finally {
@@ -383,36 +417,49 @@ function handleScroll() {
     }
   }
 
-  // Função para adicionar um post ao DOM
+  // Em home/scripts.js
+
   function addPostToDOM(post) {
     if (!postsContainer || !postTemplate) return;
 
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
 
-    // Se for uma republicação, adicione o cabeçalho
+    // Se for uma republicação, adicione o cabeçalho e modifique o comportamento
     if (post.isRepost) {
         const repostHeader = document.createElement('div');
         repostHeader.className = 'repost-header';
         repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
         
-        // Insere o cabeçalho antes do cabeçalho original do post
         postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
 
-        // Cria um container para o post original
         const originalPostContainer = document.createElement('div');
         originalPostContainer.className = 'original-post-container';
         
-        // Move o conteúdo original (cabeçalho, texto, etc.) para dentro do container
         const originalPostHeader = postClone.querySelector('.post-header');
         const originalPostContent = postClone.querySelector('.post-content');
         
         originalPostContainer.appendChild(originalPostHeader);
         originalPostContainer.appendChild(originalPostContent);
         
-        // Adiciona o container ao post principal
+        // --- INÍCIO DA ALTERAÇÃO ---
+
+        // 1. Adiciona o evento de clique para redirecionar ao post original
+        originalPostContainer.style.cursor = 'pointer'; // Muda o cursor para indicar que é clicável
+        originalPostContainer.addEventListener('click', () => {
+            // Usa o ID do post original para criar o link
+            window.location.href = `home.html?post=${post.originalPostId}`;
+        });
+
         postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 
+        // 2. Esconde a barra de ações (curtir, comentar, etc.)
+        const postActions = postClone.querySelector('.post-actions');
+        if (postActions) {
+            postActions.style.display = 'none';
+        }
+
+        // --- FIM DA ALTERAÇÃO ---
 
         // Modifica os dados do post para mostrar o conteúdo original
         post.content = post.originalPost.content;
@@ -430,7 +477,7 @@ function handleScroll() {
     const likeCount = postClone.querySelector(".like-count");
     const commentButton = postClone.querySelector(".comment-btn");
     const commentCount = postClone.querySelector(".comment-count");
-    const repostButton = postClone.querySelector(".repost-btn"); // Pega o novo botão
+    const repostButton = postClone.querySelector(".repost-btn");
     const commentsSection = postClone.querySelector(".post-comments");
     const commentInput = postClone.querySelector(".comment-text");
     const sendCommentButton = postClone.querySelector(".send-comment-btn");
@@ -468,7 +515,6 @@ function handleScroll() {
 
     likeButton.addEventListener("click", () => toggleLike(post.id));
     
-    // Adiciona o evento de clique ao botão de republicar
     repostButton.addEventListener("click", () => repostPost(post.id));
 
     commentButton.addEventListener("click", () => {
@@ -497,9 +543,8 @@ function handleScroll() {
         }
     });
 
-    postsContainer.prepend(postClone);
     return postElement; 
-}
+  }
   // Função para redirecionar para o perfil do usuário
   function redirectToUserProfile(userId) {
     window.location.href = `../pages/user.html?uid=${userId}`;
