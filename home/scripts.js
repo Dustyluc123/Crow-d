@@ -93,37 +93,64 @@ document.addEventListener("DOMContentLoaded", function () {
   let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
   let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
   const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
+  let targetPostId = null; // <-- ADICIONE ESTA LINHA
+  // Em home/scripts.js
+
+  // Função para compartilhar um post (copiar o link) - VERSÃO CORRIGIDA
+  async function sharePost(postId) {
+    // Pega a URL da página atual e remove quaisquer parâmetros antigos (? e #)
+    const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+    
+    // Cria a nova URL com o parâmetro do post
+    const postUrl = `${cleanUrl}?post=${postId}`;
+
+    try {
+      // Usa a API de Clipboard do navegador para copiar a URL
+      await navigator.clipboard.writeText(postUrl);
+      
+      // Mostra uma notificação de sucesso
+      showToast("Link da publicação copiado!", "success");
+
+    } catch (error) {
+      console.error("Erro ao copiar o link:", error);
+      
+      // Se a cópia automática falhar, mostra um alerta com o link para cópia manual
+      showCustomAlert(`Não foi possível copiar o link. Copie manualmente: ${postUrl}`);
+    }
+  }
 
   // Em home/scripts.js
 
-  // --- FUNÇÃO PARA ROLAR E DESTACAR O POST DA URL ---
-  function checkAndScrollToPost() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const postIdFromUrl = urlParams.get('post');
+  // --- FUNÇÃO PARA BUSCAR, ROLAR E DESTACAR O POST DA URL ---
+  async function findAndHighlightTargetPost() {
+    // Se não há um post alvo, a função não faz nada
+    if (!targetPostId) return;
 
-    // Se não houver 'post' na URL, não faz nada
-    if (!postIdFromUrl) return;
+    const postElement = document.querySelector(`.post[data-post-id="${targetPostId}"]`);
 
-    const postElement = document.querySelector(`.post[data-post-id="${postIdFromUrl}"]`);
-    
-    // Se o elemento do post foi encontrado na página
     if (postElement) {
+      // --- SUCESSO: O POST FOI ENCONTRADO! ---
       // Rola a tela até o post
       postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
       // Adiciona um destaque temporário
       postElement.style.transition = 'background-color 0.5s ease-in-out';
-      postElement.style.backgroundColor = 'rgba(91, 90, 211, 0.2)'; // Um tom de roxo claro
+      postElement.style.backgroundColor = 'rgba(91, 90, 211, 0.2)'; // Roxo claro
       
       setTimeout(() => {
-          postElement.style.backgroundColor = ''; // Remove o destaque após 2.5 segundos
+          postElement.style.backgroundColor = ''; // Remove o destaque
       }, 2500);
 
-      // Limpa o parâmetro da URL para não ativar novamente ao recarregar a página
+      // Limpa a URL e a variável de alvo para finalizar a operação
       history.replaceState(null, '', window.location.pathname);
+      targetPostId = null;
+
+    } else if (!noMorePosts && !isLoadingMorePosts) {
+      // --- FALHA: O POST AINDA NÃO FOI ENCONTRADO ---
+      // Se ainda não chegamos ao fim e não estamos carregando, carrega mais posts
+      await loadMorePosts();
     }
   }
-
 
   // Função para formatar timestamp
   function formatTimestamp(date) {
@@ -175,20 +202,19 @@ document.addEventListener("DOMContentLoaded", function () {
     currentUser = user;
     await loadUserProfile(user.uid);
     
-    loadInitialPosts(); // <-- ALTERADO AQUI
+    // Captura o ID do post da URL e armazena na variável global
+    const urlParams = new URLSearchParams(window.location.search);
+    targetPostId = urlParams.get('post');
+
+    loadInitialPosts();
     loadSuggestions();
 
-    // Adiciona o detector de scroll à janela
     window.addEventListener('scroll', handleScroll);
-
-    setTimeout(checkAndScrollToPost, 500); 
   } else {
-    // Remove o detector de scroll se o usuário deslogar
     window.removeEventListener('scroll', handleScroll);
     window.location.href = "../login/login.html";
   }
 });
-
   // Event listener para o botão de logout
   if (logoutButton) {
     logoutButton.addEventListener("click", function (e) {
@@ -318,6 +344,7 @@ function loadInitialPosts() {
       } else {
           noMorePosts = true;
       }
+      findAndHighlightTargetPost(); // <--- ADICIONE ESTA LINHA
   });
 }
 
@@ -349,7 +376,8 @@ async function loadMorePosts() {
 
         lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
 
-        checkAndScrollToPost(); // <--- ADICIONE ESTA LINHA
+       
+        findAndHighlightTargetPost(); // <--- ADICIONE ESTA LINHA
 
     } catch (error) {
         console.error("Erro ao carregar mais posts:", error);
@@ -478,6 +506,7 @@ function handleScroll() {
     const commentButton = postClone.querySelector(".comment-btn");
     const commentCount = postClone.querySelector(".comment-count");
     const repostButton = postClone.querySelector(".repost-btn");
+    const shareButton = postClone.querySelector(".share-btn");
     const commentsSection = postClone.querySelector(".post-comments");
     const commentInput = postClone.querySelector(".comment-text");
     const sendCommentButton = postClone.querySelector(".send-comment-btn");
@@ -516,6 +545,8 @@ function handleScroll() {
     likeButton.addEventListener("click", () => toggleLike(post.id));
     
     repostButton.addEventListener("click", () => repostPost(post.id));
+
+    shareButton.addEventListener("click", () => sharePost(post.id)); 
 
     commentButton.addEventListener("click", () => {
       commentsSection.classList.toggle("active");
