@@ -84,6 +84,11 @@ document.addEventListener("DOMContentLoaded", function () {
   let postsListener = null;
   let likeInProgress = {}; // Controle de likes em andamento
   let commentLikeInProgress = {}; // Controle de likes em comentários
+  // --- VARIÁVEIS PARA O SCROLL INFINITO ---
+  let lastVisiblePost = null; // Guarda o último post carregado
+  let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
+  let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
+  const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
 
   // Função para formatar timestamp
   function formatTimestamp(date) {
@@ -129,24 +134,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Verificar autenticação do usuário
-  auth.onAuthStateChanged(async function (user) {
-    if (user) {
-      // Usuário está logado
-      currentUser = user;
+ // Verificar autenticação do usuário
+ auth.onAuthStateChanged(async function (user) {
+  if (user) {
+    currentUser = user;
+    await loadUserProfile(user.uid);
+    
+    loadInitialPosts(); // <-- ALTERADO AQUI
+    loadSuggestions();
 
-      // Carregar perfil do usuário
-      await loadUserProfile(user.uid);
+    // Adiciona o detector de scroll à janela
+    window.addEventListener('scroll', handleScroll);
 
-      // Carregar posts
-      loadPosts();
-
-      // Carregar sugestões
-      loadSuggestions();
-    } else {
-      // Usuário não está logado, redirecionar para login
-      window.location.href = "../login/login.html";
-    }
-  });
+  } else {
+    // Remove o detector de scroll se o usuário deslogar
+    window.removeEventListener('scroll', handleScroll);
+    window.location.href = "../login/login.html";
+  }
+});
 
   // Event listener para o botão de logout
   if (logoutButton) {
@@ -235,65 +240,95 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Função para carregar posts
-  function loadPosts() {
-       if (postsContainer) {
-        postsContainer.innerHTML =
-            '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
-    }
-
-    if (postsListener) {
-        postsListener();
-    }
-
-    postsListener = db
-        .collection("posts")
-        .orderBy("timestamp", "desc") // Busca os mais novos primeiro, está CORRETO.
-        .limit(100)
-        .onSnapshot(
-            (snapshot) => {
-                // Remove o "Carregando..." apenas na primeira vez.
-                const loadingIndicator = postsContainer.querySelector('.loading-posts');
-                if (loadingIndicator) {
-                    loadingIndicator.remove();
-                }
-
-                snapshot.docChanges().forEach((change) => {
-                    const postData = { id: change.doc.id, ...change.doc.data() };
-                    const existingPostElement = postsContainer.querySelector(`.post[data-post-id="${postData.id}"]`);
-
-                    if (change.type === "added") {
-                        const newPostElement = addPostToDOM(postData);
-                        
-                        // A MÁGICA ACONTECE AQUI:
-                        // Esta lógica insere o post na posição correta, seja no
-                        // carregamento inicial ou quando um novo post é criado.
-                        const referenceNode = postsContainer.children[change.newIndex];
-                        postsContainer.insertBefore(newPostElement, referenceNode);
-
-                    } else if (change.type === "modified") {
-                        if (existingPostElement) {
-                            const likeCountElement = existingPostElement.querySelector(".like-count");
-                            const commentCountElement = existingPostElement.querySelector(".comment-count");
-                            if (likeCountElement) likeCountElement.textContent = postData.likes || 0;
-                            if (commentCountElement) commentCountElement.textContent = postData.commentCount || 0;
-                        }
-                    } else if (change.type === "removed") {
-                        if (existingPostElement) {
-                            existingPostElement.remove();
-                        }
-                    }
-                });
-            },
-            (error) => {
-                console.error("Erro ao carregar posts:", error);
-                if (postsContainer) {
-                    postsContainer.innerHTML =
-                        '<div class="error-message">Erro ao carregar publicações. Tente novamente mais tarde.</div>';
-                }
-            }
-        );
+  // --- FUNÇÃO PARA CARREGAR OS POSTS INICIAIS ---
+  // --- FUNÇÃO PARA CARREGAR OS POSTS INICIAIS (VERSÃO CORRIGIDA) ---
+function loadInitialPosts() {
+  if (postsContainer) {
+      postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
   }
 
+  const query = db.collection("posts").orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
+
+  // Este listener agora vai lidar tanto com a carga inicial quanto com os novos posts
+  postsListener = query.onSnapshot((snapshot) => {
+      const loadingIndicator = postsContainer.querySelector('.loading-posts');
+      if (loadingIndicator) {
+          loadingIndicator.remove(); // Remove o "Carregando..."
+      }
+
+      snapshot.docChanges().forEach((change) => {
+          const postData = { id: change.doc.id, ...change.doc.data() };
+          const existingPostElement = document.querySelector(`.post[data-post-id="${postData.id}"]`);
+
+          if (change.type === "added") {
+              if (existingPostElement) return; // Evita adicionar duplicatas
+
+              const newPostElement = addPostToDOM(postData);
+
+              // **AQUI ESTÁ A CORREÇÃO PRINCIPAL:**
+              // Se o post é antigo (não é o primeiro da lista), adiciona no final.
+              // Se for um post novo (inserido no topo), adiciona no topo.
+              if (change.newIndex > 0) {
+                  postsContainer.appendChild(newPostElement); // Posts da carga inicial vão para o final
+              } else {
+                  postsContainer.insertBefore(newPostElement, postsContainer.firstChild); // Posts novos vão para o topo
+              }
+          }
+      });
+
+      // Guarda o último post da leva inicial para a paginação
+      if (!snapshot.empty) {
+          lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+      } else {
+          noMorePosts = true;
+      }
+  });
+}
+
+// --- FUNÇÃO PARA CARREGAR MAIS POSTS AO ROLAR A PÁGINA ---
+async function loadMorePosts() {
+    if (noMorePosts || isLoadingMorePosts) return;
+
+    isLoadingMorePosts = true;
+    loadingMoreIndicator.style.display = 'block';
+
+    try {
+        const query = db.collection("posts")
+            .orderBy("timestamp", "desc")
+            .startAfter(lastVisiblePost)
+            .limit(POSTS_PER_PAGE);
+        
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            noMorePosts = true;
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const postData = { id: doc.id, ...doc.data() };
+            const postElement = addPostToDOM(postData);
+            postsContainer.appendChild(postElement); // Adiciona os posts antigos no final
+        });
+
+        lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+
+    } catch (error) {
+        console.error("Erro ao carregar mais posts:", error);
+    } finally {
+        isLoadingMorePosts = false;
+        loadingMoreIndicator.style.display = 'none';
+    }
+}
+
+// --- FUNÇÃO QUE DETECTA O SCROLL DO USUÁRIO ---
+function handleScroll() {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+    // Se o usuário rolou até 80% do final da página, carrega mais
+    if (scrollTop + clientHeight >= scrollHeight * 0.8) {
+        loadMorePosts();
+    }
+}
   // Função para criar um novo post
   async function createPost(content) {
     try {
