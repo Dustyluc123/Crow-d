@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
     postsListener = db
         .collection("posts")
         .orderBy("timestamp", "desc") // Busca os mais novos primeiro, está CORRETO.
-        .limit(20)
+        .limit(100)
         .onSnapshot(
             (snapshot) => {
                 // Remove o "Carregando..." apenas na primeira vez.
@@ -474,7 +474,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Adicionar post ao container
     postsContainer.appendChild(postClone);
-    
+
     return postElement; 
   }
 
