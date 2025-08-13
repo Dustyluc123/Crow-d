@@ -1003,3 +1003,147 @@ body.dark-mode .error-message {
     gap: 10px;
     margin-bottom: 15px; /* << ADICIONE ESTA LINHA */
 }
+/* Em home/home.css */
+
+/* Estilos para o Modal de Alerta Customizado */
+.modal {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: var(--light-text);
+    color: var(--dark-text);
+    margin: auto;
+    padding: 0;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    animation: fadeIn 0.3s;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--light-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.close-modal {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    padding: 15px 20px;
+    text-align: right;
+    border-top: 1px solid var(--light-border);
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+/* Dark Mode para o Modal */
+body.dark-mode .modal-content {
+    background-color: var(--dark-bg-secondary);
+    color: var(--light-text);
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-actions {
+    border-color: var(--dark-border);
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+#toast-container {
+    position: fixed;
+    top: 80px; /* Posição abaixo do header */
+    right: 20px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: var(--dark-bg-secondary);
+    color: var(--light-text);
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(100%);
+    /* A notificação entra, fica por 4s, e sai em 0.5s */
+    animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards;
+}
+
+/* Tipos de Toast para diferentes mensagens */
+.toast.success {
+    background-color: #28a745; /* Verde para sucesso */
+}
+
+.toast.error {
+    background-color: #dc3545; /* Vermelho para erro */
+}
+
+.toast.info {
+    background-color: #17a2b8; /* Azul para informação */
+}
+
+.toast i {
+    font-size: 1.2rem;
+}
+
+/* Animações de entrada e saída */
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}

@@ -9,24 +9,56 @@ document.addEventListener("DOMContentLoaded", function () {
     messagingSenderId: "1066633833169",
     appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0",
   };
-  function showCustomAlert(message) {
+  function showCustomAlert(message, title = "Aviso") {
     const modal = document.getElementById('customAlertModal');
-    const messageEl = document.getElementById('customAlertMessage');
-    const closeBtn = document.getElementById('customAlertClose');
-  
-    messageEl.textContent = message;
-    modal.style.display = 'block';
-  
-    closeBtn.onclick = function() {
-      modal.style.display = 'none';
+    const modalTitle = document.getElementById('customAlertTitle');
+    const modalMessage = document.getElementById('customAlertMessage');
+    const closeBtn = document.getElementById('customAlertCloseBtn');
+    const okBtn = document.getElementById('customAlertOkBtn');
+
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modal.style.display = 'flex';
+
+    function closeModal() {
+        modal.style.display = 'none';
     }
+
+    closeBtn.onclick = closeModal;
+    okBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
   }
-  
-  // Para usar, substitua:
-  // alert('Sua mensagem aqui');
-  // Por:
-  // showCustomAlert('Sua mensagem aqui');
-  // Inicializar Firebase
+  // ... (logo após a configuração do Firebase)
+
+  function showToast(message, type = 'info') { // type pode ser 'success', 'error', ou 'info'
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let iconClass = 'fas fa-info-circle';
+    if (type === 'success') {
+        iconClass = 'fas fa-check-circle';
+    } else if (type === 'error') {
+        iconClass = 'fas fa-exclamation-circle';
+    }
+
+    toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    // Remove a notificação da tela após 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+  }
+
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
@@ -126,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch((error) => {
           console.error("Erro ao fazer logout:", error);
-          alert("Erro ao fazer logout. Tente novamente.");
+          showCustomAlert("Erro ao fazer logout. Tente novamente.");
         });
     });
   }
@@ -204,46 +236,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Função para carregar posts
   function loadPosts() {
-    // Limpar container de posts
-    if (postsContainer) {
+       if (postsContainer) {
       postsContainer.innerHTML =
         '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
     }
 
-    // Remover listener anterior se existir
     if (postsListener) {
       postsListener();
     }
 
-    // Criar listener para posts em tempo real
     postsListener = db
       .collection("posts")
       .orderBy("timestamp", "desc")
       .limit(20)
       .onSnapshot(
         (snapshot) => {
-          // Limpar container de posts
-          if (postsContainer) {
+          // Limpa o container apenas na primeira carga
+          if (postsContainer.querySelector('.loading-posts')) {
             postsContainer.innerHTML = "";
           }
 
-          // Verificar se há posts
-          if (snapshot.empty) {
-            if (postsContainer) {
-              postsContainer.innerHTML =
-                '<div class="no-posts">Nenhuma publicação encontrada. Seja o primeiro a publicar!</div>';
+          snapshot.docChanges().forEach((change) => {
+            const postData = { id: change.doc.id, ...change.doc.data() };
+            const existingPostElement = postsContainer.querySelector(`.post[data-post-id="${postData.id}"]`);
+
+            if (change.type === "added") {
+              // Adiciona o novo post no início do feed
+              const newPostElement = addPostToDOM(postData);
+              postsContainer.insertBefore(newPostElement, postsContainer.firstChild);
             }
-            return;
-          }
-
-          // Adicionar cada post ao DOM
-          snapshot.forEach((doc) => {
-            const post = {
-              id: doc.id,
-              ...doc.data(),
-            };
-
-            addPostToDOM(post);
+            if (change.type === "modified") {
+              // Se o post já existe, apenas atualiza as contagens
+              if (existingPostElement) {
+                const likeCountElement = existingPostElement.querySelector(".like-count");
+                const commentCountElement = existingPostElement.querySelector(".comment-count");
+                
+                if (likeCountElement) likeCountElement.textContent = postData.likes || 0;
+                if (commentCountElement) commentCountElement.textContent = postData.commentCount || 0;
+              }
+            }
+            if (change.type === "removed") {
+              // Remove o post se ele for deletado
+              if (existingPostElement) {
+                existingPostElement.remove();
+              }
+            }
           });
         },
         (error) => {
@@ -261,7 +298,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Verificar se o usuário está autenticado
       if (!currentUser || !currentUserProfile) {
-        alert("Você precisa estar logado para publicar.");
+            showCustomAlert("Você precisa estar logado para publicar.");
         return;
       }
 
@@ -296,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log("Post criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar post:", error);
-      alert("Erro ao criar publicação. Tente novamente.");
+          showCustomAlert("Erro ao criar publicação. Tente novamente.");
 
       // Reativar botão de publicar
       if (postButton) {
@@ -436,6 +473,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Adicionar post ao container
     postsContainer.appendChild(postClone);
+    return postElement; 
   }
 
   // Função para redirecionar para o perfil do usuário
@@ -456,7 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Verificar se o usuário está autenticado
       if (!currentUser) {
-        alert("Você precisa estar logado para curtir.");
+            showCustomAlert("Você precisa estar logado para curtir.");
         likeInProgress[postId] = false;
         return;
       }
@@ -653,7 +691,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Verificar se o usuário está autenticado
       if (!currentUser || !currentUserProfile) {
-        alert("Você precisa estar logado para comentar.");
+            showCustomAlert("Você precisa estar logado para comentar.");
         return;
       }
 
@@ -709,7 +747,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     } catch (error) {
       console.error("Erro ao adicionar comentário:", error);
-      alert("Erro ao adicionar comentário. Tente novamente.");
+          showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
     }
   }
 
@@ -727,7 +765,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Verificar se o usuário está autenticado
       if (!currentUser) {
-        alert("Você precisa estar logado para curtir.");
+            showCustomAlert("Você precisa estar logado para curtir.");
         commentLikeInProgress[commentKey] = false;
         return;
       }
@@ -941,7 +979,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       // Verificar se é o próprio usuário
       if (userId === currentUser.uid) {
-        alert("Você não pode adicionar a si mesmo como amigo.");
+            showToast("Você não pode adicionar a si mesmo como amigo.");
         return;
       }
 
@@ -954,7 +992,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .get();
 
       if (friendDoc.exists) {
-        alert("Este usuário já é seu amigo.");
+            showToast("Este usuário já é seu amigo.");
         return;
       }
 
@@ -968,7 +1006,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .get();
 
       if (!requestsSnapshot.empty) {
-        alert("Você já enviou uma solicitação de amizade para este usuário.");
+            showToast("Você já enviou uma solicitação de amizade para este usuário.");
         return;
       }
 
@@ -994,10 +1032,10 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       // Exibir mensagem de sucesso
-      alert("Solicitação de amizade enviada com sucesso!");
+          showToast("Solicitação de amizade enviada com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar solicitação de amizade:", error);
-      alert("Erro ao enviar solicitação. Tente novamente.");
+          showToast("Erro ao enviar solicitação. Tente novamente.");
     }
   }
 });

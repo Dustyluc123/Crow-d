@@ -9,6 +9,53 @@ document.addEventListener('DOMContentLoaded', function() {
         messagingSenderId: "1066633833169",
         appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
     };
+    function showCustomAlert(message, title = "Aviso") {
+    const modal = document.getElementById('customAlertModal');
+    const modalTitle = document.getElementById('customAlertTitle');
+    const modalMessage = document.getElementById('customAlertMessage');
+    const closeBtn = document.getElementById('customAlertCloseBtn');
+    const okBtn = document.getElementById('customAlertOkBtn');
+
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modal.style.display = 'flex';
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    closeBtn.onclick = closeModal;
+    okBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+  }
+   function showToast(message, type = 'info') { // type pode ser 'success', 'error', ou 'info'
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let iconClass = 'fas fa-info-circle';
+    if (type === 'success') {
+        iconClass = 'fas fa-check-circle';
+    } else if (type === 'error') {
+        iconClass = 'fas fa-exclamation-circle';
+    }
+
+    toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    // Remove a notificação da tela após 5 segundos
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+  }
 
     // Inicializar Firebase
     if (!firebase.apps.length) {
@@ -81,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => {
                     console.error('Erro ao fazer logout:', error);
-                    alert('Erro ao fazer logout. Tente novamente.');
+                    showToast('Erro ao fazer logout. Tente novamente.');
                 });
         });
     }
@@ -114,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const friendEmail = document.getElementById('friendEmail').value.trim();
             
             if (!friendEmail) {
-                alert('Por favor, digite um e-mail ou nome de usuário válido.');
+                showToast('Por favor, digite um e-mail ou nome de usuário válido.');
                 return;
             }
             
@@ -133,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         .get();
                     
                     if (usersSnapshot2.empty) {
-                        alert('Usuário não encontrado. Verifique o e-mail ou nome de usuário.');
+                 showToast('Usuário não encontrado. Verifique o e-mail ou nome de usuário.');
                         return;
                     }
                     
@@ -147,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Erro ao buscar usuário:', error);
-                alert('Erro ao buscar usuário. Tente novamente.');
+                showToast('Erro ao buscar usuário. Tente novamente.');
             }
         });
     }
@@ -288,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const userDoc = await db.collection('users').doc(fromUserId).get();
             
             if (!userDoc.exists) {
-                alert('Usuário não encontrado.');
+            showToast('Usuário não encontrado.');
                 return;
             }
             
@@ -358,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Solicitação de amizade aceita com sucesso');
         } catch (error) {
             console.error('Erro ao aceitar solicitação de amizade:', error);
-            alert('Erro ao aceitar solicitação. Tente novamente.');
+            showToast('Erro ao aceitar solicitação. Tente novamente.');
         }
     }
 
@@ -387,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Solicitação de amizade recusada com sucesso');
         } catch (error) {
             console.error('Erro ao recusar solicitação de amizade:', error);
-            alert('Erro ao recusar solicitação. Tente novamente.');
+            showToast('Erro ao recusar solicitação. Tente novamente.');
         }
     }
 
@@ -396,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             // Verificar se é o próprio usuário
             if (userId === currentUser.uid) {
-                alert('Você não pode adicionar a si mesmo como amigo.');
+                showToast('Você não pode adicionar a si mesmo como amigo.');
                 return;
             }
             
@@ -405,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .collection('friends').doc(userId).get();
             
             if (friendDoc.exists) {
-                alert('Este usuário já é seu amigo.');
+                showToast('Este usuário já é seu amigo.');
                 return;
             }
             
@@ -417,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .get();
             
             if (!requestsSnapshot.empty) {
-                alert('Você já enviou uma solicitação de amizade para este usuário.');
+                showToast('Você já enviou uma solicitação de amizade para este usuário.');
                 return;
             }
             
@@ -451,10 +498,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('friendEmail').value = '';
             
             // Exibir mensagem de sucesso
-            alert('Solicitação de amizade enviada com sucesso!');
+            showToast('Solicitação de amizade enviada com sucesso!');
         } catch (error) {
             console.error('Erro ao enviar solicitação de amizade:', error);
-            alert('Erro ao enviar solicitação. Tente novamente.');
+            showToast('Erro ao enviar solicitação. Tente novamente.');
         }
     }
 
