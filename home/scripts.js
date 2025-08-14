@@ -79,7 +79,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const suggestionTemplate = document.getElementById("suggestion-template");
 
   const loadingMoreIndicator = document.getElementById("loading-more-indicator"); // <--- ADICIONE ESTA LINHA
-
+const feedView = document.getElementById("feed-view");
+const singlePostView = document.getElementById("single-post-view");
+const focusedPostContainer = document.getElementById("focused-post-container");
+const backToFeedBtn = document.getElementById("back-to-feed-btn");
   // ...
 
   // Variáveis globais
@@ -199,11 +202,25 @@ document.addEventListener("DOMContentLoaded", function () {
  // Verificar autenticação do usuário
  auth.onAuthStateChanged(async function (user) {
   if (user) {
+
+    
     currentUser = user;
     await loadUserProfile(user.uid);
-    
+
+    backToFeedBtn.addEventListener('click', hideSinglePostView);    
     // Captura o ID do post da URL e armazena na variável global
     const urlParams = new URLSearchParams(window.location.search);
+    const postIdFromUrl = urlParams.get('post');
+
+    if (postIdFromUrl) {
+            // SE a URL contiver um ID de post (ex: de um link compartilhado)
+            // ele chama diretamente a visualização única.
+            showSinglePostView(postIdFromUrl);
+        } else {
+            // SENÃO, ele carrega o feed principal, como fazia antes.
+            loadInitialPosts();
+        }
+
     targetPostId = urlParams.get('post');
 
     loadInitialPosts();
@@ -445,13 +462,73 @@ function handleScroll() {
     }
   }
 
-  // Em home/scripts.js
+async function showSinglePostView(postId) {
+    // 1. Esconde o feed e mostra a área do post único
+    feedView.style.display = 'none';
+    singlePostView.style.display = 'block';
+    window.scrollTo(0, 0); // Leva o usuário para o topo da página
 
-  function addPostToDOM(post) {
+    // 2. Atualiza a URL do navegador
+    const url = new URL(window.location);
+    url.searchParams.set('post', postId);
+    history.pushState({}, '', url); // Ex: muda para home.html?post=ID_DO_POST
+
+    // 3. Busca o post específico no Firestore
+    focusedPostContainer.innerHTML = '<div class="loading-posts">...</div>'; // Mostra "Carregando..."
+    const postRef = db.collection("posts").doc(postId);
+    const doc = await postRef.get();
+
+    if (doc.exists) {
+        // 4. Se o post existe, ele o "desenha" na tela
+        const postData = { id: doc.id, ...doc.data() };
+        focusedPostContainer.innerHTML = '';
+        
+        // 5. Reutiliza a função addPostToDOM para criar o elemento
+        const postElement = addPostToDOM(postData, true); // O 'true' avisa para não adicionar o evento de clique de novo
+        
+        // 6. Abre a seção de comentários automaticamente
+        const commentsSection = postElement.querySelector('.post-comments');
+        commentsSection.classList.add('active');
+        loadComments(postId);
+
+        focusedPostContainer.appendChild(postElement);
+    } else {
+        // Mostra uma mensagem de erro se o post não for encontrado
+        focusedPostContainer.innerHTML = '<div class="error-message">...</div>';
+    }
+}
+function hideSinglePostView() {
+    // 1. Faz o processo inverso: esconde a área do post e mostra o feed
+    singlePostView.style.display = 'none';
+    feedView.style.display = 'block';
+    focusedPostContainer.innerHTML = ''; // Limpa o contêiner para a próxima vez
+
+    // 2. Limpa a URL, removendo o parâmetro '?post=...'
+    const url = new URL(window.location);
+    url.searchParams.delete('post');
+    history.pushState({}, '', url);
+}
+
+  function addPostToDOM(post, isSingleView = false) {
+
+    
     if (!postsContainer || !postTemplate) return;
 
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
+
+    
+    if (!isSingleView && !post.isRepost) {
+        postElement.style.cursor = 'pointer'; // O mouse vira uma "mãozinha"
+        postElement.addEventListener('click', (e) => {
+            // Impede que a ação dispare ao clicar em botões, links, etc.
+            if (e.target.closest('button, a, .post-actions')) {
+                return;
+            }
+            // Chama a função para mostrar a visualização focada
+            showSinglePostView(post.id);
+        });
+    }
 
     // Se for uma republicação, adicione o cabeçalho e modifique o comportamento
     if (post.isRepost) {
