@@ -118,7 +118,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Em home/scripts.js
+
+// Nova função para desligar o listener do feed de forma segura
+function detachPostsListener() {
+    if (postsListener) {
+        postsListener(); // Executa a função de 'unsubscribe' retornada pelo onSnapshot
+        postsListener = null; // Limpa a variável
+    }
+}
 
   // --- FUNÇÃO PARA BUSCAR, ROLAR E DESTACAR O POST DA URL ---
 
@@ -435,7 +442,7 @@ backToFeedBtn.addEventListener('click', hideSinglePostView);
 // Em home/scripts.js
 
 async function showSinglePostView(postId) {
-    // 1. Esconde o feed e mostra a área do post único
+    detachPostsListener();
     feedView.style.display = 'none';
     singlePostView.style.display = 'block';
     window.scrollTo(0, 0);
@@ -484,6 +491,7 @@ async function showSinglePostView(postId) {
 }
 function hideSinglePostView() {
     // 1. Faz o processo inverso: esconde a área do post e mostra o feed
+    
     singlePostView.style.display = 'none';
     feedView.style.display = 'block';
     focusedPostContainer.innerHTML = ''; // Limpa o contêiner para a próxima vez
@@ -492,6 +500,7 @@ function hideSinglePostView() {
     const url = new URL(window.location);
     url.searchParams.delete('post');
     history.pushState({}, '', url);
+    loadInitialPosts();
 }
 
   function addPostToDOM(post, isSingleView = false){

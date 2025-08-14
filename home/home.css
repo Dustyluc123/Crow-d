@@ -1275,3 +1275,12 @@ body.dark-mode #focused-post-container .error-message {
 #focused-post-container .loading-posts i {
     margin-right: 10px;
 }
+/* Adicione este código ao seu home.css */
+
+.central-content {
+    flex: 1; /* Faz esta coluna central crescer e ocupar o espaço disponível */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0; /* Impede que o conteúdo flexível transborde */
+}

@@ -29,12 +29,13 @@
             <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
         </div>
     </header>
-<div id="feed-view"><div class="main-container">
+
+    <div class="main-container">
+
         <aside class="sidebar left-sidebar">
             <div class="sidebar-section">
                 <h3>Atalhos Rápidos</h3>
                 <ul>
-                   
                     <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
                     <li><a href="../pages/notificacao.html"><i class="fas fa-bell"></i> Notificação</a></li>
                     <li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
@@ -48,82 +49,59 @@
             </div>
         </aside>
 
-        <main class="feed">
-            <div class="create-post">
-                <div class="post-input">
-                    <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
-                    <input type="text" placeholder="O que você está pensando?" id="post-content">
-                </div>
-                <div class="post-actions">
-                    <button class="post-btn" id="publish-btn">Publicar</button>
-                </div>
+        <div class="central-content">
+            <div id="feed-view">
+                <main class="feed">
+                    <div class="create-post">
+                        <div class="post-input">
+                            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
+                            <input type="text" placeholder="O que você está pensando?" id="post-content">
+                        </div>
+                        <div class="post-actions">
+                            <button class="post-btn" id="publish-btn">Publicar</button>
+                        </div>
+                    </div>
+
+                    <div class="posts" id="posts-container">
+                        <div class="loading-posts">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
+                        </div>
+                        <div id="loading-more-indicator" style="display: none; text-align: center; padding: 20px;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </div>
+                    </div>
+                </main>
             </div>
 
-            <div class="posts" id="posts-container">
-                <div class="loading-posts">
-                    <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
+            <div id="single-post-view" style="display: none;">
+                <div class="single-post-header">
+                    <button id="back-to-feed-btn">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Feed
+                    </button>
                 </div>
-                <div id="loading-more-indicator" style="display: none; text-align: center; padding: 20px;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </div>
+                <div id="focused-post-container">
+                    </div>
             </div>
-        </main>
+        </div>
 
         <aside class="sidebar right-sidebar">
             <div class="sidebar-section">
                 <h3>Sugestões para Seguir</h3>
                 <p class="section-subtitle">Baseado nos seus hobbies</p>
-                
                 <div id="suggestions-container">
                     <div class="loading-suggestions">
                         <i class="fas fa-spinner fa-spin"></i> Carregando sugestões...
                     </div>
                 </div>
-                
                 <a href="../friends/amigos.html" class="see-more">Ver mais</a>
             </div>
-            
             <div class="sidebar-section">
                 <h3>Eventos Próximos</h3>
-                <div class="event">
-                    <div class="event-date">
-                        <span class="day">15</span>
-                        <span class="month">Mai</span>
-                    </div>
-                    <div class="event-info">
-                        <h4>Feira de Ciências</h4>
-                        <p><i class="fas fa-map-marker-alt"></i> Auditório Principal</p>
-                    </div>
                 </div>
-                
-                <div class="event">
-                    <div class="event-date">
-                        <span class="day">22</span>
-                        <span class="month">Mai</span>
-                    </div>
-                    <div class="event-info">
-                        <h4>Torneio de Xadrez</h4>
-                        <p><i class="fas fa-map-marker-alt"></i> Sala de Jogos</p>
-                    </div>
-                </div>
-            </div>
         </aside>
-        </div>
-    </div>
-    </div> <div id="single-post-view" style="display: none;">
-        <div class="single-post-header">
-            <button id="back-to-feed-btn">
-                <i class="fas fa-arrow-left"></i> Voltar ao Feed
-            </button>
-        </div>
-        
-        <div id="focused-post-container">
-            </div>
-    </div>
-    <aside class="sidebar-right">
 
-    
-    <template id="post-template">
+    </div> <template id="post-template">
+    ...
         <div class="post">
             <div class="post-header">
                 <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
