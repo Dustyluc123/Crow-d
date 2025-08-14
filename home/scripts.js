@@ -513,13 +513,14 @@ function hideSinglePostView() {
 
     
     if (!isSingleView && !post.isRepost) {
-        postElement.style.cursor = 'pointer'; // O mouse vira uma "mãozinha"
+        postElement.style.cursor = 'pointer';
         postElement.addEventListener('click', (e) => {
-            // Impede que a ação dispare ao clicar em botões, links, etc.
-            if (e.target.closest('button, a, .post-actions')) {
+            // AQUI ESTÁ A MUDANÇA: Adicionamos '.post-comments' à lista para ignorar
+            // Agora, cliques nos botões, links, barra de ações E na seção de comentários não levarão ao post único.
+            if (e.target.closest('button, a, .post-actions, .post-comments')) {
                 return;
             }
-            // Chama a função para mostrar a visualização focada
+            
             showSinglePostView(post.id);
         });
     }
@@ -577,6 +578,7 @@ function hideSinglePostView() {
     const commentButton = postClone.querySelector(".comment-btn");
     const commentCount = postClone.querySelector(".comment-count");
     const repostButton = postClone.querySelector(".repost-btn");
+    const saveButton = postClone.querySelector(".save-btn");
     const shareButton = postClone.querySelector(".share-btn");
     const commentsSection = postClone.querySelector(".post-comments");
     const commentInput = postClone.querySelector(".comment-text");
@@ -585,6 +587,12 @@ function hideSinglePostView() {
 
     postElement.dataset.postId = post.id;
     postElement.dataset.authorId = post.authorId;
+    postElement.dataset.originalPostId = post.originalPostId;
+
+    if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
+        saveButton.classList.add("saved");
+        saveButton.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
+    }
 
 if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
     repostButton.classList.add("reposted");
@@ -620,10 +628,8 @@ if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
     }
 
     likeButton.addEventListener("click", () => toggleLike(post.id));
-    
-
+    saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
     repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
-
     shareButton.addEventListener("click", () => sharePost(post.id)); 
 
  
@@ -662,6 +668,49 @@ commentButton.addEventListener("click", () => {
   function redirectToUserProfile(userId) {
     window.location.href = `../pages/user.html?uid=${userId}`;
   }
+  async function toggleSavePost(postId, buttonElement) {
+    if (!currentUser) {
+        showCustomAlert("Você precisa estar logado para salvar publicações.");
+        return;
+    }
+
+    const postRef = db.collection("posts").doc(postId);
+    try {
+        const doc = await postRef.get();
+        if (!doc.exists) return;
+
+        const postData = doc.data();
+        const savedBy = postData.savedBy || [];
+        const isSaved = savedBy.includes(currentUser.uid);
+
+        const saveButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .save-btn`);
+
+        if (isSaved) {
+            // --- AÇÃO: REMOVER DOS SALVOS ---
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+            if (saveButtonUI) {
+                saveButtonUI.classList.remove('saved');
+                saveButtonUI.innerHTML = `<i class="far fa-bookmark"></i> Salvar`;
+            }
+            
+        } else {
+            // --- AÇÃO: SALVAR O POST ---
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            if (saveButtonUI) {
+                saveButtonUI.classList.add('saved');
+                saveButtonUI.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
+            }
+         
+        }
+    } catch (error) {
+        console.error("Erro ao salvar/remover post:", error);
+        showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
+    }
+}
 
   // Função para alternar curtida em um post
   async function toggleLike(postId) {
@@ -1232,7 +1281,7 @@ function loadComments(postId, commentsListElement) {
 
 async function toggleRepost(postId, buttonElement) {
     try {
-        // 1. VERIFICAÇÕES INICIAIS
+        // 1. VERIFICAÇÕES INICIAIS DE SEGURANÇA
         if (!currentUser || !currentUserProfile) {
             showCustomAlert("Você precisa estar logado para republicar.");
             return;
@@ -1264,7 +1313,7 @@ async function toggleRepost(postId, buttonElement) {
         if (hasReposted) {
             // --- AÇÃO: DESFAZER REPUBLICAÇÃO ---
 
-            // Encontra a republicação específica feita por este usuário para deletá-la
+            // Encontra e deleta a republicação do banco de dados
             const repostQuery = db.collection("posts")
                 .where("originalPostId", "==", postId)
                 .where("authorId", "==", currentUser.uid);
@@ -1272,18 +1321,27 @@ async function toggleRepost(postId, buttonElement) {
             const repostSnapshot = await repostQuery.get();
             if (!repostSnapshot.empty) {
                 const deletePromises = [];
-                repostSnapshot.forEach(doc => {
-                    deletePromises.push(doc.ref.delete());
-                });
+                repostSnapshot.forEach(doc => deletePromises.push(doc.ref.delete()));
                 await Promise.all(deletePromises);
             }
 
-            // Remove o usuário da lista 'repostedBy' no post original
+            // Remove o usuário da lista de 'repostedBy' no post original
             await postRef.update({
                 repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
 
-            // Atualiza a interface: remove a classe e restaura o texto original do botão
+            // ATUALIZAÇÃO DA INTERFACE EM TEMPO REAL:
+            // Encontra o elemento da republicação que está visível na tela para removê-lo
+            const repostElementToRemove = document.querySelector(
+                `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
+            );
+
+            // Se o elemento for encontrado, remove-o imediatamente
+            if (repostElementToRemove) {
+                repostElementToRemove.remove();
+            }
+
+            // Atualiza o botão e mostra a notificação
             if (repostButtonUI) {
                 repostButtonUI.classList.remove('reposted');
                 repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
@@ -1293,7 +1351,7 @@ async function toggleRepost(postId, buttonElement) {
         } else {
             // --- AÇÃO: CRIAR REPUBLICAÇÃO ---
 
-            // Cria o objeto da nova publicação (a republicação)
+            // Cria o objeto da nova publicação
             const repostData = {
                 isRepost: true,
                 originalPostId: postId,

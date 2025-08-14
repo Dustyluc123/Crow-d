@@ -1292,3 +1292,80 @@ body.dark-mode #focused-post-container .error-message {
     color: #17bf63; /* Um tom de verde, similar ao do Twitter/X */
     font-weight: bold;
 }
+/* ====================================================== */
+/* ESTILOS PARA O BOTÃO DE CURTIR DO COMENTÁRIO (ROXO) */
+/* ====================================================== */
+
+/* Organiza o rodapé do comentário (timestamp e botão de curtir) */
+.comment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px; /* Adiciona um espaço acima do rodapé */
+    padding-top: 8px;
+    border-top: 1px solid var(--light-border); /* Linha sutil de separação */
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .comment-footer {
+    border-top-color: var(--dark-border);
+}
+
+
+/* Estilo base para o botão de curtir do comentário */
+.comment-like-btn {
+    background: none;
+    border: none;
+    color: var(--light-text-secondary); /* Cor padrão do texto/ícone */
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%; /* Deixa o fundo do hover redondo */
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Espaço entre o ícone e o número */
+    font-size: 0.9em;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+body.dark-mode .comment-like-btn {
+    color: var(--dark-text-secondary);
+}
+
+/* Efeito ao passar o mouse - ALTERAÇÃO PARA ROXO */
+.comment-like-btn:hover {
+    background-color: rgba(167, 139, 250, 0.15); /* Roxo claro e sutil */
+    color: #a78bfa; /* Roxo claro */
+}
+
+/* Estilo do botão QUANDO FOI CURTIDO - ALTERAÇÃO PARA ROXO */
+.comment-like-btn.liked {
+    color: #8b5cf6; /* Roxo mais vibrante */
+    font-weight: bold; /* Deixa o número em negrito */
+}
+
+/* Garante que o ícone também fique roxo - ALTERAÇÃO PARA ROXO */
+.comment-like-btn.liked i {
+    font-weight: 900; /* Ícone preenchido do Font Awesome */
+    color: #8b5cf6; /* Roxo mais vibrante */
+}
+/* ====================================================== */
+/* ESTILOS PARA O BOTÃO DE SALVAR POST               */
+/* ====================================================== */
+
+/* Efeito ao passar o mouse */
+.post-actions-bar .save-btn:hover {
+    background-color: rgba(59, 130, 246, 0.1); /* Fundo azul bem sutil */
+    color: #3b82f6; /* Tom de azul */
+}
+
+/* Estilo do botão quando o post ESTÁ SALVO */
+.post-action.save-btn.saved {
+    color: #3b82f6; /* Tom de azul principal */
+    font-weight: bold;
+}
+
+/* Garante que o ícone também fique azul e preenchido */
+.post-action.save-btn.saved i {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900; /* Ícone preenchido (sólido) */
+}
