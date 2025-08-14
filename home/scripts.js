@@ -33,9 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
   }
-  // ... (logo após a configuração do Firebase)
-
-  function showToast(message, type = 'info') { // type pode ser 'success', 'error', ou 'info'
+  function showToast(message, type = 'info') { 
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -77,14 +75,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const postTemplate = document.getElementById("post-template");
   const commentTemplate = document.getElementById("comment-template");
   const suggestionTemplate = document.getElementById("suggestion-template");
-
-  const loadingMoreIndicator = document.getElementById("loading-more-indicator"); // <--- ADICIONE ESTA LINHA
-const feedView = document.getElementById("feed-view");
-const singlePostView = document.getElementById("single-post-view");
-const focusedPostContainer = document.getElementById("focused-post-container");
-const backToFeedBtn = document.getElementById("back-to-feed-btn");
-  // ...
-
+  const loadingMoreIndicator = document.getElementById("loading-more-indicator");
+  const feedView = document.getElementById("feed-view");
+  const singlePostView = document.getElementById("single-post-view");
+  const focusedPostContainer = document.getElementById("focused-post-container");
+  const backToFeedBtn = document.getElementById("back-to-feed-btn");
+  
   // Variáveis globais
   let currentUser = null;
   let currentUserProfile = null;
@@ -96,7 +92,7 @@ const backToFeedBtn = document.getElementById("back-to-feed-btn");
   let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
   let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
   const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
-  let targetPostId = null; // <-- ADICIONE ESTA LINHA
+  
   // Em home/scripts.js
 
   // Função para compartilhar um post (copiar o link) - VERSÃO CORRIGIDA
@@ -125,35 +121,6 @@ const backToFeedBtn = document.getElementById("back-to-feed-btn");
   // Em home/scripts.js
 
   // --- FUNÇÃO PARA BUSCAR, ROLAR E DESTACAR O POST DA URL ---
-  async function findAndHighlightTargetPost() {
-    // Se não há um post alvo, a função não faz nada
-    if (!targetPostId) return;
-
-    const postElement = document.querySelector(`.post[data-post-id="${targetPostId}"]`);
-
-    if (postElement) {
-      // --- SUCESSO: O POST FOI ENCONTRADO! ---
-      // Rola a tela até o post
-      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      // Adiciona um destaque temporário
-      postElement.style.transition = 'background-color 0.5s ease-in-out';
-      postElement.style.backgroundColor = 'rgba(91, 90, 211, 0.2)'; // Roxo claro
-      
-      setTimeout(() => {
-          postElement.style.backgroundColor = ''; // Remove o destaque
-      }, 2500);
-
-      // Limpa a URL e a variável de alvo para finalizar a operação
-      history.replaceState(null, '', window.location.pathname);
-      targetPostId = null;
-
-    } else if (!noMorePosts && !isLoadingMorePosts) {
-      // --- FALHA: O POST AINDA NÃO FOI ENCONTRADO ---
-      // Se ainda não chegamos ao fim e não estamos carregando, carrega mais posts
-      await loadMorePosts();
-    }
-  }
 
   // Função para formatar timestamp
   function formatTimestamp(date) {
@@ -200,34 +167,34 @@ const backToFeedBtn = document.getElementById("back-to-feed-btn");
 
   // Verificar autenticação do usuário
  // Verificar autenticação do usuário
- auth.onAuthStateChanged(async function (user) {
-  if (user) {
+ // Em home/scripts.js
 
-    
+auth.onAuthStateChanged(async function (user) {
+  if (user) {
     currentUser = user;
     await loadUserProfile(user.uid);
 
-    backToFeedBtn.addEventListener('click', hideSinglePostView);    
-    // Captura o ID do post da URL e armazena na variável global
+    // Adiciona o listener para o botão de voltar (essencial)
+     
+
     const urlParams = new URLSearchParams(window.location.search);
     const postIdFromUrl = urlParams.get('post');
 
+    // Lógica IF/ELSE simples e correta:
     if (postIdFromUrl) {
-            // SE a URL contiver um ID de post (ex: de um link compartilhado)
-            // ele chama diretamente a visualização única.
-            showSinglePostView(postIdFromUrl);
-        } else {
-            // SENÃO, ele carrega o feed principal, como fazia antes.
-            loadInitialPosts();
-        }
+        // Se a URL tem um post, mostra a visualização única.
+        showSinglePostView(postIdFromUrl);
+    } else {
+        // Senão, carrega o feed principal.
+        loadInitialPosts();
+    }
 
-    targetPostId = urlParams.get('post');
-
-    loadInitialPosts();
+    // Carrega sugestões e o listener de scroll
     loadSuggestions();
-
     window.addEventListener('scroll', handleScroll);
+
   } else {
+    // Se o usuário não estiver logado
     window.removeEventListener('scroll', handleScroll);
     window.location.href = "../login/login.html";
   }
@@ -361,7 +328,7 @@ function loadInitialPosts() {
       } else {
           noMorePosts = true;
       }
-      findAndHighlightTargetPost(); // <--- ADICIONE ESTA LINHA
+     
   });
 }
 
@@ -394,7 +361,7 @@ async function loadMorePosts() {
         lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
 
        
-        findAndHighlightTargetPost(); // <--- ADICIONE ESTA LINHA
+        
 
     } catch (error) {
         console.error("Erro ao carregar mais posts:", error);
@@ -462,39 +429,57 @@ function handleScroll() {
     }
   }
 
+// Garanta que o listener do botão de voltar seja adicionado aqui.
+backToFeedBtn.addEventListener('click', hideSinglePostView);
+
+// Em home/scripts.js
+
 async function showSinglePostView(postId) {
     // 1. Esconde o feed e mostra a área do post único
     feedView.style.display = 'none';
     singlePostView.style.display = 'block';
-    window.scrollTo(0, 0); // Leva o usuário para o topo da página
+    window.scrollTo(0, 0);
 
     // 2. Atualiza a URL do navegador
     const url = new URL(window.location);
     url.searchParams.set('post', postId);
-    history.pushState({}, '', url); // Ex: muda para home.html?post=ID_DO_POST
+    history.pushState({}, '', url);
 
-    // 3. Busca o post específico no Firestore
-    focusedPostContainer.innerHTML = '<div class="loading-posts">...</div>'; // Mostra "Carregando..."
+    // 3. Mostra o indicador de carregamento
+    focusedPostContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    
+    // 4. Busca o post específico no Firestore
     const postRef = db.collection("posts").doc(postId);
     const doc = await postRef.get();
 
     if (doc.exists) {
-        // 4. Se o post existe, ele o "desenha" na tela
+        // 5. Se o post existe, limpa o "carregando" e desenha o post na tela
         const postData = { id: doc.id, ...doc.data() };
         focusedPostContainer.innerHTML = '';
         
-        // 5. Reutiliza a função addPostToDOM para criar o elemento
+        // 6. Reutiliza a função addPostToDOM para criar o elemento HTML
         const postElement = addPostToDOM(postData, true); // O 'true' avisa para não adicionar o evento de clique de novo
-        
-        // 6. Abre a seção de comentários automaticamente
-        const commentsSection = postElement.querySelector('.post-comments');
-        commentsSection.classList.add('active');
-        loadComments(postId);
 
+     // 7. Encontra a seção de comentários dentro do post que acabamos de criar
+        const commentsSection = postElement.querySelector('.post-comments');
+        if (commentsSection) {
+            // Adiciona a classe 'active' para torná-la visível
+            commentsSection.classList.add('active');
+            
+            // Encontra a <div> específica da lista de comentários
+            const commentsList = commentsSection.querySelector('.comments-list');
+            if (commentsList) {
+                // Chama a função com os dois argumentos necessários
+                loadComments(postId, commentsList);
+            }
+        }
+      
+        // 8. Adiciona o post (já com a área de comentários ativa) à página
         focusedPostContainer.appendChild(postElement);
+
     } else {
-        // Mostra uma mensagem de erro se o post não for encontrado
-        focusedPostContainer.innerHTML = '<div class="error-message">...</div>';
+        // Se o post não for encontrado
+        focusedPostContainer.innerHTML = '<div class="error-message">Esta publicação não foi encontrada ou foi removida.</div>';
     }
 }
 function hideSinglePostView() {
@@ -509,7 +494,7 @@ function hideSinglePostView() {
     history.pushState({}, '', url);
 }
 
-  function addPostToDOM(post, isSingleView = false) {
+  function addPostToDOM(post, isSingleView = false){
 
     
     if (!postsContainer || !postTemplate) return;
@@ -625,14 +610,18 @@ function hideSinglePostView() {
 
     shareButton.addEventListener("click", () => sharePost(post.id)); 
 
-    commentButton.addEventListener("click", () => {
+ 
+commentButton.addEventListener("click", () => {
       commentsSection.classList.toggle("active");
       if (commentsSection.classList.contains("active")) {
-        loadComments(post.id);
+        // A mesma lógica da alteração 2: encontrar a lista e passá-la
+        const commentsList = commentsSection.querySelector('.comments-list');
+        if (commentsList) {
+            loadComments(post.id, commentsList);
+        }
         commentInput.focus();
       }
     });
-
     sendCommentButton.addEventListener("click", () => {
         const content = commentInput.value.trim();
         if (content) {
@@ -754,45 +743,50 @@ function hideSinglePostView() {
   }
 
   // Função para carregar comentários em tempo real
-  function loadComments(postId) {
-    const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
-    const commentsList = postElement.querySelector(".comments-list");
-    const commentInput = postElement.querySelector(".comment-text");
+  // Em scripts.js
+
+// ALTERAÇÃO 1: A função agora recebe o elemento da lista de comentários diretamente
+function loadComments(postId, commentsListElement) { 
   
-    if (!commentsList || !commentInput) return;
-  
-    // Salvar texto atual digitado
-    const draftText = commentInput.value;
-  
-    commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
+    // Verificação para garantir que o elemento correto foi passado
+    if (!commentsListElement) {
+        console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
+        return;
+    }
+
+    const commentInput = commentsListElement.closest('.post-comments').querySelector('.comment-text');
+    const draftText = commentInput ? commentInput.value : '';
+
+    commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
   
     return db
       .collection("posts")
       .doc(postId)
       .collection("comments")
-      .orderBy("timestamp", "asc")
+      .orderBy("timestamp", "desc") // Mantido 'desc' como no seu código original
       .onSnapshot((snapshot) => {
-        commentsList.innerHTML = "";
+        commentsListElement.innerHTML = ""; // Limpa o "Carregando..."
   
         if (snapshot.empty) {
-          commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
+          commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
           return;
         }
   
         snapshot.forEach((doc) => {
           const comment = { id: doc.id, ...doc.data() };
-          addCommentToDOM(postId, comment, commentsList);
-          
+          // Passamos o elemento da lista diretamente para a função que o adiciona ao DOM
+          addCommentToDOM(postId, comment, commentsListElement); 
         });
   
-        // Restaurar o que estava digitado
-        commentInput.value = draftText;
+        if(commentInput) {
+            commentInput.value = draftText; // Restaura o texto que estava sendo digitado
+        }
+
       }, (error) => {
         console.error("Erro ao escutar comentários:", error);
-        commentsList.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+        commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
       });
-  }
-  
+}
   
 
   // Função para adicionar um comentário ao DOM

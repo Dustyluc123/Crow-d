@@ -1183,3 +1183,95 @@ body.dark-mode .original-post-container {
     border-color: var(--dark-border);
 }
 
+/* ====================================================== */
+/* ESTILOS PARA A VISUALIZAÇÃO DE POST ÚNICO (COM DARK MODE) */
+/* ====================================================== */
+
+/* O container principal da visualização do post focado */
+#single-post-view {
+    width: 100%;
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--light-text); /* Variável para fundo claro */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+body.dark-mode #single-post-view {
+    background-color: var(--dark-bg-secondary); /* Variável para fundo escuro */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* O cabeçalho que contém o botão de voltar */
+.single-post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--light-border); /* Variável para borda clara */
+    transition: border-color 0.3s;
+}
+
+body.dark-mode .single-post-header {
+    border-bottom-color: var(--dark-border); /* Variável para borda escura */
+}
+
+/* O botão de voltar */
+#back-to-feed-btn {
+    background-color: transparent;
+    border: 1px solid var(--light-border); /* Variável */
+    color: var(--light-text-secondary); /* Variável para texto secundário */
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+#back-to-feed-btn i {
+    margin-right: 8px;
+}
+
+#back-to-feed-btn:hover {
+    background-color: var(--light-bg-secondary); /* Variável para hover claro */
+    color: var(--primary-color);
+}
+
+body.dark-mode #back-to-feed-btn {
+    border-color: var(--dark-border); /* Variável */
+    color: var(--dark-text-secondary); /* Variável */
+}
+
+body.dark-mode #back-to-feed-btn:hover {
+    background-color: var(--dark-bg-tertiary); /* Variável para hover escuro */
+    color: var(--primary-hover);
+}
+
+/* O container onde o post será inserido */
+#focused-post-container {
+    width: 100%;
+}
+
+/* Estilos para o indicador de carregamento e mensagens de erro nesta view */
+#focused-post-container .loading-posts,
+#focused-post-container .error-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--light-text-secondary); /* Variável */
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+body.dark-mode #focused-post-container .loading-posts,
+body.dark-mode #focused-post-container .error-message {
+    color: var(--dark-text-secondary); /* Variável */
+}
+
+#focused-post-container .loading-posts i {
+    margin-right: 10px;
+}
