@@ -586,6 +586,12 @@ function hideSinglePostView() {
     postElement.dataset.postId = post.id;
     postElement.dataset.authorId = post.authorId;
 
+if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
+    repostButton.classList.add("reposted");
+    // Define o texto inicial como "Republicado"
+    repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+}
+
     if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
     authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
 
@@ -615,7 +621,8 @@ function hideSinglePostView() {
 
     likeButton.addEventListener("click", () => toggleLike(post.id));
     
-    repostButton.addEventListener("click", () => repostPost(post.id));
+
+    repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
 
     shareButton.addEventListener("click", () => sharePost(post.id)); 
 
@@ -1219,29 +1226,74 @@ function loadComments(postId, commentsListElement) {
     }
   }
 
-    async function repostPost(postId) {
-        try {
-            if (!currentUser || !currentUserProfile) {
-                showCustomAlert("Você precisa estar logado para republicar.");
-                return;
-            }
 
-            const postRef = db.collection("posts").doc(postId);
-            const postDoc = await postRef.get();
 
-            if (!postDoc.exists) {
-                showCustomAlert("Esta publicação não existe mais.");
-                return;
-            }
+// Em scripts.js
+
+async function toggleRepost(postId, buttonElement) {
+    try {
+        // 1. VERIFICAÇÕES INICIAIS
+        if (!currentUser || !currentUserProfile) {
+            showCustomAlert("Você precisa estar logado para republicar.");
+            return;
+        }
+
+        const postRef = db.collection("posts").doc(postId);
+        const postDoc = await postRef.get();
+
+        if (!postDoc.exists) {
+            showCustomAlert("Esta publicação não existe mais.");
+            return;
+        }
+        
+        const originalPostData = postDoc.data();
+
+        // Impede que alguém republique uma republicação
+        if (originalPostData.isRepost) {
+            showCustomAlert("Não é possível republicar uma republicação.");
+            return;
+        }
+
+        // 2. DETERMINA A AÇÃO (REPUBLICAR OU DESFAZER)
+        const repostedBy = originalPostData.repostedBy || [];
+        const hasReposted = repostedBy.includes(currentUser.uid);
+        
+        // Pega a referência do botão na tela para poder atualizá-lo
+        const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
+
+        if (hasReposted) {
+            // --- AÇÃO: DESFAZER REPUBLICAÇÃO ---
+
+            // Encontra a republicação específica feita por este usuário para deletá-la
+            const repostQuery = db.collection("posts")
+                .where("originalPostId", "==", postId)
+                .where("authorId", "==", currentUser.uid);
             
-            const originalPostData = postDoc.data();
-
-            // Evitar que alguém republique a própria republicação
-            if (originalPostData.isRepost) {
-                showCustomAlert("Não é possível republicar uma republicação.");
-                return;
+            const repostSnapshot = await repostQuery.get();
+            if (!repostSnapshot.empty) {
+                const deletePromises = [];
+                repostSnapshot.forEach(doc => {
+                    deletePromises.push(doc.ref.delete());
+                });
+                await Promise.all(deletePromises);
             }
 
+            // Remove o usuário da lista 'repostedBy' no post original
+            await postRef.update({
+                repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+
+            // Atualiza a interface: remove a classe e restaura o texto original do botão
+            if (repostButtonUI) {
+                repostButtonUI.classList.remove('reposted');
+                repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
+            }
+            showToast("Republicação removida.", "info");
+
+        } else {
+            // --- AÇÃO: CRIAR REPUBLICAÇÃO ---
+
+            // Cria o objeto da nova publicação (a republicação)
             const repostData = {
                 isRepost: true,
                 originalPostId: postId,
@@ -1252,7 +1304,7 @@ function loadComments(postId, commentsListElement) {
                     authorId: originalPostData.authorId,
                     timestamp: originalPostData.timestamp,
                 },
-                authorId: currentUser.uid, // O autor da republicação
+                authorId: currentUser.uid,
                 authorName: currentUserProfile.nickname || "Usuário",
                 authorPhoto: currentUserProfile.photoURL || null,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1261,9 +1313,15 @@ function loadComments(postId, commentsListElement) {
                 commentCount: 0,
             };
 
+            // Adiciona o novo documento de republicação ao banco de dados
             await db.collection("posts").add(repostData);
 
-            // Notificar o autor original
+            // Adiciona o usuário na lista 'repostedBy' do post original
+            await postRef.update({
+                repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            
+            // Envia uma notificação para o autor do post original
             if (originalPostData.authorId !== currentUser.uid) {
                 await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
                     type: "repost",
@@ -1277,11 +1335,17 @@ function loadComments(postId, commentsListElement) {
                 });
             }
             
-            showToast("Publicação republicada com sucesso!", "success");
-
-        } catch (error) {
-            console.error("Erro ao republicar:", error);
-            showCustomAlert("Ocorreu um erro ao republicar. Tente novamente.");
+            // Atualiza a interface: adiciona a classe e troca o texto do botão
+            if (repostButtonUI) {
+                repostButtonUI.classList.add('reposted');
+                repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+            }
+            showToast("Publicação republicada!", "success");
         }
+
+    } catch (error) {
+        console.error("Erro ao republicar/desrepublicar:", error);
+        showCustomAlert("Ocorreu um erro. Tente novamente.");
     }
+}
 });

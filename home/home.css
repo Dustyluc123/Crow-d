@@ -1284,3 +1284,11 @@ body.dark-mode #focused-post-container .error-message {
     gap: 20px;
     min-width: 0; /* Impede que o conteúdo flexível transborde */
 }
+/* Em home.css */
+
+/* Deixa o botão de republicar verde quando ativo */
+.post-action.repost-btn.reposted,
+.post-action.repost-btn.reposted i {
+    color: #17bf63; /* Um tom de verde, similar ao do Twitter/X */
+    font-weight: bold;
+}
