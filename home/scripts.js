@@ -840,48 +840,78 @@ commentButton.addEventListener("click", () => {
   // Em scripts.js
 
 // ALTERAÇÃO 1: A função agora recebe o elemento da lista de comentários diretamente
+// Em home/scripts.js
+
+// SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA VERSÃO CORRIGIDA
 function loadComments(postId, commentsListElement) { 
-  
-    // Verificação para garantir que o elemento correto foi passado
-    if (!commentsListElement) {
-        console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
-        return;
-    }
+  if (!commentsListElement) {
+      console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
+      return;
+  }
 
-    const commentInput = commentsListElement.closest('.post-comments').querySelector('.comment-text');
-    const draftText = commentInput ? commentInput.value : '';
+  // Mostra o "Carregando..." apenas se a lista estiver vazia
+  if (commentsListElement.innerHTML === '') {
+      commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
+  }
 
-    commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
-  
-    return db
-      .collection("posts")
-      .doc(postId)
-      .collection("comments")
-      .orderBy("timestamp", "desc") // Mantido 'desc' como no seu código original
-      .onSnapshot((snapshot) => {
-        commentsListElement.innerHTML = ""; // Limpa o "Carregando..."
-  
-        if (snapshot.empty) {
-          commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
-          return;
-        }
-  
-        snapshot.forEach((doc) => {
-          const comment = { id: doc.id, ...doc.data() };
-          // Passamos o elemento da lista diretamente para a função que o adiciona ao DOM
-          addCommentToDOM(postId, comment, commentsListElement); 
-        });
-  
-        if(commentInput) {
-            commentInput.value = draftText; // Restaura o texto que estava sendo digitado
-        }
+  return db
+    .collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("timestamp", "asc") // Usar 'asc' para adicionar novos comentários no final
+    .onSnapshot((snapshot) => {
+      // Remove o indicador de "carregando" ou "nenhum comentário" se existirem
+      const initialMessage = commentsListElement.querySelector('.loading-comments, .no-comments');
+      if (initialMessage) {
+          initialMessage.remove();
+      }
 
-      }, (error) => {
-        console.error("Erro ao escutar comentários:", error);
-        commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+      // ESTA É A MUDANÇA PRINCIPAL:
+      // Em vez de apagar tudo, vamos processar apenas as alterações.
+      snapshot.docChanges().forEach((change) => {
+          const commentData = { id: change.doc.id, ...change.doc.data() };
+          
+          if (change.type === "added") {
+              // Se um novo comentário foi ADICIONADO, nós o criamos e o adicionamos ao final da lista
+              // Isso não afeta o que outros usuários estão digitando
+              addCommentToDOM(postId, commentData, commentsListElement);
+          }
+          if (change.type === "modified") {
+              // Se um comentário foi MODIFICADO (ex: curtida), encontramos o elemento e o atualizamos
+              const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
+              if (commentElement) {
+                  // Exemplo: atualizar a contagem de curtidas
+                  const likeCount = commentElement.querySelector('.comment-like-count');
+                  const likeButton = commentElement.querySelector('.comment-like-btn');
+                  if(likeCount) likeCount.textContent = commentData.likes || 0;
+                  if(likeButton) {
+                      if(commentData.likedBy && commentData.likedBy.includes(currentUser.uid)) {
+                          likeButton.classList.add('liked');
+                      } else {
+                          likeButton.classList.remove('liked');
+                      }
+                  }
+              }
+          }
+          if (change.type === "removed") {
+              // Se um comentário foi REMOVIDO, nós o encontramos e o removemos da tela
+              const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
+              if (commentElement) {
+                  commentElement.remove();
+              }
+          }
       });
+
+      // Se após processar as mudanças a lista estiver vazia, mostramos a mensagem
+      if (commentsListElement.children.length === 0) {
+          commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
+      }
+
+    }, (error) => {
+      console.error("Erro ao escutar comentários:", error);
+      commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+    });
 }
-  
 
   // Função para adicionar um comentário ao DOM
   // Função para adicionar um comentário ao DOM
