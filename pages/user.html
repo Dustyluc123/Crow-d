@@ -15,134 +15,135 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <style>
-        /* Estilos específicos para a página de perfil público */
-        .profile-header {
-            display: flex;
-            align-items: center;
-            padding: 20px;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .profile-photo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 30px;
-            border: 4px solid var(--primary-color);
-        }
-        
-        .profile-info {
-            flex: 1;
-        }
-        
-        .profile-name {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0 0 5px;
-            color: var(--text-primary);
-        }
-        
-        .profile-school {
-            font-size: 16px;
-            color: var(--text-secondary);
-            margin: 0 0 10px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .profile-school i {
-            margin-right: 5px;
-            color: var(--primary-color);
-        }
-        
-        .profile-hobbies {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .hobby-tag {
-            background-color: var(--bg-hover);
-            color: var(--text-secondary);
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            display: inline-block;
-        }
-        
-        .profile-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .profile-btn {
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-        
-        .profile-btn i {
-            margin-right: 5px;
-        }
-        
-        .follow-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-        }
-        
-        .follow-btn:hover {
-            background-color: var(--primary-color-dark);
-        }
-        
-        .message-btn {
-            background-color: var(--bg-hover);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-        
-        .message-btn:hover {
-            background-color: var(--bg-secondary);
-        }
-        
-        .profile-tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-        }
-        
-        .profile-tab {
-            padding: 10px 20px;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s;
-        }
-        
-        .profile-tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-        
-        .profile-tab:hover:not(.active) {
-            color: var(--text-primary);
-            border-bottom-color: var(--border-color);
-        }
-        
+    /* Estilos específicos para a página de perfil público */
+     /* Cole este código dentro da tag <style> no seu arquivo user.html */
+
+/*
+  Esta regra força o container principal a ter uma margem no topo,
+  abrindo espaço para o header de 60px + 20px de respiro.
+*/
+.main-container {
+    margin-top: 80px;
+}
+    /* Define o tamanho e o formato da foto de perfil na página user.html */
+    .profile-photo {
+        width: 120px;           /* Largura fixa da imagem */
+        height: 120px;          /* Altura fixa da imagem */
+        border-radius: 50%;     /* Deixa a imagem perfeitamente redonda */
+        object-fit: cover;      /* Garante que a imagem preencha o espaço sem distorcer */
+        margin-right: 30px;     /* Espaço entre a foto e as informações */
+        border: 4px solid var(--primary-color); /* Borda roxa para combinar com seu tema */
+    }
+
+    /* Garante que o container do cabeçalho alinhe os itens corretamente */
+    .profile-header {
+        display: flex;
+        align-items: center;
+        background-color: var(--dark-bg-secondary); /* Cor de fundo para o cabeçalho do perfil */
+        padding: 20px;
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+    }
+
+    .profile-info {
+        flex: 1;
+    }
+    
+    .profile-name {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 5px;
+        color: var(--light-text); /* Corrigido para funcionar no seu tema escuro */
+    }
+    
+    .profile-school {
+        font-size: 16px;
+        color: var(--dark-text-secondary); /* Corrigido para funcionar no seu tema escuro */
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .profile-school i {
+        margin-right: 5px;
+        color: var(--primary-color);
+    }
+    
+    .profile-hobbies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    
+    .profile-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .profile-btn {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    
+    .profile-btn i {
+        margin-right: 5px;
+    }
+    
+    .follow-btn {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+    }
+    
+    .follow-btn:hover {
+        background-color: var(--primary-hover);
+    }
+    
+    .message-btn {
+        background-color: var(--dark-bg-tertiary);
+        color: var(--light-text);
+        border: 1px solid var(--dark-border);
+    }
+    
+    .message-btn:hover {
+        background-color: var(--dark-bg);
+    }
+    
+    .profile-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--dark-border);
+        margin-bottom: 20px;
+    }
+    
+    .profile-tab {
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--dark-text-secondary);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .profile-tab.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+    }
+    
+    .profile-tab:hover:not(.active) {
+        color: var(--light-text);
+        border-bottom-color: var(--dark-border);
+    }
+    
         .profile-content {
             margin-bottom: 30px;
         }
@@ -319,53 +320,49 @@
     <template id="post-template">
         <div class="post">
             <div class="post-header">
-                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="post-author-photo">
-                <div class="post-author-info">
-                    <h3 class="post-author-name">Nome do Autor</h3>
-                    <span class="post-timestamp">Há 2 horas</span>
+                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
+                <div class="post-info">
+                    <h3 class="post-author-name">Nome do Usuário</h3>
+                    <span class="post-timestamp">há 5 minutos</span>
                 </div>
             </div>
             <div class="post-content">
-                Conteúdo da publicação...
+                <p class="post-text">Conteúdo da publicação...</p>
+                <div class="post-media" style="display: none;"></div>
             </div>
-            <div class="post-media-container"></div>
             <div class="post-actions">
-                <button class="post-action-btn like-btn">
-                    <i class="far fa-heart"></i>
-                    <span class="like-count">0</span>
-                </button>
-                <button class="post-action-btn comment-btn">
-                    <i class="far fa-comment"></i>
-                    <span class="comment-count">0</span>
-                </button>
+                <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
+                <button class="post-action comment-btn"><i class="far fa-comment"></i> <span class="comment-count">0</span></button>
+                <button class="post-action repost-btn"><i class="fas fa-retweet"></i> Republicar</button>
+                 <button class="post-action save-btn"><i class="far fa-bookmark"></i> Salvar</button>
+                <button class="post-action share-btn"><i class="far fa-share-square"></i></button>
             </div>
-            <div class="post-comments" style="display: none;">
-                <div class="comments-list"></div>
-                <div class="comment-input-container">
-                    <img src="../img/Design sem nome2.png" alt="Sua foto" class="comment-user-photo">
-                    <input type="text" class="comment-text" placeholder="Escreva um comentário...">
+            <div class="post-comments">
+                <div class="comment-input">
+                    <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic small comment-user-photo">
+                    <input type="text" placeholder="O que você está pensando?" class="comment-text">
                     <button class="send-comment-btn"><i class="fas fa-paper-plane"></i></button>
                 </div>
+                <div class="comments-list">
+                    </div>
             </div>
         </div>
     </template>
 
     <template id="comment-template">
         <div class="comment">
-            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="comment-author-photo">
+            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic small comment-author-photo">
             <div class="comment-content">
-                <div class="comment-author-name">Nome do Autor</div>
-                <div class="comment-text">Conteúdo do comentário...</div>
-                <div class="comment-actions">
-                    <span class="comment-timestamp">Há 1 hora</span>
-                    <button class="comment-like-btn">
-                        <i class="far fa-heart"></i>
-                        <span class="comment-like-count">0</span>
-                    </button>
+                <h4 class="comment-author-name">Nome do Usuário</h4>
+                <p class="comment-text">Conteúdo do comentário...</p>
+                <div class="comment-footer">
+                    <span class="comment-timestamp">há 2 minutos</span>
+                    <button class="comment-like-btn"><i class="far fa-heart"></i> <span class="comment-like-count">0</span></button>
                 </div>
             </div>
         </div>
     </template>
+    <script src="../home/scripts.js"></script>
 
     <script>
         // Sistema de perfil público para o Crow-d com Firebase
@@ -412,48 +409,73 @@
             let postsListener = null;
             let isFollowing = false;
 
-            // Verificar autenticação do usuário
-            auth.onAuthStateChanged(async function(user) {
-                if (user) {
-                    // Usuário está logado
-                    currentUser = user;
-                    
-                    // Carregar perfil do usuário atual
-                    await loadCurrentUserProfile(user.uid);
-                    
-                    // Obter ID do usuário do perfil a partir da URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    profileUserId = urlParams.get('uid');
-                    
-                    if (!profileUserId) {
-                        // Se não houver ID na URL, redirecionar para a página inicial
-                        window.location.href = '../home/home.html';
-                        return;
-                    }
-                    
-                    // Verificar se é o próprio perfil do usuário
-                    if (profileUserId === currentUser.uid) {
-                        // Redirecionar para a página de edição de perfil
-                        window.location.href = '../editprofile/edit-profile.html';
-                        return;
-                    }
-                    
-                    // Carregar perfil do usuário
-                    await loadProfileUser(profileUserId);
-                    
-                    // Verificar se o usuário atual segue o usuário do perfil
-                    checkFollowStatus();
-                    
-                    // Carregar publicações do usuário
-                    loadUserPosts();
-                    
-                    // Carregar amigos do usuário
-                    loadUserFriends();
-                } else {
-                    // Usuário não está logado, redirecionar para login
-                    window.location.href = '../login/login.html';
-                }
-            });
+            // SUBSTITUA A FUNÇÃO ANTIGA POR ESTA VERSÃO CORRIGIDA
+
+auth.onAuthStateChanged(async function(user) {
+    if (user) {
+        // Usuário está logado
+        currentUser = user;
+        
+        // Carrega o perfil do usuário logado (necessário para seguir outros)
+        await loadCurrentUserProfile(user.uid);
+        
+        // Pega o ID do usuário do perfil a partir da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        profileUserId = urlParams.get('uid');
+        
+        if (!profileUserId) {
+            // Se não houver ID na URL, vai para a página inicial
+            window.location.href = '../home/home.html';
+            return;
+        }
+        
+        // ==========================================================
+        //      INÍCIO DA LÓGICA CORRIGIDA
+        // ==========================================================
+        
+        if (profileUserId === currentUser.uid) {
+            // SE FOR O SEU PRÓPRIO PERFIL:
+            // 1. Esconde os botões "Seguir" e "Mensagem"
+            if (followBtn) followBtn.style.display = 'none';
+            if (messageBtn) messageBtn.style.display = 'none';
+
+            // 2. Cria e mostra um botão "Editar Perfil" no lugar
+            const profileActions = document.querySelector('.profile-actions');
+            if (profileActions) {
+                const editProfileBtn = document.createElement('button');
+                editProfileBtn.className = 'profile-btn message-btn'; // Reutiliza o estilo de outro botão
+                editProfileBtn.id = 'editProfileBtn';
+                editProfileBtn.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Perfil';
+                editProfileBtn.onclick = () => {
+                    window.location.href = '../editprofile/edit-profile.html';
+                };
+                profileActions.appendChild(editProfileBtn);
+            }
+
+        } else {
+            // SE FOR O PERFIL DE OUTRA PESSOA:
+            // 1. Mostra os botões "Seguir" e "Mensagem"
+            if (followBtn) followBtn.style.display = 'flex';
+            if (messageBtn) messageBtn.style.display = 'flex';
+            
+            // 2. Verifica se você já segue essa pessoa
+            checkFollowStatus();
+        }
+
+        // ==========================================================
+        //       FIM DA LÓGICA CORRIGIDA
+        // ==========================================================
+
+        // Estas funções agora rodam para qualquer perfil (seu ou de outros)
+        await loadProfileUser(profileUserId);
+        loadUserPosts();
+        loadUserFriends();
+
+    } else {
+        // Usuário não está logado, redirecionar para login
+        window.location.href = '../login/login.html';
+    }
+});
 
             // Event listener para o botão de logout
             if (logoutButton) {
@@ -1208,5 +1230,6 @@
             }
         });
     </script>
+     
 </body>
 </html>

@@ -176,33 +176,42 @@ function detachPostsListener() {
  // Verificar autenticação do usuário
  // Em home/scripts.js
 
+// Em scripts.js
+
 auth.onAuthStateChanged(async function (user) {
   if (user) {
     currentUser = user;
     await loadUserProfile(user.uid);
     setupNotificationListener(user.uid);
 
-    // Adiciona o listener para o botão de voltar (essencial)
-     
+    // ==========================================================
+    //      INÍCIO DA LÓGICA ADICIONADA
+    // ==========================================================
+    
+    // Encontra o botão/link de perfil no header pela sua classe
+    const profileLink = document.querySelector('.main-nav a.profile-link');
+    if (profileLink) {
+        // Define o link para a página do usuário logado (user.html) com o UID correto
+        profileLink.href = `../pages/user.html?uid=${user.uid}`;
+    }
+
+    // ==========================================================
+    //      FIM DA LÓGICA ADICIONADA
+    // ==========================================================
 
     const urlParams = new URLSearchParams(window.location.search);
     const postIdFromUrl = urlParams.get('post');
 
-    // Lógica IF/ELSE simples e correta:
     if (postIdFromUrl) {
-        // Se a URL tem um post, mostra a visualização única.
         showSinglePostView(postIdFromUrl);
     } else {
-        // Senão, carrega o feed principal.
         loadInitialPosts();
     }
 
-    // Carrega sugestões e o listener de scroll
     loadSuggestions();
     window.addEventListener('scroll', handleScroll);
 
   } else {
-    // Se o usuário não estiver logado
     window.removeEventListener('scroll', handleScroll);
     window.location.href = "../login/login.html";
   }
@@ -245,53 +254,57 @@ auth.onAuthStateChanged(async function (user) {
   }
 
   // Função para carregar o perfil do usuário
-  async function loadUserProfile(userId) {
-    try {
-      const doc = await db.collection("users").doc(userId).get();
+  // Em scripts.js
 
-      if (doc.exists) {
-        currentUserProfile = doc.data();
+// SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA
+async function loadUserProfile(userId) {
+  try {
+    const doc = await db.collection("users").doc(userId).get();
 
-        // Atualizar foto do usuário
-        if (userPhotoElement && currentUserProfile.photoURL) {
-          userPhotoElement.src = currentUserProfile.photoURL;
-        }
+    if (doc.exists) {
+      currentUserProfile = doc.data();
 
-        // Carregar hobbies do usuário
-        if (userHobbiesContainer) {
-          userHobbiesContainer.innerHTML = "";
-
-          // Adicionar hobbies padrão
-          if (currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
-            currentUserProfile.hobbies.forEach((hobby) => {
-              const hobbyTag = document.createElement("span");
-              hobbyTag.className = "hobby-tag";
-              hobbyTag.textContent = hobby;
-              userHobbiesContainer.appendChild(hobbyTag);
-            });
-          }
-
-          // Adicionar hobbies personalizados
-          if (
-            currentUserProfile.customHobbies &&
-            currentUserProfile.customHobbies.length > 0
-          ) {
-            currentUserProfile.customHobbies.forEach((hobby) => {
-              const hobbyTag = document.createElement("span");
-              hobbyTag.className = "hobby-tag custom";
-              hobbyTag.textContent = hobby;
-              userHobbiesContainer.appendChild(hobbyTag);
-            });
-          }
-        }
-      } else {
-        console.log("Perfil do usuário não encontrado.");
-        window.location.href = "../profile/profile.html";
+      // Atualizar foto do usuário
+      if (userPhotoElement && currentUserProfile.photoURL) {
+        userPhotoElement.src = currentUserProfile.photoURL;
       }
-    } catch (error) {
-      console.error("Erro ao carregar perfil do usuário:", error);
+
+      // Carregar hobbies do usuário
+      if (userHobbiesContainer) {
+        userHobbiesContainer.innerHTML = "";
+
+        // Adicionar hobbies padrão
+        if (currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
+          currentUserProfile.hobbies.forEach((hobby) => {
+            const hobbyTag = document.createElement("span");
+            hobbyTag.className = "hobby-tag";
+            hobbyTag.textContent = hobby;
+            userHobbiesContainer.appendChild(hobbyTag);
+          });
+        }
+
+        // Adicionar hobbies personalizados
+        if (
+          currentUserProfile.customHobbies &&
+          currentUserProfile.customHobbies.length > 0
+        ) {
+          currentUserProfile.customHobbies.forEach((hobby) => {
+            const hobbyTag = document.createElement("span");
+            hobbyTag.className = "hobby-tag custom";
+            hobbyTag.textContent = hobby;
+            userHobbiesContainer.appendChild(hobbyTag);
+          });
+        }
+      }
+    } else {
+      // O perfil não foi encontrado, mas agora não fazemos mais o redirecionamento.
+      // Apenas avisamos no console.
+      console.warn(`Aviso: Perfil para o usuário ${userId} não foi encontrado no Firestore.`);
     }
+  } catch (error) {
+    console.error("Erro ao carregar perfil do usuário:", error);
   }
+}
 
   // Função para carregar posts
   // --- FUNÇÃO PARA CARREGAR OS POSTS INICIAIS ---
