@@ -180,6 +180,7 @@ auth.onAuthStateChanged(async function (user) {
   if (user) {
     currentUser = user;
     await loadUserProfile(user.uid);
+    setupNotificationListener(user.uid);
 
     // Adiciona o listener para o botão de voltar (essencial)
      
@@ -488,6 +489,21 @@ async function showSinglePostView(postId) {
         // Se o post não for encontrado
         focusedPostContainer.innerHTML = '<div class="error-message">Esta publicação não foi encontrada ou foi removida.</div>';
     }
+}
+// Função que fica "escutando" por notificações não lidas em tempo real
+function setupNotificationListener(userId) {
+    const notificationsRef = db.collection('users').doc(userId).collection('notifications');
+
+    // Escuta por qualquer alteração em notificações onde 'read' é 'false'
+    notificationsRef.where('read', '==', false).onSnapshot(snapshot => {
+        const unreadCount = snapshot.size; // Pega a quantidade de docs não lidos
+        const badge = document.getElementById('notification-badge');
+
+        if (badge) {
+            // Se houver mais de 0 notificações não lidas, mostra a bolinha. Senão, esconde.
+            badge.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+    });
 }
 function hideSinglePostView() {
     // 1. Faz o processo inverso: esconde a área do post e mostra o feed

@@ -1348,9 +1348,6 @@ body.dark-mode .comment-like-btn {
     font-weight: 900; /* Ícone preenchido do Font Awesome */
     color: #8b5cf6; /* Roxo mais vibrante */
 }
-/* ====================================================== */
-/* ESTILOS PARA O BOTÃO DE SALVAR POST               */
-/* ====================================================== */
 
 /* Efeito ao passar o mouse */
 .post-actions-bar .save-btn:hover {
@@ -1368,4 +1365,24 @@ body.dark-mode .comment-like-btn {
 .post-action.save-btn.saved i {
     font-family: "Font Awesome 6 Free";
     font-weight: 900; /* Ícone preenchido (sólido) */
+}
+.notification-link-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* A bolinha roxa */
+.notification-badge {
+    height: 10px;
+    width: 10px;
+    background-color: var(--primary-color); /* Usa sua cor primária roxa */
+    border-radius: 50%;
+    border: 2px solid var(--light-text); /* Borda para destacar do fundo */
+}
+
+/* Ajuste da borda para o Dark Mode */
+body.dark-mode .notification-badge {
+    border-color: var(--dark-bg-secondary);
 }
