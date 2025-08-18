@@ -1355,12 +1355,12 @@ body.dark-mode .comment-like-btn {
 /* Efeito ao passar o mouse */
 .post-actions-bar .save-btn:hover {
     background-color: rgba(59, 130, 246, 0.1); /* Fundo azul bem sutil */
-    color: #3b82f6; /* Tom de azul */
+    color: #5b5ad3;
 }
 
 /* Estilo do botão quando o post ESTÁ SALVO */
 .post-action.save-btn.saved {
-    color: #3b82f6; /* Tom de azul principal */
+    color: #5b5ad3;
     font-weight: bold;
 }
 
