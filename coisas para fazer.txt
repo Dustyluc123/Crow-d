@@ -1,26 +1,15 @@
 
-
-Geral 
-1- tira os alertas e criar nossos proprios
-
-///Index
-
-1-fotos do integrandes do grupo 
-2-mudar carrossel 
-
 ///Login
-1-centralizar
-
-///Cadastro 
-
-2-contraste
+Feito
 
 ///Home
-1-mudar layout de comentar 
-2-tirar o botão "meu hobbies"
-3-republicar posts
-4-salvar posts
-5-espaço entre posts 
+Feito
+
+//notificacao
+Feito
+
+//Salvos
+Feito
 
 ///Friends
 1-tirar o botão "meu hobbies"
@@ -28,12 +17,11 @@ Geral
 3-e adiconar amigos
 
 ///Mensagen
-1-melhorar layout(linha entre cada conversa, no tema claro problema de cores )
-2-melhorias talvez(de apagar mensagem e emoji)
-
-// criar parte de notificacao 
+1-centralizar mensagem no canto 
 
 ///editprofile
+1-Colocar os Hobbys
+
 
 
 ///confing 

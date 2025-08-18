@@ -1,97 +1,129 @@
 :root {
-    --roxo: #6a0dad;
-    --cinza-escuro: #333333;
-    --branco: #ffffff;
-    --primary-color: #5b5ad3;
-    --primary-hover: #8483de;
-  }
+  --roxo: #6a0dad;
+  --cinza-escuro: #333333;
+  --branco: #ffffff;
+  --primary-color: #5b5ad3;
+  --primary-hover: #8483de;
+}
 
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #141351;
-    color: var(--branco);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px 0;
-  }
+body {
+  font-family: Arial, sans-serif;
+  background-color: #141351;
+  color: var(--branco);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box; /* Garante que padding não afete a largura total */
+}
 
-  .cadastro-container {
-    background-color: #141359;
-    background-image: url('img/Design\\ sem\\ nome2.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 500px;
-    text-align: center;
-  }
+.cadastro-container {
+  background-color: #141359;
+  /* Certifique-se que o caminho para a imagem está correto */
+  background-image: url('../img/Design sem nome2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  /* Usando flexbox para organizar o conteúdo interno */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Espaçamento consistente entre os elementos */
+}
 
-  .input-group {
-    margin-bottom: 1rem;
-    text-align: left;
-  }
+.cadastro-container h1 {
+  margin-bottom: 0;
+}
 
-  label {
-    display: block;
-    margin-bottom: 0.5rem;
-  }
+.form-title {
+  margin: 0 0 0.5rem 0; /* Ajusta as margens do subtítulo */
+}
 
-  input {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-  }
+/* Formulário */
+#cadastro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem; /* Espaço entre os campos e botões */
+  width: 100%;
+}
 
-  button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 0.75rem;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-    margin-top: 1rem;
-  }
+.input-group {
+  margin-bottom: 0; /* Removido para usar o gap do formulário */
+  text-align: left;
+}
 
-  button:hover {
-    background-color: var(--primary-hover);
-  }
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
 
-  p {
-    margin-top: 1rem;
-  }
+input {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  box-sizing: border-box; /* Importante para o padding não quebrar o layout */
+}
 
-  a {
-    color: var(--branco);
-    text-decoration: none;
-  }
+/* Botões */
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  box-sizing: border-box;
+}
 
-  a:hover {
-    text-decoration: underline;
-  }
+button:hover {
+  background-color: var(--primary-hover);
+}
 
-  .form-title {
-    margin-bottom: 1.5rem;
-  }
+/* Botão do Google */
+.social-login {
+  margin-top: 0.5rem;
+}
 
-  /* Botão do Google */
-  #login-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+#login-google {
+  background-color: white;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* Espaço entre o logo e o texto */
+}
 
-  #login-google img {
-    width: 20px;
-    height: auto;
-    margin-right: 8px;
-  }
+#login-google img {
+  width: 20px;
+  height: 20px;
+}
+
+#login-google:hover {
+  background-color: #f1f1f1;
+}
+
+/* Link inferior */
+p {
+  margin-top: 1rem;
+}
+
+a {
+  color: var(--branco);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

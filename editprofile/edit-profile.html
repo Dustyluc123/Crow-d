@@ -8,17 +8,14 @@
     <link rel="stylesheet" href="profile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
-    <!-- Dark Mode Script -->
     <script src="../config/darkmode.js" defer></script>
     <script src="edit-profile.js" defer></script>
 </head>
 <body>
-    <!-- HEADER / MENU DE NAVEGAÇÃO -->
     <header>
         <div class="logo">
             <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -35,7 +32,6 @@
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-container">
         <main class="feed">
             <h1 class="page-title"><i class="fas fa-user-edit"></i> Editar Perfil</h1>
@@ -50,9 +46,9 @@
                                 <img id="photoPreview" src="../img/Design sem nome2.png" alt="Foto de perfil">
                             </div>
                             <div class="photo-upload">
-                                <label for="photoFile">Escolher nova foto</label>
-                                <input type="file" id="photoFile" accept="image/*">
-                                <small>Selecione uma imagem do seu dispositivo (foto de perfil)</small>
+                                <label for="photoFile" class="photo-upload-btn">Escolher nova foto</label>
+                                <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                                <small>Selecione uma imagem do seu dispositivo.</small>
                             </div>
                         </div>
 
@@ -109,10 +105,37 @@
                         </div>
                     </div>
 
-                    <!-- Seus hobbies -->
-                    <!-- Mantém igual ao seu HTML atual -->
-                    <!-- ... (restante da seção de hobbies e preferências) ... -->
-
+                    <div class="profile-section">
+                        <h2><i class="fas fa-star"></i> Seus Hobbies</h2>
+                        <p class="section-subtitle">Selecione seus interesses para se conectar com outros estudantes.</p>
+                        
+                        <div class="hobbies-container">
+                            <div class="hobby-category">
+                                <h3>Esportes</h3>
+                                <div class="hobby-options">
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Futebol"><span>Futebol</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Basquete"><span>Basquete</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Vôlei"><span>Vôlei</span></label>
+                                </div>
+                            </div>
+                            <div class="hobby-category">
+                                <h3>Artes</h3>
+                                <div class="hobby-options">
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Desenho"><span>Desenho</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Pintura"><span>Pintura</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Fotografia"><span>Fotografia</span></label>
+                                </div>
+                            </div>
+                             <div class="hobby-category">
+                                <h3>Música</h3>
+                                <div class="hobby-options">
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Tocar instrumento"><span>Tocar instrumento</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Cantar"><span>Cantar</span></label>
+                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Ouvir música"><span>Ouvir música</span></label>
+                                </div>
+                            </div>
+                            </div>
+                    </div>
                     <div class="form-actions">
                         <button type="button" class="secondary-btn" onclick="window.location.href='../home/home.html'">Cancelar</button>
                         <button type="submit" class="primary-btn" id="saveProfileBtn">Salvar alterações</button>
@@ -120,10 +143,6 @@
                 </form>
             </div>
         </main>
-        
-       
     </div>
-
-    <script src="profile.js"></script>
 </body>
 </html>
