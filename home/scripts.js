@@ -209,6 +209,8 @@ auth.onAuthStateChanged(async function (user) {
     }
 
     loadSuggestions();
+    loadUpcomingEvents(); 
+    checkUpcomingEventNotifications(); 
     window.addEventListener('scroll', handleScroll);
 
   } else {
@@ -1463,6 +1465,111 @@ async function toggleRepost(postId, buttonElement) {
     } catch (error) {
         console.error("Erro ao republicar/desrepublicar:", error);
         showCustomAlert("Ocorreu um erro. Tente novamente.");
+    }
+}
+/**
+ * Carrega os 3 eventos mais próximos e exibe-os na página principal.
+ */
+async function loadUpcomingEvents() {
+    const upcomingEventsContainer = document.getElementById('upcoming-events-container');
+    if (!upcomingEventsContainer) return;
+
+    upcomingEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i></div>';
+
+    try {
+        const now = new Date();
+        const snapshot = await db.collection('events')
+            .where('eventDateTime', '>=', now) // Apenas eventos que ainda não aconteceram
+            .orderBy('eventDateTime', 'asc')   // Ordena pelos mais próximos
+            .limit(3)                          // Pega apenas os 3 primeiros
+            .get();
+
+        upcomingEventsContainer.innerHTML = '';
+
+        if (snapshot.empty) {
+            upcomingEventsContainer.innerHTML = '<p>Nenhum evento próximo.</p>';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const event = { id: doc.id, ...doc.data() };
+            const eventDate = event.eventDateTime.toDate();
+            const day = eventDate.getDate();
+            const month = eventDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event';
+            eventElement.innerHTML = `
+                <div class="event-date">
+                    <span class="day">${day}</span>
+                    <span class="month">${month}</span>
+                </div>
+                <div class="event-info">
+                    <h4>${event.eventName}</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
+                </div>
+            `;
+            upcomingEventsContainer.appendChild(eventElement);
+        });
+    } catch (error) {
+        console.error("Erro ao carregar eventos próximos:", error);
+        upcomingEventsContainer.innerHTML = '<p>Erro ao carregar eventos.</p>';
+    }
+}
+/**
+ * Verifica os eventos em que o utilizador está inscrito e cria uma notificação
+ * se o evento estiver a menos de 24 horas de distância e se ainda não foi notificado.
+ */
+async function checkUpcomingEventNotifications() {
+    if (!currentUser || !currentUser.uid) return;
+
+    try {
+        const now = new Date();
+        // Define o limite de tempo para "próximo": 24 horas a partir de agora
+        const upcomingLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+        // 1. Encontra todos os eventos futuros em que o utilizador participa
+        const eventsSnapshot = await db.collection('events')
+            .where('participants', 'array-contains', currentUser.uid)
+            .where('eventDateTime', '>=', now) // Apenas eventos que ainda não aconteceram
+            .where('eventDateTime', '<=', upcomingLimit) // Apenas eventos nas próximas 24h
+            .get();
+
+        if (eventsSnapshot.empty) {
+            // Nenhum evento próximo para notificar
+            return;
+        }
+
+        // 2. Para cada evento próximo, verifica se já existe uma notificação
+        eventsSnapshot.forEach(async (doc) => {
+            const event = { id: doc.id, ...doc.data() };
+            const eventId = event.id;
+
+            // Procura por uma notificação de lembrete já existente para este evento
+            const notificationQuery = await db.collection('users').doc(currentUser.uid).collection('notifications')
+                .where('type', '==', 'event_reminder')
+                .where('eventId', '==', eventId)
+                .limit(1)
+                .get();
+            
+            // 3. Se não existir notificação, cria uma nova
+            if (notificationQuery.empty) {
+                const eventDate = event.eventDateTime.toDate();
+                const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                await db.collection('users').doc(currentUser.uid).collection('notifications').add({
+                    type: 'event_reminder',
+                    eventId: eventId,
+                    fromUserName: 'Sistema de Eventos', // Notificação do sistema
+                    content: `Lembrete: O evento "${event.eventName}" começa hoje às ${formattedTime}!`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+                console.log(`Notificação criada para o evento: ${event.eventName}`);
+            }
+        });
+    } catch (error) {
+        console.error("Erro ao verificar notificações de eventos:", error);
     }
 }
 });

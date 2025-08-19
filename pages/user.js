@@ -310,12 +310,11 @@ async function loadMoreUserPosts() {
     isLoadingMorePosts = false;
 }
 
-  async function loadUserFriends() {
+async function loadUserFriends() {
     friendsGrid.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
 
     try {
         // CORREÇÃO: A consulta agora aponta para a coleção 'following'
-        // Isto fará com que a aba "Amigos" mostre quem o utilizador do perfil segue.
         const followingSnapshot = await db.collection('users').doc(profileUserId)
             .collection('following').limit(12).get();
 
@@ -326,7 +325,6 @@ async function loadMoreUserPosts() {
 
         friendsGrid.innerHTML = ''; // Limpa o "a carregar"
         followingSnapshot.forEach(doc => {
-            // Passamos o ID do documento (que é o ID do amigo) e os seus dados
             addFriendToDOM({ id: doc.id, ...doc.data() });
         });
     } catch (error) {

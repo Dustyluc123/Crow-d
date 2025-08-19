@@ -1,375 +1,266 @@
-// Script para corrigir a lógica dos marcadores no mapa
 document.addEventListener('DOMContentLoaded', function() {
-    // Referência ao iframe do mapa
-    const mapIframe = document.querySelector('.map iframe');
-    
-    // Referência ao container do mapa
-    const mapContainer = document.querySelector('.map');
-    
-    // Referência aos marcadores
-    const markers = document.querySelectorAll('.map-marker');
-    
-    // Referência ao tooltip
-    const tooltip = document.querySelector('.map-tooltip');
-    
-    // Função para inicializar o mapa com marcadores dinâmicos
-    function initMap() {
-        // Remover os marcadores estáticos existentes
-        markers.forEach(marker => {
-            marker.remove();
-        });
-        
-        // Dados dos eventos (normalmente viriam de um banco de dados)
-        const events = [
-            {
-                name: "Feira de Ciências",
-                date: "15/05 - 14:00",
-                location: "Auditório Principal",
-                lat: -23.5608,
-                lng: -46.6547
-            },
-            {
-                name: "Torneio de Basquete",
-                date: "22/05 - 09:00",
-                location: "Quadra Poliesportiva",
-                lat: -23.5670,
-                lng: -46.6520
-            },
-            {
-                name: "Show da Banda Escolar",
-                date: "28/05 - 19:00",
-                location: "Pátio Central",
-                lat: -23.5630,
-                lng: -46.6580
-            }
-        ];
-        
-        // Criar um novo script para injetar no iframe após o carregamento
-        mapIframe.addEventListener('load', function() {
-            try {
-                // Acessar o documento do iframe
-                const iframeDocument = mapIframe.contentDocument || mapIframe.contentWindow.document;
-                
-                // Injetar script para adicionar marcadores ao mapa do Google
-                const script = iframeDocument.createElement('script');
-                script.textContent = `
-                    // Função para adicionar marcadores ao mapa
-                    function addMarkers() {
-                        // Verificar se o Google Maps API está disponível
-                        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
-                            console.error('Google Maps API não está disponível');
-                            return;
-                        }
-                        
-                        // Obter a instância do mapa
-                        const maps = document.querySelectorAll('iframe[src*="google.com/maps"]');
-                        if (maps.length === 0) return;
-                        
-                        const mapInstance = maps[0].contentWindow.google.maps.map;
-                        if (!mapInstance) return;
-                        
-                        // Dados dos eventos
-                        const events = ${JSON.stringify(events)};
-                        
-                        // Adicionar marcadores para cada evento
-                        events.forEach(event => {
-                            const marker = new google.maps.Marker({
-                                position: { lat: event.lat, lng: event.lng },
-                                map: mapInstance,
-                                title: event.name,
-                                animation: google.maps.Animation.DROP
-                            });
-                            
-                            // Adicionar infowindow para cada marcador
-                            const infowindow = new google.maps.InfoWindow({
-                                content: \`
-                                    <div>
-                                        <h4>\${event.name}</h4>
-                                        <p>\${event.date}</p>
-                                        <p>\${event.location}</p>
-                                    </div>
-                                \`
-                            });
-                            
-                            // Abrir infowindow ao clicar no marcador
-                            marker.addListener('click', function() {
-                                infowindow.open(mapInstance, marker);
-                            });
-                        });
-                    }
-                    
-                    // Tentar adicionar marcadores após um pequeno delay
-                    setTimeout(addMarkers, 1000);
-                `;
-                
-                // Adicionar o script ao documento do iframe
-                iframeDocument.body.appendChild(script);
-            } catch (error) {
-                console.error('Erro ao acessar o iframe:', error);
-                
-                // Plano B: Usar marcadores personalizados com posicionamento relativo
-                createCustomMarkers(events);
-            }
-        });
-    }
-    auth.onAuthStateChanged(async function(user) {
-    if (user) {
-        // Usuário está logado
-        currentUser = user;
+    // ==========================================================
+    // CONFIGURAÇÃO DO FIREBASE
+    // ==========================================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+        authDomain: "tcclogin-7e7b8.firebaseapp.com",
+        projectId: "tcclogin-7e7b8",
+        storageBucket: "tcclogin-7e7b8.appspot.com",
+        messagingSenderId: "1066633833169",
+        appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
 
-        // ==========================================================
-        //      INÍCIO DA LÓGICA ADICIONADA
-        // ==========================================================
-        
-        // Encontra o botão/link de perfil no header pela sua classe
-        const profileLink = document.querySelector('.main-nav a.profile-link');
-        if (profileLink) {
-            // Define o link para a página do utilizador logado (user.html) com o UID correto
-            profileLink.href = `../pages/user.html?uid=${user.uid}`;
-        }
-
-        // ==========================================================
-        //      FIM DA LÓGICA ADICIONADA
-        // ==========================================================
-        
-        // Carregar perfil do usuário
-        await loadUserProfile(user.uid);
-        
-        // Carregar amigos, solicitações e sugestões
-        loadFriendRequests();
-        loadFriends();
-        loadSuggestions();
-    } else {
-        // Usuário não está logado, redirecionar para login
-        window.location.href = '../login/login.html';
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
     }
-});
-    
-    // Função alternativa para criar marcadores personalizados
-    function createCustomMarkers(events) {
-        // Limpar marcadores existentes
-        mapContainer.querySelectorAll('.map-marker').forEach(marker => marker.remove());
-        
-        // Adicionar novos marcadores com posicionamento relativo
-        events.forEach(event => {
-            // Converter coordenadas para posição relativa no mapa
-            // Estas são aproximações baseadas no centro do mapa
-            const latRange = [-23.57, -23.56]; // Aproximação do range de latitude visível
-            const lngRange = [-46.66, -46.65]; // Aproximação do range de longitude visível
-            
-            // Calcular posição percentual no mapa
-            const latPercent = 100 - ((event.lat - latRange[0]) / (latRange[1] - latRange[0]) * 100);
-            const lngPercent = (event.lng - lngRange[0]) / (lngRange[1] - lngRange[0]) * 100;
-            
-            // Criar marcador
-            const marker = document.createElement('div');
-            marker.className = 'map-marker';
-            marker.style.top = `${latPercent}%`;
-            marker.style.left = `${lngPercent}%`;
-            marker.setAttribute('data-event', event.name);
-            marker.setAttribute('data-date', event.date);
-            marker.setAttribute('data-location', event.location);
-            
-            // Adicionar evento de clique para mostrar tooltip
-            marker.addEventListener('click', function() {
-                tooltip.querySelector('h4').textContent = this.getAttribute('data-event');
-                tooltip.querySelector('p:nth-child(2)').textContent = this.getAttribute('data-date');
-                tooltip.querySelector('p:nth-child(3)').textContent = this.getAttribute('data-location');
-                
-                // Posicionar tooltip próximo ao marcador
-                tooltip.style.top = `${this.offsetTop - tooltip.offsetHeight - 10}px`;
-                tooltip.style.left = `${this.offsetLeft - (tooltip.offsetWidth / 2) + 10}px`;
-                tooltip.style.display = 'block';
-            });
-            
-            // Adicionar marcador ao mapa
-            mapContainer.appendChild(marker);
-        });
-        
-        // Fechar tooltip ao clicar fora
-        document.addEventListener('click', function(e) {
-            if (!e.target.classList.contains('map-marker')) {
-                tooltip.style.display = 'none';
-            }
-        });
-    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    
-    // Inicializar o mapa
-    initMap();
-});
-   // Script para o modal de criar evento
-   document.addEventListener('DOMContentLoaded', function() {
-    const createEventBtn = document.getElementById('createEventBtn');
+    // ==========================================================
+    // VARIÁVEIS E REFERÊNCIAS DO DOM
+    // ==========================================================
+    let currentUser = null;
+    const eventsContainer = document.querySelector('.events-container');
+    const popularEventsContainer = document.getElementById('popular-events-container'); // Nova referência
     const createEventModal = document.getElementById('createEventModal');
+    const createEventForm = document.querySelector('#createEventModal .modal-form');
+    const createEventBtn = document.getElementById('createEventBtn');
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
     
-    createEventBtn.addEventListener('click', function() {
-        createEventModal.style.display = 'flex';
+
+    // ==========================================================
+    // LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO
+    // ==========================================================
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            currentUser = user;
+            const profileLink = document.querySelector('.main-nav a.profile-link');
+            if (profileLink) {
+                profileLink.href = `../pages/user.html?uid=${user.uid}`;
+            }
+            loadEvents();
+        } else {
+            window.location.href = '../login/login.html';
+        }
     });
+
+    // ==========================================================
+    // FUNÇÕES DO SISTEMA DE EVENTOS
+    // ==========================================================
+
+    /**
+     * Carrega todos os eventos, exibe-os na lista principal e
+     * os mais populares na barra lateral.
+     */
+    async function loadEvents() {
+        eventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando eventos...</div>';
+        popularEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+        
+        try {
+            const snapshot = await db.collection('events')
+                .orderBy('eventDateTime', 'asc')
+                .get();
+
+            if (snapshot.empty) {
+                eventsContainer.innerHTML = '<p>Nenhum evento futuro encontrado.</p>';
+                popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
+                return;
+            }
+
+            eventsContainer.innerHTML = '';
+            
+            const allEvents = [];
+            snapshot.forEach(doc => {
+                const eventData = { id: doc.id, ...doc.data() };
+                allEvents.push(eventData);
+                // Adiciona cada evento à lista principal
+                addEventToDOM(eventData);
+            });
+
+            // --- LÓGICA DOS EVENTOS POPULARES ---
+            // 1. Faz uma cópia da lista de eventos
+            const sortedByPopularity = [...allEvents];
+            
+            // 2. Ordena a cópia pelo número de participantes (do maior para o menor)
+            sortedByPopularity.sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0));
+
+            // 3. Pega os 3 eventos mais populares e exibe-os na barra lateral
+            displayPopularEvents(sortedByPopularity.slice(0, 3));
+
+        } catch (error) {
+            console.error("Erro ao carregar eventos:", error);
+            eventsContainer.innerHTML = '<p>Ocorreu um erro ao carregar os eventos.</p>';
+        }
+    }
     
-    closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            createEventModal.style.display = 'none';
+    /**
+     * NOVA FUNÇÃO: Cria o HTML para a lista de eventos populares.
+     * @param {Array} popularEvents - Uma lista com os eventos mais populares.
+     */
+    function displayPopularEvents(popularEvents) {
+        popularEventsContainer.innerHTML = ''; // Limpa o contentor
+
+        if (popularEvents.length === 0) {
+            popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
+            return;
+        }
+
+        popularEvents.forEach(event => {
+            const eventDate = event.eventDateTime.toDate();
+            const day = eventDate.getDate();
+            const month = eventDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+
+            const eventElement = document.createElement('div');
+            eventElement.className = 'event';
+            eventElement.innerHTML = `
+                <div class="event-date">
+                    <span class="day">${day}</span>
+                    <span class="month">${month}</span>
+                </div>
+                <div class="event-info">
+                    <h4>${event.eventName}</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
+                </div>
+            `;
+            popularEventsContainer.appendChild(eventElement);
         });
-    });
-    
-    // Fechar modal ao clicar fora dele
-    window.addEventListener('click', function(event) {
+
+        const seeMoreLink = document.createElement('a');
+        seeMoreLink.href = "#";
+        seeMoreLink.className = "see-more";
+        seeMoreLink.textContent = "Ver mais";
+        popularEventsContainer.appendChild(seeMoreLink);
+    }
+
+    /**
+     * Cria o HTML de um cartão de evento e adiciona-o à página.
+     * @param {object} event - O objeto do evento com os seus dados.
+     */
+    function addEventToDOM(event) {
+        const eventCard = document.createElement('div');
+        eventCard.className = 'event-card';
+
+        const eventDate = event.eventDateTime.toDate();
+        const formattedDate = eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const isParticipating = event.participants && event.participants.includes(currentUser.uid);
+
+        eventCard.innerHTML = `
+            <div class="event-header">
+                <h3>${event.eventName}</h3>
+                <div class="event-date-display">
+                    <i class="fas fa-calendar"></i> ${formattedDate}
+                </div>
+            </div>
+            <div class="event-content">
+                <div class="event-details">
+                    <p><i class="fas fa-clock"></i> ${formattedTime}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
+                    <p><i class="fas fa-users"></i> ${event.participants ? event.participants.length : 0} participantes</p>
+                </div>
+                <p class="event-description">${event.description}</p>
+                <div class="event-tags">
+                    ${event.tags.map(tag => `<span class="hobby-tag">${tag}</span>`).join('')}
+                </div>
+                <div class="event-actions">
+                    <button class="event-btn participate-btn ${isParticipating ? 'secondary' : ''}">
+                        ${isParticipating ? 'Participando' : 'Participar'}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        const participateBtn = eventCard.querySelector('.participate-btn');
+        participateBtn.addEventListener('click', () => toggleParticipation(event.id, participateBtn));
+
+        eventsContainer.appendChild(eventCard);
+    }
+
+    // (O resto do seu ficheiro eventos.js continua aqui: toggleParticipation, createEvent, e os listeners do modal)
+    // ...
+    // ... (COLE O RESTO DO SEU FICHEIRO JS A PARTIR DAQUI) ...
+    // ...
+
+    async function toggleParticipation(eventId, button) {
+        const eventRef = db.collection('events').doc(eventId);
+        
+        try {
+            const doc = await eventRef.get();
+            if (!doc.exists) return;
+
+            const eventData = doc.data();
+            const participants = eventData.participants || [];
+            const isParticipating = participants.includes(currentUser.uid);
+
+            if (isParticipating) {
+                await eventRef.update({
+                    participants: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                });
+            } else {
+                await eventRef.update({
+                    participants: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                });
+            }
+            loadEvents(); 
+        } catch (error) {
+            console.error("Erro ao atualizar participação:", error);
+            alert("Ocorreu um erro ao tentar participar do evento.");
+        }
+    }
+
+    async function createEvent(e) {
+        e.preventDefault();
+        const eventName = document.getElementById('eventName').value;
+        const eventLocation = document.getElementById('eventLocation').value;
+        const eventDate = document.getElementById('eventDate').value;
+        const eventTime = document.getElementById('eventTime').value;
+        const description = document.getElementById('eventDescription').value;
+        const tags = document.getElementById('eventTags').value.split(',').map(tag => tag.trim());
+
+        if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
+            alert("Por favor, preencha todos os campos obrigatórios.");
+            return;
+        }
+
+        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+
+        try {
+            await db.collection('events').add({
+                eventName,
+                eventLocation,
+                eventDateTime,
+                description,
+                tags,
+                creatorId: currentUser.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                participants: []
+            });
+
+            createEventModal.style.display = 'none';
+            createEventForm.reset();
+            loadEvents();
+        } catch (error) {
+            console.error("Erro ao criar evento: ", error);
+            alert("Ocorreu um erro ao criar o evento.");
+        }
+    }
+
+    if (createEventBtn) {
+        createEventBtn.addEventListener('click', () => { createEventModal.style.display = 'flex'; });
+    }
+    if (closeModalBtns) {
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => { createEventModal.style.display = 'none'; });
+        });
+    }
+    if (createEventForm) {
+        createEventForm.addEventListener('submit', createEvent);
+    }
+    window.addEventListener('click', (event) => {
         if (event.target === createEventModal) {
             createEventModal.style.display = 'none';
         }
     });
-    
-    // Prevenir envio do formulário (apenas para demonstração)
-    document.querySelector('.modal-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert('Evento criado com sucesso!');
-        createEventModal.style.display = 'none';
-    });
-    
-    // Interatividade do mapa
-    const mapMarkers = document.querySelectorAll('.map-marker');
-    const mapTooltip = document.querySelector('.map-tooltip');
-    
-    mapMarkers.forEach(marker => {
-        marker.addEventListener('mouseenter', function(e) {
-            const eventName = this.getAttribute('data-event');
-            mapTooltip.querySelector('h4').textContent = eventName;
-            
-            // Posicionar tooltip próximo ao marcador
-            const markerRect = this.getBoundingClientRect();
-            const mapRect = document.querySelector('.map').getBoundingClientRect();
-            
-            mapTooltip.style.top = (markerRect.top - mapRect.top - 70) + 'px';
-            mapTooltip.style.left = (markerRect.left - mapRect.left + 15) + 'px';
-            mapTooltip.style.display = 'block';
-        });
-        
-        marker.addEventListener('mouseleave', function() {
-            mapTooltip.style.display = 'none';
-        });
-    });
 });
-    // Script para o modal de criar evento
-        document.addEventListener('DOMContentLoaded', function() {
-            const createEventBtn = document.getElementById('createEventBtn');
-            const createEventModal = document.getElementById('createEventModal');
-            const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
-            
-            createEventBtn.addEventListener('click', function() {
-                createEventModal.style.display = 'flex';
-            });
-            
-            closeModalBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    createEventModal.style.display = 'none';
-                });
-            });
-            
-            // Fechar modal ao clicar fora dele
-            window.addEventListener('click', function(event) {
-                if (event.target === createEventModal) {
-                    createEventModal.style.display = 'none';
-                }
-            });
-            
-            // Prevenir envio do formulário (apenas para demonstração)
-            document.querySelector('.modal-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Evento criado com sucesso!');
-                createEventModal.style.display = 'none';
-            });
-            
-            // Interatividade do mapa
-            const mapMarkers = document.querySelectorAll('.map-marker');
-            const mapTooltip = document.querySelector('.map-tooltip');
-            
-            mapMarkers.forEach(marker => {
-                marker.addEventListener('mouseenter', function(e) {
-                    const eventName = this.getAttribute('data-event');
-                    mapTooltip.querySelector('h4').textContent = eventName;
-                    
-                    // Posicionar tooltip próximo ao marcador
-                    const markerRect = this.getBoundingClientRect();
-                    const mapRect = document.querySelector('.map').getBoundingClientRect();
-                    
-                    mapTooltip.style.top = (markerRect.top - mapRect.top - 70) + 'px';
-                    mapTooltip.style.left = (markerRect.left - mapRect.left + 15) + 'px';
-                    mapTooltip.style.display = 'block';
-                });
-                
-                marker.addEventListener('mouseleave', function() {
-                    mapTooltip.style.display = 'none';
-                });
-            });
-        });
-            // Script para o modal de criar evento
-            document.addEventListener('DOMContentLoaded', function() {
-                const createEventBtn = document.getElementById('createEventBtn');
-                const createEventModal = document.getElementById('createEventModal');
-                const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
-                
-                createEventBtn.addEventListener('click', function() {
-                    createEventModal.style.display = 'flex';
-                });
-                
-                closeModalBtns.forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        createEventModal.style.display = 'none';
-                    });
-                });
-                
-                // Fechar modal ao clicar fora dele
-                window.addEventListener('click', function(event) {
-                    if (event.target === createEventModal) {
-                        createEventModal.style.display = 'none';
-                    }
-                });
-                
-                // Prevenir envio do formulário (apenas para demonstração)
-                document.querySelector('.modal-form').addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    alert('Evento criado com sucesso!');
-                    createEventModal.style.display = 'none';
-                });
-                
-                // Interatividade do mapa
-                const mapMarkers = document.querySelectorAll('.map-marker');
-                const mapTooltip = document.querySelector('.map-tooltip');
-                
-                mapMarkers.forEach(marker => {
-                    marker.addEventListener('mouseenter', function(e) {
-                        const eventName = this.getAttribute('data-event');
-                        mapTooltip.querySelector('h4').textContent = eventName;
-                        
-                        // Posicionar tooltip próximo ao marcador
-                        const markerRect = this.getBoundingClientRect();
-                        const mapRect = document.querySelector('.map').getBoundingClientRect();
-                        
-                        mapTooltip.style.top = (markerRect.top - mapRect.top - 70) + 'px';
-                        mapTooltip.style.left = (markerRect.left - mapRect.left + 15) + 'px';
-                        mapTooltip.style.display = 'block';
-                    });
-                    
-                    marker.addEventListener('mouseleave', function() {
-                        mapTooltip.style.display = 'none';
-                    });
-                });
-                function setupNotificationListener(userId) {
-    const notificationsRef = db.collection('users').doc(userId).collection('notifications');
-
-    // Escuta por qualquer alteração em notificações onde 'read' é 'false'
-    notificationsRef.where('read', '==', false).onSnapshot(snapshot => {
-        const unreadCount = snapshot.size; // Pega a quantidade de docs não lidos
-        const badge = document.getElementById('notification-badge');
-
-        if (badge) {
-            // Se houver mais de 0 notificações não lidas, mostra a bolinha. Senão, esconde.
-            badge.style.display = unreadCount > 0 ? 'block' : 'none';
-        }
-    });
-}
-            });
-            //testeeee
-            //testee

@@ -3,11 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
     <title>Eventos - Crow-d</title>
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="../home/page-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+<style>
+    /* Adiciona o espaço que pediu entre as tags e o botão */
+.event-tags {
+    margin-bottom: 15px;
+}
+
+/* Novo estilo para os itens na lista de eventos populares */
+#popular-events-container .event {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#popular-events-container .event-date {
+    background-color: var(--primary-color);
+}
+</style>
 <body>
     <!-- HEADER / MENU DE NAVEGAÇÃO -->
     <header>
@@ -66,80 +87,7 @@
             
             <h2>Próximos Eventos</h2>
             <div class="events-container">
-                <div class="event-card">
-                    <div class="event-header">
-                        <h3>Feira de Ciências</h3>
-                        <div class="event-date-display">
-                            <i class="fas fa-calendar"></i> 15/05
-                        </div>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-details">
-                            <p><i class="fas fa-clock"></i> 14:00 - 18:00</p>
-                            <p><i class="fas fa-map-marker-alt"></i> Auditório Principal</p>
-                            <p><i class="fas fa-users"></i> 45 participantes</p>
-                        </div>
-                        <p class="event-description">Apresentação de projetos científicos desenvolvidos pelos alunos durante o semestre.</p>
-                        <div class="event-tags">
-                            <span class="hobby-tag">Ciência</span>
-                            <span class="hobby-tag">Tecnologia</span>
-                        </div>
-                        <div class="event-actions">
-                            <button class="event-btn">Participar</button>
-                            <button class="event-btn secondary">Lembrar</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="event-card">
-                    <div class="event-header">
-                        <h3>Torneio de Basquete</h3>
-                        <div class="event-date-display">
-                            <i class="fas fa-calendar"></i> 22/05
-                        </div>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-details">
-                            <p><i class="fas fa-clock"></i> 09:00 - 17:00</p>
-                            <p><i class="fas fa-map-marker-alt"></i> Quadra Poliesportiva</p>
-                            <p><i class="fas fa-users"></i> 32 participantes</p>
-                        </div>
-                        <p class="event-description">Torneio interclasses de basquete. Inscreva seu time e venha participar!</p>
-                        <div class="event-tags">
-                            <span class="hobby-tag">Esportes</span>
-                            <span class="hobby-tag">Basquete</span>
-                        </div>
-                        <div class="event-actions">
-                            <button class="event-btn">Participar</button>
-                            <button class="event-btn secondary">Lembrar</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="event-card">
-                    <div class="event-header">
-                        <h3>Show da Banda Escolar</h3>
-                        <div class="event-date-display">
-                            <i class="fas fa-calendar"></i> 28/05
-                        </div>
-                    </div>
-                    <div class="event-content">
-                        <div class="event-details">
-                            <p><i class="fas fa-clock"></i> 19:00 - 21:00</p>
-                            <p><i class="fas fa-map-marker-alt"></i> Pátio Central</p>
-                            <p><i class="fas fa-users"></i> 120 participantes</p>
-                        </div>
-                        <p class="event-description">Apresentação da banda escolar com repertório de músicas populares e autorais.</p>
-                        <div class="event-tags">
-                            <span class="hobby-tag">Música</span>
-                            <span class="hobby-tag">Arte</span>
-                        </div>
-                        <div class="event-actions">
-                            <button class="event-btn">Participar</button>
-                            <button class="event-btn secondary">Lembrar</button>
-                        </div>
-                    </div>
-                </div>
+     
             </div>
         </main>
 
@@ -149,40 +97,8 @@
                 <h3>Eventos Populares</h3>
                 <p class="section-subtitle">Eventos com mais participantes</p>
                 
-                <div class="event">
-                    <div class="event-date">
-                        <span class="day">10</span>
-                        <span class="month">Jun</span>
-                    </div>
-                    <div class="event-info">
-                        <h4>Festival de Música</h4>
-                        <p><i class="fas fa-map-marker-alt"></i> Anfiteatro</p>
-                    </div>
-                </div>
-                
-                <div class="event">
-                    <div class="event-date">
-                        <span class="day">15</span>
-                        <span class="month">Jun</span>
-                    </div>
-                    <div class="event-info">
-                        <h4>Maratona de Programação</h4>
-                        <p><i class="fas fa-map-marker-alt"></i> Lab. de Informática</p>
-                    </div>
-                </div>
-                
-                <div class="event">
-                    <div class="event-date">
-                        <span class="day">20</span>
-                        <span class="month">Jun</span>
-                    </div>
-                    <div class="event-info">
-                        <h4>Olimpíadas Escolares</h4>
-                        <p><i class="fas fa-map-marker-alt"></i> Complexo Esportivo</p>
-                    </div>
-                </div>
-                
-                <a href="#" class="see-more">Ver mais</a>
+                <div id="popular-events-container">
+    </div>
             </div>
         </aside>
     </div>
@@ -227,7 +143,6 @@
     </div>
 
     <script src="eventos.js"></script>
-    <script src="../home/scripts.js""></script>
     <script src="../config/darkmode.js"></script>
 </body>
 </html>
