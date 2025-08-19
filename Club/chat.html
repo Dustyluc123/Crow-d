@@ -11,6 +11,20 @@
         .chat-area { max-height: 75vh; }
         .message-header { font-size: 0.8rem; color: var(--light-text-secondary); margin-bottom: 4px; font-weight: bold; }
         body.dark-mode .message-header { color: var(--dark-text-secondary); }
+        .message { display: flex; align-items: flex-start; gap: 10px; }
+        .message-avatar { width: 40px; height: 40px; border-radius: 50%; }
+        .message-content { max-width: 80%; }
+        .members-sidebar { width: 250px; border-left: 1px solid var(--light-border); padding: 10px; background-color: var(--light-text); }
+        body.dark-mode .members-sidebar { background-color: var(--dark-bg-secondary); border-left-color: var(--dark-border); }
+        .member-item { display: flex; align-items: center; margin-bottom: 10px; }
+        .kick-btn { margin-left: auto; background: #dc3545; color: white; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .chat-input-area { position: relative; } /* Necessário para posicionar o emoji picker */
+        emoji-picker {
+            position: absolute;
+            bottom: 60px; /* Posiciona acima do campo de input */
+            left: 10px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -23,25 +37,32 @@
             </a>
         </div>
     </header>
-    <div class="main-container">
-        <main class="feed">
+    <div class="main-container" style="display: flex;">
+        <main class="feed" style="flex: 1;">
             <h1 class="page-title" id="group-name-title"><i class="fas fa-spinner fa-spin"></i></h1>
             <div class="messages-container">
                 <div class="chat-area">
                     <div class="chat-messages" id="chat-messages">
                         </div>
                     <div class="chat-input-area">
+                        <emoji-picker style="display: none;"></emoji-picker>
+                        <button id="emoji-btn" class="chat-action-btn"><i class="fas fa-smile"></i></button>
                         <input type="text" class="chat-input" id="message-input" placeholder="Digite uma mensagem...">
                         <button class="chat-send-btn" id="send-btn"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>
         </main>
+        <aside class="members-sidebar" id="members-sidebar">
+            <h3>Membros</h3>
+            <div id="members-list"></div>
+        </aside>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script src="chat.js"></script>
     <script src="../config/darkmode.js"></script>
 </body>

@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
     const createGroupForm = document.querySelector('#createGroupModal .modal-form');
     const searchInput = document.getElementById('search-input');
+    const isPrivateCheckbox = document.getElementById('isPrivate');
+    const passwordField = document.getElementById('password-field');
+    const viewMembersModal = document.getElementById('viewMembersModal');
+    const membersList = document.getElementById('members-list');
 
     // Autenticação
     auth.onAuthStateChanged(function(user) {
@@ -110,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="group-actions">
                     ${isMember ? `
                         <button class="group-btn chat-btn"><i class="fas fa-comment"></i> Entrar no Chat</button>
+                        <button class="group-btn view-members-btn"><i class="fas fa-users"></i> Ver Membros</button>
                         <button class="group-btn secondary leave-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
                     ` : `
                         <button class="group-btn join-btn"><i class="fas fa-plus"></i> Participar</button>
@@ -123,8 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = `chat.html?groupId=${group.id}`;
             });
             card.querySelector('.leave-btn').addEventListener('click', () => leaveGroup(group.id));
+            card.querySelector('.view-members-btn').addEventListener('click', () => viewMembers(group.id));
         } else {
-            card.querySelector('.join-btn').addEventListener('click', () => joinGroup(group.id));
+            card.querySelector('.join-btn').addEventListener('click', () => joinGroup(group.id, group.isPrivate, group.password));
         }
         return card;
     }
@@ -136,9 +142,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const groupDescription = document.getElementById('groupDescription').value.trim();
         const tagsInput = document.getElementById('groupTags').value;
         const groupTags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+        const isPrivate = isPrivateCheckbox.checked;
+        const password = document.getElementById('groupPassword').value;
 
         if (!groupName || !groupDescription) {
             alert("Por favor, preencha o nome e a descrição.");
+            return;
+        }
+
+        if (isPrivate && !password) {
+            alert("Por favor, digite uma senha para o grupo privado.");
             return;
         }
 
@@ -149,7 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 tags: groupTags,
                 members: [currentUser.uid],
                 createdBy: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                isPrivate: isPrivate,
+                password: password
             });
 
             createGroupModal.style.display = 'none';
@@ -162,7 +177,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Entrar em um Grupo
-    async function joinGroup(groupId) {
+    async function joinGroup(groupId, isPrivate, password) {
+        if (isPrivate) {
+            const enteredPassword = prompt("Este grupo é privado. Por favor, digite a senha:");
+            if (enteredPassword !== password) {
+                alert("Senha incorreta.");
+                return;
+            }
+        }
+
         try {
             await db.collection('groups').doc(groupId).update({
                 members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
@@ -186,6 +209,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Ver Membros
+    async function viewMembers(groupId) {
+        membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+        viewMembersModal.style.display = 'flex';
+
+        try {
+            const groupDoc = await db.collection('groups').doc(groupId).get();
+            const groupData = groupDoc.data();
+            const members = groupData.members;
+
+            membersList.innerHTML = '';
+            for (const memberId of members) {
+                const userDoc = await db.collection('users').doc(memberId).get();
+                const userData = userDoc.data();
+                const memberElement = document.createElement('div');
+                memberElement.innerHTML = `<p>${userData.nickname}</p>`;
+                membersList.appendChild(memberElement);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar membros:", error);
+            membersList.innerHTML = '<p>Ocorreu um erro ao carregar os membros.</p>';
+        }
+    }
+
     // Lógica da Busca
     searchInput.addEventListener('input', (e) => {
         loadGroups(e.target.value);
@@ -196,11 +243,21 @@ document.addEventListener('DOMContentLoaded', function() {
         createGroupBtn.addEventListener('click', () => { createGroupModal.style.display = 'flex'; });
     }
     closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', () => { createGroupModal.style.display = 'none'; });
+        btn.addEventListener('click', () => {
+            createGroupModal.style.display = 'none';
+            viewMembersModal.style.display = 'none';
+        });
     });
     window.addEventListener('click', (event) => {
         if (event.target === createGroupModal) {
             createGroupModal.style.display = 'none';
         }
+        if (event.target === viewMembersModal) {
+            viewMembersModal.style.display = 'none';
+        }
+    });
+
+    isPrivateCheckbox.addEventListener('change', () => {
+        passwordField.style.display = isPrivateCheckbox.checked ? 'block' : 'none';
     });
 });

@@ -18,11 +18,17 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUserProfile = {};
     let groupId = null;
     let membersProfiles = {};
+    let groupCreatorId = null;
 
     const groupNameTitle = document.getElementById('group-name-title');
     const messagesContainer = document.getElementById('chat-messages');
     const messageInput = document.getElementById('message-input');
     const sendBtn = document.getElementById('send-btn');
+    const membersList = document.getElementById('members-list');
+    
+    // --- CORREÇÃO EMOJI ---
+    const emojiBtn = document.getElementById('emoji-btn');
+    const emojiPicker = document.querySelector('emoji-picker');
 
     auth.onAuthStateChanged(async function(user) {
         if (user) {
@@ -33,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             groupId = urlParams.get('groupId');
             
             if (groupId) {
-                verifyGroupMembership();
+                await verifyGroupMembership();
             } else {
                 window.location.href = 'grupos.html';
             }
@@ -55,10 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (groupDoc.exists) {
             const groupData = groupDoc.data();
+            groupCreatorId = groupData.createdBy;
             if (groupData.members.includes(currentUser.uid)) {
                 groupNameTitle.textContent = groupData.name;
                 await fetchMembersProfiles(groupData.members);
                 loadMessages();
+                loadMembers();
             } else {
                 alert("Você não é membro deste grupo.");
                 window.location.href = 'grupos.html';
@@ -91,6 +99,41 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    function loadMembers() {
+        db.collection('groups').doc(groupId).onSnapshot(async (doc) => {
+            const groupData = doc.data();
+            const members = groupData.members;
+            await fetchMembersProfiles(members);
+            membersList.innerHTML = '';
+            for (const memberId of members) {
+                const memberProfile = membersProfiles[memberId];
+                if (!memberProfile) continue;
+                const memberElement = document.createElement('div');
+                memberElement.className = 'member-item';
+                memberElement.innerHTML = `<img src="${memberProfile.photoURL || '../img/Design sem nome2.png'}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;"> <p>${memberProfile.nickname}</p>`;
+                if (currentUser.uid === groupCreatorId && memberId !== currentUser.uid) {
+                    const kickBtn = document.createElement('button');
+                    kickBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    kickBtn.className = 'kick-btn';
+                    kickBtn.onclick = () => kickMember(memberId);
+                    memberElement.appendChild(kickBtn);
+                }
+                membersList.appendChild(memberElement);
+            }
+        });
+    }
+
+    async function kickMember(memberId) {
+        if (!confirm("Tem certeza que deseja remover este membro?")) return;
+        try {
+            await db.collection('groups').doc(groupId).update({
+                members: firebase.firestore.FieldValue.arrayRemove(memberId)
+            });
+        } catch (error) {
+            console.error("Erro ao remover membro:", error);
+        }
+    }
+
     function addMessageToDOM(message) {
         const senderProfile = membersProfiles[message.senderId] || { nickname: 'Usuário', photoURL: '../img/Design sem nome2.png' };
         const isSentByMe = message.senderId === currentUser.uid;
@@ -98,6 +141,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `message ${isSentByMe ? 'sent' : 'received'}`;
         
+        const avatar = document.createElement('img');
+        avatar.src = senderProfile.photoURL || '../img/Design sem nome2.png';
+        avatar.className = 'message-avatar';
+        messageWrapper.appendChild(avatar);
+
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
         
@@ -135,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
-            messageInput.value = text; // Devolve o texto se falhar
+            messageInput.value = text;
         }
     }
 
@@ -144,6 +192,36 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             e.preventDefault();
             sendMessage();
+        }
+    });
+
+    // --- LÓGICA CORRIGIDA DO EMOJI PICKER ---
+    emojiBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+    });
+
+    emojiPicker.addEventListener('emoji-click', event => {
+        messageInput.value += event.detail.emoji.unicode;
+        emojiPicker.style.display = 'none';
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
+            emojiPicker.style.display = 'none';
+        }
+    });
+
+    // Mentions (básico)
+    messageInput.addEventListener('input', () => {
+        const text = messageInput.value;
+        const mentionMatch = text.match(/@(\w*)$/);
+        if (mentionMatch) {
+            const search = mentionMatch[1].toLowerCase();
+            const members = Object.keys(membersProfiles).map(id => ({id, ...membersProfiles[id]}));
+            const suggestions = members.filter(m => m.nickname.toLowerCase().includes(search));
+            // Aqui você pode implementar uma caixa de sugestões para os membros
+            console.log("Sugestões de menção:", suggestions);
         }
     });
 });

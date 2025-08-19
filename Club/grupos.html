@@ -90,11 +90,30 @@
                     <label for="groupTags">Tags (separadas por vírgula)</label>
                     <input type="text" id="groupTags" placeholder="Ex: Música, Arte, Esportes">
                 </div>
+                <div class="input-group">
+                    <label for="isPrivate">Grupo Privado</label>
+                    <input type="checkbox" id="isPrivate">
+                </div>
+                <div class="input-group" id="password-field" style="display: none;">
+                    <label for="groupPassword">Senha</label>
+                    <input type="password" id="groupPassword" placeholder="Digite a senha do grupo">
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="group-btn secondary close-modal-btn">Cancelar</button>
                     <button type="submit" class="group-btn">Criar Grupo</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal" id="viewMembersModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Membros do Grupo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="members-list">
+            </div>
         </div>
     </div>
 
