@@ -62,9 +62,6 @@ o numero 3 e 5 de confing estaja pronto)
 5-perfil que não aparece online(So pode ser feito depois que o numero 1 do Friends seja feito)
 
 //User --- Barreto
-1- aparecer o repluciados de forma correta 
-2- poder compartilhar,salvar, comentar, repuplicar, curtit pelo User
-3- melhorar css, modo Dark, header
 4- aparecer os amigos da pessoa 
 5- erro ao seguir 
 

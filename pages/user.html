@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Usuário - Crow-d</title>
     <link rel="stylesheet" href="../home/home.css">
-    <link rel="stylesheet" href="../profile/profile.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="user.js"></script>
+    <script src="../config/darkmode.js" defer></script> 
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -15,50 +17,111 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <style>
-    /* Estilos específicos para a página de perfil público */
-     /* Cole este código dentro da tag <style> no seu arquivo user.html */
+        /* --- ESTILOS MELHORADOS PARA A GRELHA DE AMIGOS --- */
 
-/*
-  Esta regra força o container principal a ter uma margem no topo,
-  abrindo espaço para o header de 60px + 20px de respiro.
-*/
-.main-container {
-    margin-top: 80px;
+/* Transforma a grelha num layout mais espaçado */
+/* Transforma a grelha num layout mais espaçado */
+.friends-grid {
+    display: grid;
+    /* Cria colunas de tamanho flexível, mas com um mínimo de 200px */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px; /* Aumenta o espaço entre os cartões */
+    margin-top: 10px;
 }
-    /* Define o tamanho e o formato da foto de perfil na página user.html */
-    .profile-photo {
-        width: 120px;           /* Largura fixa da imagem */
-        height: 120px;          /* Altura fixa da imagem */
-        border-radius: 50%;     /* Deixa a imagem perfeitamente redonda */
-        object-fit: cover;      /* Garante que a imagem preencha o espaço sem distorcer */
-        margin-right: 30px;     /* Espaço entre a foto e as informações */
-        border: 4px solid var(--primary-color); /* Borda roxa para combinar com seu tema */
+
+/* Estilo principal do cartão de amigo */
+/* Estilo principal do cartão de amigo */
+.friend-card {
+    background-color: var(--light-bg-secondary);
+    border: 1px solid var(--light-border);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none; /* Remove o sublinhado do link */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.friend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow);
+}
+
+/* --- CORREÇÃO PARA A FOTO DO AMIGO (AVATAR) --- */
+
+.friend-card .friend-avatar {
+    width: 80px;  /* Largura fixa */
+    height: 80px; /* Altura fixa */
+    border-radius: 50%;
+    object-fit: cover; /* Garante que a imagem preencha o círculo sem distorcer */
+    margin-bottom: 10px; /* Espaço entre a foto e o nome */
+    border: 3px solid var(--primary-color);
+
+    /* As duas linhas abaixo são a chave da correção: */
+    display: block;  /* Garante que a margem funcione corretamente */
+    margin-left: auto;  /* Centraliza horizontalmente */
+    margin-right: auto; /* Centraliza horizontalmente */
+}
+
+/* Estilo para o nome do amigo */
+.friend-card .friend-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+/* --- Ajustes para o Modo Escuro --- */
+body.dark-mode .friend-card {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .friend-card .friend-name {
+    color: var(--light-text);
+}
+    
+/*
+      Esta regra força o container principal a ter uma margem no topo,
+      abrindo espaço para o header de 60px + 20px de respiro.
+    */
+    .main-container {
+        margin-top: 80px;
     }
 
-    /* Garante que o container do cabeçalho alinhe os itens corretamente */
+    /* Cabeçalho do Perfil */
     .profile-header {
         display: flex;
         align-items: center;
-        background-color: var(--dark-bg-secondary); /* Cor de fundo para o cabeçalho do perfil */
+        background-color: var(--light-text); /* Usa variável */
         padding: 20px;
         border-radius: var(--border-radius);
         margin-bottom: 20px;
+        border: 1px solid var(--light-border); /* Adiciona borda subtil */
+        transition: background-color 0.3s, border-color 0.3s;
     }
 
-    .profile-info {
-        flex: 1;
+    .profile-photo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 30px;
+        border: 4px solid var(--primary-color);
     }
-    
+
     .profile-name {
         font-size: 24px;
         font-weight: 700;
         margin: 0 0 5px;
-        color: var(--light-text); /* Corrigido para funcionar no seu tema escuro */
+        color: var(--dark-text); /* Usa variável */
     }
-    
+
     .profile-school {
         font-size: 16px;
-        color: var(--dark-text-secondary); /* Corrigido para funcionar no seu tema escuro */
+        color: var(--light-text-secondary); /* Usa variável */
         margin: 0 0 10px;
         display: flex;
         align-items: center;
@@ -68,7 +131,8 @@
         margin-right: 5px;
         color: var(--primary-color);
     }
-    
+
+    /* Hobbies */
     .profile-hobbies {
         display: flex;
         flex-wrap: wrap;
@@ -76,6 +140,7 @@
         margin-top: 10px;
     }
     
+    /* Botões de Ação no Perfil */
     .profile-actions {
         display: flex;
         gap: 10px;
@@ -92,35 +157,39 @@
         align-items: center;
         justify-content: center;
         transition: all 0.2s;
-    }
-    
-    .profile-btn i {
-        margin-right: 5px;
+        border: none;
     }
     
     .follow-btn {
         background-color: var(--primary-color);
-        color: white;
-        border: none;
+        color: var(--light-text);
     }
     
     .follow-btn:hover {
         background-color: var(--primary-hover);
     }
     
+    /* Botão de "Seguindo" */
+    .follow-btn.following {
+        background-color: var(--light-bg-secondary);
+        color: var(--dark-text);
+        border: 1px solid var(--light-border);
+    }
+    
     .message-btn {
-        background-color: var(--dark-bg-tertiary);
-        color: var(--light-text);
-        border: 1px solid var(--dark-border);
+        background-color: var(--light-bg-secondary);
+        color: var(--dark-text);
+        border: 1px solid var(--light-border);
     }
     
     .message-btn:hover {
-        background-color: var(--dark-bg);
+        background-color: #e0e0e0; /* Escurece um pouco no hover */
     }
     
+    /* Abas do Perfil */
     .profile-tabs {
         display: flex;
-        border-bottom: 1px solid var(--dark-border);
+        border-bottom: 1px solid var(--light-border);
         margin-bottom: 20px;
     }
     
@@ -128,7 +197,7 @@
         padding: 10px 20px;
         font-size: 16px;
         font-weight: 600;
-        color: var(--dark-text-secondary);
+        color: var(--light-text-secondary);
         cursor: pointer;
         border-bottom: 3px solid transparent;
         transition: all 0.2s;
@@ -140,102 +209,123 @@
     }
     
     .profile-tab:hover:not(.active) {
+        color: var(--dark-text);
+        border-bottom-color: var(--light-border);
+    }
+    
+    /* Grelha de Amigos */
+    .friends-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 15px;
+    }
+    
+    .friend-photo {
+        border: 2px solid var(--light-border);
+    }
+    
+    .friend-photo:hover {
+        border-color: var(--primary-color);
+    }
+    
+    .friend-name {
+        color: var(--light-text-secondary);
+    }
+    
+    /* Mensagens de "Carregando" e "Sem conteúdo" */
+    .loading-indicator, .no-content {
+        text-align: center;
+        padding: 30px;
+        color: var(--light-text-secondary);
+        background-color: var(--light-bg-secondary);
+        border-radius: 10px;
+    }
+
+    /* ================================== */
+    /* ESTILOS PARA O MODO ESCURO (DARK MODE) */
+    /* ================================== */
+
+    body.dark-mode .profile-header {
+        background-color: var(--dark-bg-secondary);
+        border-color: var(--dark-border);
+    }
+
+    body.dark-mode .profile-name {
         color: var(--light-text);
+    }
+
+    body.dark-mode .profile-school {
+        color: var(--dark-text-secondary);
+    }
+
+    body.dark-mode .profile-btn.message-btn {
+        background-color: var(--dark-bg-tertiary);
+        color: var(--light-text);
+        border-color: var(--dark-border);
+    }
+    
+    body.dark-mode .profile-btn.message-btn:hover {
+        background-color: #4a4b50;
+    }
+
+    body.dark-mode .follow-btn.following {
+        background-color: var(--dark-bg-tertiary);
+        color: var(--light-text);
+        border: 1px solid var(--dark-border);
+    }
+
+    body.dark-mode .profile-tabs {
         border-bottom-color: var(--dark-border);
     }
     
-        .profile-content {
-            margin-bottom: 30px;
-        }
-        
-        .profile-section {
-            margin-bottom: 20px;
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-right: 8px;
-            color: var(--primary-color);
-        }
-        
-        .friends-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 15px;
-        }
-        
-        .friend-item {
-            text-align: center;
-        }
-        
-        .friend-photo {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 5px;
-            border: 2px solid var(--border-color);
-            transition: transform 0.2s;
-        }
-        
-        .friend-photo:hover {
-            transform: scale(1.05);
-            border-color: var(--primary-color);
-        }
-        
-        .friend-name {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .posts-container {
-            display: flex;
+    body.dark-mode .profile-tab {
+        color: var(--dark-text-secondary);
+    }
+    
+    body.dark-mode .profile-tab.active {
+        color: var(--primary-hover);
+        border-bottom-color: var(--primary-hover);
+    }
+    
+    body.dark-mode .profile-tab:hover:not(.active) {
+        color: var(--light-text);
+        border-bottom-color: var(--dark-border);
+    }
+
+    body.dark-mode .friend-name {
+        color: var(--dark-text-secondary);
+    }
+
+    body.dark-mode .friend-photo {
+        border-color: var(--dark-border);
+    }
+
+    body.dark-mode .friend-photo:hover {
+        border-color: var(--primary-hover);
+    }
+
+    body.dark-mode .loading-indicator,
+    body.dark-mode .no-content {
+        background-color: var(--dark-bg-secondary);
+        color: var(--dark-text-secondary);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .profile-header {
             flex-direction: column;
-            gap: 20px;
-        }
-        
-        .loading-indicator {
             text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
         }
         
-        .no-content {
-            text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
+        .profile-photo {
+            margin-right: 0;
+            margin-bottom: 15px;
         }
         
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .profile-photo {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-            
-            .profile-actions {
-                justify-content: center;
-            }
+        .profile-actions {
+            justify-content: center;
         }
+    }
     </style>
 </head>
 <body>
@@ -363,7 +453,6 @@
         </div>
     </template>
    
-    <script src="user.js"></script>
     
      
 </body>

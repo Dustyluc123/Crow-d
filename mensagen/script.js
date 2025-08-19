@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
+          const profileLink = document.querySelector('.main-nav a.profile-link');
+        if (profileLink) {
+            // Define o link para a página do utilizador logado (user.html) com o UID correto
+            profileLink.href = `../pages/user.html?uid=${user.uid}`;
+        }
         if (user) {
             currentUser = user;
             await loadUserProfile(user.uid);

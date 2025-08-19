@@ -39,11 +39,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let isFollowing = false;
     let likeInProgress = {};
     let commentLikeInProgress = {};
+     let postsListener = null;
+    let lastVisiblePost = null;
+     let isLoadingMorePosts = false;
 
     // ==========================================================
     // LÓGICA PRINCIPAL DA PÁGINA
-    // ==========================================================
-
+   
     auth.onAuthStateChanged(async function(user) {
         if (user) {
             currentUser = user;
@@ -56,6 +58,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = '../home/home.html';
                 return;
             }
+            const profileLink = document.querySelector('.main-nav a.profile-link');
+        if (profileLink) {
+            // Define o link para a página do utilizador logado (user.html) com o UID correto
+            profileLink.href = `../pages/user.html?uid=${user.uid}`;
+        }
             
             if (profileUserId === currentUser.uid) {
                 if (followBtn) followBtn.style.display = 'none';
@@ -78,6 +85,13 @@ document.addEventListener('DOMContentLoaded', function() {
             await loadProfileUser(profileUserId);
             loadUserPosts();
             loadUserFriends();
+            // Adicionar o listener de scroll para o feed do utilizador
+window.addEventListener('scroll', () => {
+    // Se o utilizador estiver perto do fundo da página E não estiver a carregar mais posts
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200 && !isLoadingMorePosts) {
+        loadMoreUserPosts();
+    }
+});
         } else {
             window.location.href = '../login/login.html';
         }
@@ -156,44 +170,68 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function toggleFollow() {
-        if (!currentUserProfile) {
-            alert("Seu perfil não foi carregado. Tente novamente.");
-            return;
-        }
-        try {
-            const followingRef = db.collection('users').doc(currentUser.uid).collection('following').doc(profileUserId);
-            const followerRef = db.collection('users').doc(profileUserId).collection('followers').doc(currentUser.uid);
+    // Desativa o botão para prevenir múltiplos cliques
+    followBtn.disabled = true;
 
-            if (isFollowing) {
-                await followingRef.delete();
-                await followerRef.delete();
-            } else {
-                await followingRef.set({
-                    nickname: profileUser.nickname || 'Usuário',
-                    photoURL: profileUser.photoURL || null,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                await followerRef.set({
-                    nickname: currentUserProfile.nickname || 'Usuário',
-                    photoURL: currentUserProfile.photoURL || null,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                await db.collection('users').doc(profileUserId).collection('notifications').add({
-                    type: 'follow',
-                    fromUserId: currentUser.uid,
-                    fromUserName: currentUserProfile.nickname || 'Usuário',
-                    fromUserPhoto: currentUserProfile.photoURL || null,
-                    content: 'começou a seguir você',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    read: false
-                });
-            }
-            isFollowing = !isFollowing;
-            updateFollowButton();
-        } catch (error) {
-            console.error('Erro ao alternar seguir:', error);
+    try {
+        if (!currentUser || !currentUserProfile) {
+            alert("Você precisa estar logado e o seu perfil precisa estar carregado para seguir outros utilizadores.");
+            return; // Sai da função se os perfis não estiverem prontos
         }
+
+        // Referências diretas para os documentos no Firestore
+        const followingRef = db.collection('users').doc(currentUser.uid).collection('following').doc(profileUserId);
+        const followerRef = db.collection('users').doc(profileUserId).collection('followers').doc(currentUser.uid);
+
+        if (isFollowing) {
+            // --- AÇÃO: DEIXAR DE SEGUIR ---
+            await followingRef.delete();
+            await followerRef.delete();
+            
+            console.log("Deixou de seguir com sucesso.");
+
+        } else {
+            // --- AÇÃO: SEGUIR ---
+            // Grava os dados do utilizador que está a ser seguido na sua lista de "a seguir"
+            await followingRef.set({
+                nickname: profileUser.nickname || 'Usuário',
+                photoURL: profileUser.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Grava os seus dados na lista de "seguidores" do outro utilizador
+            await followerRef.set({
+                nickname: currentUserProfile.nickname || 'Usuário',
+                photoURL: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Envia uma notificação para o utilizador que começou a ser seguido
+            await db.collection('users').doc(profileUserId).collection('notifications').add({
+                type: 'follow',
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserProfile.nickname || 'Usuário',
+                fromUserPhoto: currentUserProfile.photoURL || null,
+                content: 'começou a seguir você',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+            
+            console.log("Começou a seguir com sucesso.");
+        }
+
+        // Atualiza o estado e o botão
+        isFollowing = !isFollowing;
+        updateFollowButton();
+
+    } catch (error) {
+        console.error("Erro ao seguir/deixar de seguir:", error);
+        alert("Ocorreu um erro. Por favor, tente novamente.");
+    } finally {
+        // Reativa o botão no final, quer a operação tenha sucesso ou falhe
+        followBtn.disabled = false;
     }
+}
 
     function updateFollowButton() {
         if (isFollowing) {
@@ -206,48 +244,122 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadUserPosts() {
-        postsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        db.collection('posts').where('authorId', '==', profileUserId).orderBy('timestamp', 'desc').limit(20)
-        .onSnapshot(snapshot => {
-            postsContainer.innerHTML = '';
-            if (snapshot.empty) {
-                postsContainer.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Nenhuma publicação encontrada.</div>';
-                return;
-            }
-            snapshot.forEach(doc => {
-                addPostToDOM({ id: doc.id, ...doc.data() });
-            });
-        });
-    }
+    postsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    isLoadingMorePosts = true; // Previne carregamentos duplicados
 
-    async function loadUserFriends() {
-        friendsGrid.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        const followersSnapshot = await db.collection('users').doc(profileUserId).collection('followers').limit(12).get();
-        
-        if (followersSnapshot.empty) {
-            friendsGrid.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Este usuário ainda não tem amigos.</div>';
+    const query = db.collection('posts')
+        .where('authorId', '==', profileUserId)
+        .orderBy('timestamp', 'desc')
+        .limit(10); // Carrega os primeiros 10 posts
+
+    query.get().then(snapshot => {
+        postsContainer.innerHTML = '';
+        if (snapshot.empty) {
+            postsContainer.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Nenhuma publicação foi feita ainda.</div>';
             return;
         }
         
-        friendsGrid.innerHTML = '';
-        followersSnapshot.forEach(doc => {
+        snapshot.forEach(doc => {
+            const postElement = addPostToDOM({ id: doc.id, ...doc.data() });
+            if (postElement) {
+                postsContainer.appendChild(postElement);
+            }
+        });
+
+        // Guarda a referência do último post para a próxima consulta
+        lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+        isLoadingMorePosts = false;
+    });
+}
+async function loadMoreUserPosts() {
+    if (!lastVisiblePost) return; // Não carrega mais se a primeira página não carregou
+
+    isLoadingMorePosts = true;
+    
+    // Opcional: Adicionar um indicador de "a carregar mais" no fundo da página
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    postsContainer.appendChild(loadingIndicator);
+
+    const query = db.collection('posts')
+        .where('authorId', '==', profileUserId)
+        .orderBy('timestamp', 'desc')
+        .startAfter(lastVisiblePost) // Começa a busca depois do último post visível
+        .limit(10); // Carrega mais 10 posts
+
+    const snapshot = await query.get();
+    
+    // Remove o indicador de "a carregar mais"
+    loadingIndicator.remove();
+
+    if (snapshot.empty) {
+        lastVisiblePost = null; // Indica que não há mais posts para carregar
+        isLoadingMorePosts = false;
+        return;
+    }
+
+    snapshot.forEach(doc => {
+        const postElement = addPostToDOM({ id: doc.id, ...doc.data() });
+        if (postElement) {
+            postsContainer.appendChild(postElement);
+        }
+    });
+
+    lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+    isLoadingMorePosts = false;
+}
+
+  async function loadUserFriends() {
+    friendsGrid.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+
+    try {
+        // CORREÇÃO: A consulta agora aponta para a coleção 'following'
+        // Isto fará com que a aba "Amigos" mostre quem o utilizador do perfil segue.
+        const followingSnapshot = await db.collection('users').doc(profileUserId)
+            .collection('following').limit(12).get();
+
+        if (followingSnapshot.empty) {
+            friendsGrid.innerHTML = '<div class="no-content"><i class="fas fa-info-circle"></i> Este utilizador ainda não segue ninguém.</div>';
+            return;
+        }
+
+        friendsGrid.innerHTML = ''; // Limpa o "a carregar"
+        followingSnapshot.forEach(doc => {
+            // Passamos o ID do documento (que é o ID do amigo) e os seus dados
             addFriendToDOM({ id: doc.id, ...doc.data() });
         });
+    } catch (error) {
+        console.error("Erro ao carregar os utilizadores que segue:", error);
+        friendsGrid.innerHTML = '<div class="error-message">Ocorreu um erro ao carregar os amigos.</div>';
     }
-
+}
     function addFriendToDOM(friend) {
-        const friendElement = document.createElement('div');
-        friendElement.className = 'friend-item';
-        friendElement.innerHTML = `
-            <a href="user.html?uid=${friend.id}">
-                <img src="${friend.photoURL || '../img/Design sem nome2.png'}" alt="Foto de perfil" class="friend-photo">
-                <p class="friend-name">${friend.nickname || 'Usuário'}</p>
-            </a>
-        `;
-        friendsGrid.appendChild(friendElement);
-    }
+    // Cria o link (<a>) que será o cartão de amigo clicável
+    const friendLink = document.createElement('a');
+    friendLink.href = `user.html?uid=${friend.id}`;
+    friendLink.className = 'friend-card'; // Aplica o estilo principal do cartão
 
-    function addPostToDOM(post) { 
+    // Cria a imagem de perfil (avatar)
+    const friendAvatar = document.createElement('img');
+    friendAvatar.src = friend.photoURL || '../img/Design sem nome2.png';
+    friendAvatar.alt = 'Foto de perfil';
+    friendAvatar.className = 'friend-avatar'; // Aplica o estilo da foto
+
+    // Cria o nome do amigo
+    const friendName = document.createElement('h4');
+    friendName.className = 'friend-name';
+    friendName.textContent = friend.nickname || 'Usuário';
+
+    // Adiciona a imagem e o nome ao link (cartão)
+    friendLink.appendChild(friendAvatar);
+    friendLink.appendChild(friendName);
+
+    // Adiciona o cartão de amigo completo à grelha na página
+    friendsGrid.appendChild(friendLink);
+}
+
+    function addPostToDOM(post, isSingleView = false) {
     
     if (!postsContainer || !postTemplate) return;
 
@@ -457,7 +569,7 @@ commentButton.addEventListener("click", () => {
 
       // Verificar se o usuário está autenticado
       if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para curtir.");
+            showToast("Você precisa estar logado para curtir.");
         likeInProgress[postId] = false;
         return;
       }
@@ -540,7 +652,7 @@ commentButton.addEventListener("click", () => {
     async function toggleRepost(postId, buttonElement) {  try {
         // 1. VERIFICAÇÕES INICIAIS DE SEGURANÇA
         if (!currentUser || !currentUserProfile) {
-            showCustomAlert("Você precisa estar logado para republicar.");
+            showToast("Você precisa estar logado para republicar.");
             return;
         }
 
@@ -548,7 +660,7 @@ commentButton.addEventListener("click", () => {
         const postDoc = await postRef.get();
 
         if (!postDoc.exists) {
-            showCustomAlert("Esta publicação não existe mais.");
+            showToast("Esta publicação não existe mais.");
             return;
         }
         
@@ -556,7 +668,7 @@ commentButton.addEventListener("click", () => {
 
         // Impede que alguém republique uma republicação
         if (originalPostData.isRepost) {
-            showCustomAlert("Não é possível republicar uma republicação.");
+            showToast("Não é possível republicar uma republicação.");
             return;
         }
 
@@ -660,10 +772,10 @@ commentButton.addEventListener("click", () => {
 
     } catch (error) {
         console.error("Erro ao republicar/desrepublicar:", error);
-        showCustomAlert("Ocorreu um erro. Tente novamente.");
+        showToast("Ocorreu um erro. Tente novamente.");
     }}
     async function toggleSavePost(postId, buttonElement) { if (!currentUser) {
-        showCustomAlert("Você precisa estar logado para salvar publicações.");
+        showToast("Você precisa estar logado para salvar publicações.");
         return;
     }
 
@@ -701,7 +813,7 @@ commentButton.addEventListener("click", () => {
         }
     } catch (error) {
         console.error("Erro ao salvar/remover post:", error);
-        showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
+        showToast("Ocorreu um erro ao tentar salvar a publicação.");
     } }
     async function sharePost(postId) { // Pega a URL da página atual e remove quaisquer parâmetros antigos (? e #)
     const cleanUrl = window.location.href.split('?')[0].split('#')[0];
@@ -720,7 +832,7 @@ commentButton.addEventListener("click", () => {
       console.error("Erro ao copiar o link:", error);
       
       // Se a cópia automática falhar, mostra um alerta com o link para cópia manual
-      showCustomAlert(`Não foi possível copiar o link. Copie manualmente: ${postUrl}`);
+      showToast(`Não foi possível copiar o link. Copie manualmente: ${postUrl}`);
     } }
     function loadComments(postId, commentsListElement) { if (!commentsListElement) {
       console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
@@ -856,7 +968,7 @@ commentButton.addEventListener("click", () => {
     try {
       // Verificar se o usuário está autenticado
       if (!currentUser || !currentUserProfile) {
-            showCustomAlert("Você precisa estar logado para comentar.");
+            showToast("Você precisa estar logado para comentar.");
         return;
       }
 
@@ -912,10 +1024,46 @@ commentButton.addEventListener("click", () => {
       }
     } catch (error) {
       console.error("Erro ao adicionar comentário:", error);
-          showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
+          showToast("Erro ao adicionar comentário. Tente novamente.");
     }
   }
+  function showCustomAlert(message, title = "Aviso") {
+    const modal = document.getElementById('customAlertModal');
+    const modalTitle = document.getElementById('customAlertTitle');
+    const modalMessage = document.getElementById('customAlertMessage');
+    const closeBtn = document.getElementById('customAlertCloseBtn');
+    const okBtn = document.getElementById('customAlertOkBtn');
 
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    modal.style.display = 'flex';
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    closeBtn.onclick = closeModal;
+    okBtn.onclick = closeModal;
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+  }
+function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container') || document.createElement('div');
+        if (!document.getElementById('toast-container')) {
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${message}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
   // Função para alternar curtida em um comentário
   async function toggleCommentLike(postId, commentId) {
     try {
@@ -930,7 +1078,7 @@ commentButton.addEventListener("click", () => {
 
       // Verificar se o usuário está autenticado
       if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para curtir.");
+            showToast("Você precisa estar logado para curtir.");
         commentLikeInProgress[commentKey] = false;
         return;
       }
@@ -1025,7 +1173,7 @@ commentButton.addEventListener("click", () => {
 
       // Verificar se o usuário está autenticado
       if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para curtir.");
+            showToast("Você precisa estar logado para curtir.");
         commentLikeInProgress[commentKey] = false;
         return;
       }

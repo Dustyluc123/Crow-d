@@ -112,6 +112,38 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    auth.onAuthStateChanged(async function(user) {
+    if (user) {
+        // Usuário está logado
+        currentUser = user;
+
+        // ==========================================================
+        //      INÍCIO DA LÓGICA ADICIONADA
+        // ==========================================================
+        
+        // Encontra o botão/link de perfil no header pela sua classe
+        const profileLink = document.querySelector('.main-nav a.profile-link');
+        if (profileLink) {
+            // Define o link para a página do utilizador logado (user.html) com o UID correto
+            profileLink.href = `../pages/user.html?uid=${user.uid}`;
+        }
+
+        // ==========================================================
+        //      FIM DA LÓGICA ADICIONADA
+        // ==========================================================
+        
+        // Carregar perfil do usuário
+        await loadUserProfile(user.uid);
+        
+        // Carregar amigos, solicitações e sugestões
+        loadFriendRequests();
+        loadFriends();
+        loadSuggestions();
+    } else {
+        // Usuário não está logado, redirecionar para login
+        window.location.href = '../login/login.html';
+    }
+});
     
     // Função alternativa para criar marcadores personalizados
     function createCustomMarkers(events) {
@@ -161,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
     
     // Inicializar o mapa
     initMap();
@@ -323,6 +356,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         mapTooltip.style.display = 'none';
                     });
                 });
+                function setupNotificationListener(userId) {
+    const notificationsRef = db.collection('users').doc(userId).collection('notifications');
+
+    // Escuta por qualquer alteração em notificações onde 'read' é 'false'
+    notificationsRef.where('read', '==', false).onSnapshot(snapshot => {
+        const unreadCount = snapshot.size; // Pega a quantidade de docs não lidos
+        const badge = document.getElementById('notification-badge');
+
+        if (badge) {
+            // Se houver mais de 0 notificações não lidas, mostra a bolinha. Senão, esconde.
+            badge.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+    });
+}
             });
             //testeeee
             //testee

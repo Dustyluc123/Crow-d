@@ -99,24 +99,38 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
     const friendForm = document.querySelector('.modal-form');
     
-    // Verificar autenticação do usuário
-    auth.onAuthStateChanged(async function(user) {
-        if (user) {
-            // Usuário está logado
-            currentUser = user;
-            
-            // Carregar perfil do usuário
-            await loadUserProfile(user.uid);
-            
-            // Carregar amigos, solicitações e sugestões
-            loadFriendRequests();
-            loadFriends();
-            loadSuggestions();
-        } else {
-            // Usuário não está logado, redirecionar para login
-            window.location.href = '../login/login.html';
+  auth.onAuthStateChanged(async function(user) {
+    if (user) {
+        // Usuário está logado
+        currentUser = user;
+
+        // ==========================================================
+        //      INÍCIO DA LÓGICA ADICIONADA
+        // ==========================================================
+        
+        // Encontra o botão/link de perfil no header pela sua classe
+        const profileLink = document.querySelector('.main-nav a.profile-link');
+        if (profileLink) {
+            // Define o link para a página do utilizador logado (user.html) com o UID correto
+            profileLink.href = `../pages/user.html?uid=${user.uid}`;
         }
-    });
+
+        // ==========================================================
+        //      FIM DA LÓGICA ADICIONADA
+        // ==========================================================
+        
+        // Carregar perfil do usuário
+        await loadUserProfile(user.uid);
+        
+        // Carregar amigos, solicitações e sugestões
+        loadFriendRequests();
+        loadFriends();
+        loadSuggestions();
+    } else {
+        // Usuário não está logado, redirecionar para login
+        window.location.href = '../login/login.html';
+    }
+});
 
     // Event listener para o botão de logout
     if (logoutButton) {

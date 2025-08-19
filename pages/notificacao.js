@@ -1,15 +1,15 @@
 // Sistema de notificações para o Crow-d com Firebase
 document.addEventListener('DOMContentLoaded', function() {
-    
+    // Configuração do Firebase
     const firebaseConfig = {
-    apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
-    authDomain: "tcclogin-7e7b8.firebaseapp.com",
-    projectId: "tcclogin-7e7b8",
-    storageBucket: "tcclogin-7e7b8.appspot.com",
-    messagingSenderId: "1066633833169",
-    appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0",
-  };
-  ß 
+        apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+        authDomain: "tcclogin-7e7b8.firebaseapp.com",
+        projectId: "tcclogin-7e7b8",
+        storageBucket: "tcclogin-7e7b8.appspot.com",
+        messagingSenderId: "1066633833169",
+        appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
+
     // Inicializar Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
@@ -40,6 +40,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
+          const profileLink = document.querySelector('.main-nav a.profile-link');
+        if (profileLink) {
+            // Define o link para a página do utilizador logado (user.html) com o UID correto
+            profileLink.href = `../pages/user.html?uid=${user.uid}`;
+        }
         if (user) {
             currentUser = user;
             await loadUserProfile(user.uid);
