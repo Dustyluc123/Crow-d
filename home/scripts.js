@@ -80,6 +80,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const singlePostView = document.getElementById("single-post-view");
   const focusedPostContainer = document.getElementById("focused-post-container");
   const backToFeedBtn = document.getElementById("back-to-feed-btn");
+  const addImageBtn = document.getElementById("add-image-btn");
+  const imageFileInput = document.getElementById("image-file-input");
+  const imagePreviewContainer = document.getElementById("image-preview-container");
+  const imagePreview = document.getElementById("image-preview");
+  const removeImageBtn = document.getElementById("remove-image-btn");
   
   // Variáveis globais
   let currentUser = null;
@@ -87,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let postsListener = null;
   let likeInProgress = {}; // Controle de likes em andamento
   let commentLikeInProgress = {}; // Controle de likes em comentários
+  let selectedImageFile = null;
   // --- VARIÁVEIS PARA O SCROLL INFINITO ---
   let lastVisiblePost = null; // Guarda o último post carregado
   let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
@@ -238,9 +244,10 @@ auth.onAuthStateChanged(async function (user) {
   if (postButton && postInput) {
     postButton.addEventListener("click", function () {
       const content = postInput.value.trim();
-      if (content) {
-        createPost(content);
+      if (content || selectedImageFile) {
+        createPost(content, selectedImageFile);
         postInput.value = "";
+        removeImagePreview();
       }
     });
 
@@ -248,12 +255,44 @@ auth.onAuthStateChanged(async function (user) {
     postInput.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
         const content = postInput.value.trim();
-        if (content) {
-          createPost(content);
+        if (content || selectedImageFile) {
+          createPost(content, selectedImageFile);
           postInput.value = "";
+          removeImagePreview();
         }
       }
     });
+  }
+
+  // Event listeners para upload de imagem
+  if (addImageBtn) {
+    addImageBtn.addEventListener("click", () => imageFileInput.click());
+  }
+
+  if (imageFileInput) {
+    imageFileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          imagePreview.src = event.target.result;
+          imagePreviewContainer.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (removeImageBtn) {
+    removeImageBtn.addEventListener("click", removeImagePreview);
+  }
+
+  function removeImagePreview() {
+    selectedImageFile = null;
+    imageFileInput.value = "";
+    imagePreviewContainer.style.display = "none";
+    imagePreview.src = "#";
   }
 
   // Função para carregar o perfil do usuário
@@ -404,7 +443,7 @@ function handleScroll() {
     }
 }
   // Função para criar um novo post
-  async function createPost(content) {
+  async function createPost(content, imageFile) {
     try {
       // Verificar se o usuário está autenticado
       if (!currentUser || !currentUserProfile) {
@@ -419,9 +458,18 @@ function handleScroll() {
           '<i class="fas fa-spinner fa-spin"></i> Publicando...';
       }
 
+      let imageUrl = null;
+      if (imageFile) {
+        const filePath = `posts/${currentUser.uid}/${Date.now()}_${imageFile.name}`;
+        const fileRef = storage.ref(filePath);
+        const uploadTask = await fileRef.put(imageFile);
+        imageUrl = await uploadTask.ref.getDownloadURL();
+      }
+
       // Criar objeto de post
       const postData = {
         content,
+        imageUrl,
         authorId: currentUser.uid,
         authorName: currentUserProfile.nickname || "Usuário",
         authorPhoto: currentUserProfile.photoURL || null,
@@ -605,6 +653,8 @@ function hideSinglePostView() {
     const authorNameElement = postClone.querySelector(".post-author-name");
     const timestampElement = postClone.querySelector(".post-timestamp");
     const contentElement = postClone.querySelector(".post-text");
+    const postMedia = postClone.querySelector(".post-media");
+    const postImage = postClone.querySelector(".post-image");
     const likeButton = postClone.querySelector(".like-btn");
     const likeCount = postClone.querySelector(".like-count");
     const commentButton = postClone.querySelector(".comment-btn");
@@ -620,6 +670,11 @@ function hideSinglePostView() {
     postElement.dataset.postId = post.id;
     postElement.dataset.authorId = post.authorId;
     postElement.dataset.originalPostId = post.originalPostId;
+
+    if (post.imageUrl) {
+        postImage.src = post.imageUrl;
+        postMedia.style.display = "block";
+    }
 
     if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
         saveButton.classList.add("saved");
