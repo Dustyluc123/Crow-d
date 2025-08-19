@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // ==========================================================
     // CONFIGURAÇÃO DO FIREBASE
     // ==========================================================
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const createEventForm = document.querySelector('#createEventModal .modal-form');
     const createEventBtn = document.getElementById('createEventBtn');
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
-    
+
 
     // ==========================================================
     // LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO
     // ==========================================================
-    auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(function (user) {
         if (user) {
             currentUser = user;
             const profileLink = document.querySelector('.main-nav a.profile-link');
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
         eventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando eventos...</div>';
         popularEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
         if (myEventsContainer) myEventsContainer.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i></li>';
-        
+
         try {
             const snapshot = await db.collection('events')
                 .orderBy('eventDateTime', 'asc')
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             eventsContainer.innerHTML = '';
-            
+
             const allEvents = [];
             snapshot.forEach(doc => {
                 const eventData = { id: doc.id, ...doc.data() };
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
             eventsContainer.innerHTML = '<p>Ocorreu um erro ao carregar os eventos.</p>';
         }
     }
-    
+
     /**
      * NOVA FUNÇÃO: Exibe os eventos do usuário na barra lateral.
      * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
@@ -118,8 +118,11 @@ document.addEventListener('DOMContentLoaded', function() {
      * Cria o HTML para a lista de eventos populares.
      * @param {Array} popularEvents - Uma lista com os eventos mais populares.
      */
+    /**
+
+     */
     function displayPopularEvents(popularEvents) {
-        popularEventsContainer.innerHTML = ''; 
+        popularEventsContainer.innerHTML = '';
 
         if (popularEvents.length === 0) {
             popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
@@ -130,6 +133,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const eventDate = event.eventDateTime.toDate();
             const day = eventDate.getDate();
             const month = eventDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+
+            // **INÍCIO DA ALTERAÇÃO**
+            // Cria um link <a> que envolve todo o item do evento
+            const eventLink = document.createElement('a');
+            eventLink.href = `single-event.html?id=${event.id}`;
+            eventLink.style.textDecoration = 'none';
+            eventLink.style.color = 'inherit';
 
             const eventElement = document.createElement('div');
             eventElement.className = 'event';
@@ -143,7 +153,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
                 </div>
             `;
-            popularEventsContainer.appendChild(eventElement);
+
+            // Adiciona o elemento do evento dentro do link
+            eventLink.appendChild(eventElement);
+            // Adiciona o link ao contêiner
+            popularEventsContainer.appendChild(eventLink);
+            // **FIM DA ALTERAÇÃO**
         });
 
         const seeMoreLink = document.createElement('a');
@@ -152,20 +167,30 @@ document.addEventListener('DOMContentLoaded', function() {
         seeMoreLink.textContent = "Ver mais";
         popularEventsContainer.appendChild(seeMoreLink);
     }
-
     /**
      * Cria o HTML de um cartão de evento e adiciona-o à página.
      * @param {object} event - O objeto do evento com os seus dados.
      */
     function addEventToDOM(event) {
+        // Cria um link <a> que envolve todo o card do evento
+        const eventCardWrapper = document.createElement('a');
+        eventCardWrapper.className = 'event-card-link';
+        eventCardWrapper.style.textDecoration = 'none'; // Garante que não haja sublinhado
+        eventCardWrapper.href = `single-event.html?id=${event.id}`;
+
         const eventCard = document.createElement('div');
         eventCard.className = 'event-card';
 
         const eventDate = event.eventDateTime.toDate();
         const formattedDate = eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        
+
         const isParticipating = event.participants && event.participants.includes(currentUser.uid);
+        const isCreator = event.creatorId === currentUser.uid;
+
+        // Adiciona o botão de excluir apenas se o usuário for o criador
+        const deleteButtonHTML = isCreator ?
+            `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
 
         eventCard.innerHTML = `
             <div class="event-header">
@@ -188,19 +213,48 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button class="event-btn participate-btn ${isParticipating ? 'secondary' : ''}">
                         ${isParticipating ? 'Sair do Evento' : 'Participar'}
                     </button>
+                    ${deleteButtonHTML}
                 </div>
             </div>
         `;
-        
-        const participateBtn = eventCard.querySelector('.participate-btn');
-        participateBtn.addEventListener('click', () => toggleParticipation(event.id, participateBtn));
 
-        eventsContainer.appendChild(eventCard);
+        // Adiciona listeners aos botões para impedir a navegação ao clicar neles
+        const participateBtn = eventCard.querySelector('.participate-btn');
+        participateBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleParticipation(event.id, participateBtn);
+        });
+
+        if (isCreator) {
+            const deleteBtn = eventCard.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteEvent(event.id);
+            });
+        }
+
+        eventCardWrapper.appendChild(eventCard);
+        eventsContainer.appendChild(eventCardWrapper);
+    }
+    // NOVA FUNÇÃO PARA DELETAR EVENTOS
+    async function deleteEvent(eventId) {
+        if (confirm("Você tem certeza que quer excluir este evento? Esta ação não pode ser desfeita.")) {
+            try {
+                await db.collection('events').doc(eventId).delete();
+                alert("Evento excluído com sucesso!");
+                loadEvents(); // Recarrega a lista de eventos
+            } catch (error) {
+                console.error("Erro ao excluir evento:", error);
+                alert("Ocorreu um erro ao excluir o evento.");
+            }
+        }
     }
 
     async function toggleParticipation(eventId, button) {
         const eventRef = db.collection('events').doc(eventId);
-        
+
         try {
             const doc = await eventRef.get();
             if (!doc.exists) return;
@@ -218,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     participants: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                 });
             }
-            loadEvents(); 
+            loadEvents();
         } catch (error) {
             console.error("Erro ao atualizar participação:", error);
             alert("Ocorreu um erro ao tentar participar do evento.");

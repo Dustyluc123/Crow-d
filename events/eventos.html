@@ -30,26 +30,20 @@
         background-color: var(--primary-color);
     }
 
-    /* ... (seu CSS existente) ... */
-
-    /* Garante que todos os cards tenham a mesma altura e alinhamento */
     .event-card {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        /* Ocupa a altura total do contêiner da grade */
+        height: 100%; 
     }
 
     .event-content {
-        flex-grow: 1;
-        /* Faz esta área crescer para preencher o espaço */
+        flex-grow: 1; 
         display: flex;
         flex-direction: column;
     }
 
     .event-actions {
-        margin-top: auto;
-        /* Empurra os botões para o final do card */
+        margin-top: auto; 
     }
 
     /* Limita a descrição a 3 linhas e adiciona "..." */
@@ -57,10 +51,18 @@
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
-        line-height: 1.5em;
-        /* Ajuste o espaçamento entre linhas se necessário */
-        min-height: 4.5em;
-        /* line-height * line-clamp (garante altura mínima) */
+       
+        -webkit-box-orient: vertical;
+        line-height: 1.5em; 
+        min-height: 4.5em; 
+    }
+
+    /* Adicionado para os links dos cards */
+    .event-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        height: 100%;
     }
 </style>
 
