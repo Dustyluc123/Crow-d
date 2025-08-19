@@ -186,27 +186,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função para salvar todos os dados do perfil no Firestore
     async function saveProfileData(userId) {
         try {
-            // Coletar dados do formulário
-            const nickname = document.getElementById('nickname').value;
+            const nickname = document.getElementById('nickname').value.trim();
+
+            // --- INÍCIO DA VERIFICAÇÃO DE NICKNAME ---
+            if (nickname) {
+                const querySnapshot = await db.collection('users').where('nickname', '==', nickname).get();
+                if (!querySnapshot.empty) {
+                    // Nickname já existe, joga um erro para ser pego pelo catch
+                    throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
+                }
+            } else {
+                throw new Error("O apelido é obrigatório.");
+            }
+            // --- FIM DA VERIFICAÇÃO DE NICKNAME ---
+
+            // Coletar outros dados do formulário
             const bio = document.getElementById('bio').value;
             const school = document.getElementById('school').value;
             const grade = document.getElementById('grade').value;
             const photoURL = document.getElementById('photoURL').value.trim();
             
-            // Coletar hobbies selecionados
             const selectedHobbies = [];
             const hobbyCheckboxes = document.querySelectorAll('input[name="hobbies"]:checked');
             hobbyCheckboxes.forEach(checkbox => {
                 selectedHobbies.push(checkbox.value);
             });
             
-            // Coletar hobbies personalizados
             const customHobbies = getCustomHobbies();
-            
-            // Coletar visibilidade
             const visibility = document.querySelector('input[name="visibility"]:checked').value;
             
-            // Criar objeto de perfil
             const profileData = {
                 nickname,
                 bio,
@@ -215,26 +223,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 hobbies: selectedHobbies,
                 customHobbies,
                 visibility,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
-            // Adicionar URL da foto ao objeto de perfil se fornecida
             if (photoURL) {
                 profileData.photoURL = photoURL;
             }
             
-            // Atualizar mensagem de carregamento
             if (loadingMessage) {
                 loadingMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando dados do perfil...';
             }
             
-            // Salvar no Firestore
             await db.collection('users').doc(userId).set(profileData, { merge: true });
             
             return true;
         } catch (error) {
             console.error('Erro ao salvar perfil:', error);
-            throw error;
+            throw error; // Re-joga o erro para o .catch() do listener do formulário
         }
     }
     
@@ -259,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('nickname').value = profileData.nickname || '';
                     document.getElementById('bio').value = profileData.bio || '';
                     
-                    // Selecionar escola
                     if (profileData.school) {
                         const schoolSelect = document.getElementById('school');
                         for (let i = 0; i < schoolSelect.options.length; i++) {
@@ -270,7 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    // Selecionar série/ano
                     if (profileData.grade) {
                         const gradeSelect = document.getElementById('grade');
                         for (let i = 0; i < gradeSelect.options.length; i++) {
@@ -281,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    // Marcar hobbies
                     if (profileData.hobbies && profileData.hobbies.length > 0) {
                         const hobbyCheckboxes = document.querySelectorAll('input[name="hobbies"]');
                         hobbyCheckboxes.forEach(checkbox => {
@@ -291,12 +294,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
                     
-                    // Carregar hobbies personalizados
                     if (profileData.customHobbies) {
                         loadCustomHobbies(profileData.customHobbies);
                     }
                     
-                    // Definir visibilidade
                     if (profileData.visibility) {
                         const visibilityRadios = document.querySelectorAll('input[name="visibility"]');
                         visibilityRadios.forEach(radio => {
@@ -304,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
                     
-                    // Carregar foto do perfil
                     if (profileData.photoURL) {
                         photoURLInput.value = profileData.photoURL;
                         photoPreview.src = profileData.photoURL;

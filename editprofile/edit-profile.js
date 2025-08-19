@@ -141,8 +141,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const grade = gradeSelect.value;
             const selectedHobbies = [...hobbyCheckboxes].filter(c => c.checked).map(c => c.value);
 
-            if (!nickname || !school) {
-                alert('Preencha nome e escola.');
+            // --- INÍCIO DA VERIFICAÇÃO DE NICKNAME ---
+            if (!nickname) {
+                throw new Error("O apelido é obrigatório.");
+            }
+
+            // Verifica se o nickname foi alterado
+            if (nickname !== currentUserProfile.nickname) {
+                const querySnapshot = await db.collection('users').where('nickname', '==', nickname).get();
+                if (!querySnapshot.empty) {
+                    // Nickname já existe, lança um erro
+                    throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
+                }
+            }
+            // --- FIM DA VERIFICAÇÃO DE NICKNAME ---
+
+            if (!school) {
+                alert('Preencha a escola.');
                 saveProfileBtn.disabled = false;
                 saveProfileBtn.innerHTML = 'Salvar alterações';
                 isSubmitting = false;
@@ -177,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (err) {
             console.error('Erro ao salvar perfil:', err);
-            alert('Erro ao salvar perfil.');
+            alert('Erro ao salvar perfil: ' + err.message);
             saveProfileBtn.disabled = false;
             saveProfileBtn.innerHTML = 'Salvar alterações';
             isSubmitting = false;
