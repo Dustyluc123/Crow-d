@@ -1,195 +1,199 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crow-d - Página Principal</title>
-    <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Crow-d - Página Principal</title>
+   <link rel="stylesheet" href="home.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body>
-    <div id="toast-container"></div>
-    <header>
-        <div class="logo">
-            <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
-            <span>Crow-d</span>
-        </div>
-        <nav class="main-nav">
-            <a href="../home/home.html" class="active"><i class="fas fa-home"></i> Feed</a>
-            <a href="../friends/amigos.html"><i class="fas fa-user-friends"></i> Amigos</a>
-            <a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i> Mensagens</a>
-            <a href="#" class="profile-link"><i class="fas fa-user"></i> Perfil</a>
-        </nav>
-        <div class="user-actions">
-            <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
-        </div>
-    </header>
+   <div id="toast-container"></div>
+   <header>
+       <div class="logo">
+           <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
+           <span>Crow-d</span>
+       </div>
+       <nav class="main-nav">
+           <a href="../home/home.html" class="active"><i class="fas fa-home"></i> Feed</a>
+           <a href="../friends/amigos.html"><i class="fas fa-user-friends"></i> Amigos</a>
+           <a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i> Mensagens</a>
+           <a href="#" class="profile-link"><i class="fas fa-user"></i> Perfil</a>
+       </nav>
+       <div class="user-actions">
+           <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
+       </div>
+   </header>
 
-    <div class="main-container">
 
-        <aside class="sidebar left-sidebar">
-            <div class="sidebar-section">
-                <h3>Atalhos Rápidos</h3>
-                <ul>
-                    <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
-                    <li>
-                        <a href="../pages/notificacao.html" class="notification-link-wrapper">
-                            <span><i class="fas fa-bell"></i> Notificação</span>
-                            <span class="notification-badge" id="notification-badge" style="display: none;"></span>
-                        </a>
-                    </li>
-                    <li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
-                    <li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
-                    <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
-                </ul>
-            </div>
-            <div class="sidebar-section">
-                <h3>Meus Hobbies</h3>
-                <div class="hobby-tags" id="user-hobbies">
-                    </div>
-            </div>
-        </aside>
+   <div class="main-container">
 
-        <div class="central-content">
-            <div id="feed-view">
-                <main class="feed">
-                    <div class="create-post">
-                        <div class="post-input">
-                            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
-                            <input type="text" placeholder="O que você está pensando?" id="post-content">
-                        </div>
-                        <div class="image-preview-container" id="image-preview-container" style="display: none;">
-                            <img id="image-preview" src="#" alt="Image Preview">
-                            <button id="remove-image-btn">&times;</button>
-                        </div>
-                        <div class="post-actions">
-                            <button class="post-action" id="add-image-btn"><i class="fas fa-camera"></i> Adicionar Imagem</button>
-                            <input type="file" id="image-file-input" accept="image/*" style="display: none;">
-                            <button class="post-btn" id="publish-btn">Publicar</button>
-                        </div>
-                    </div>
 
-                    <div class="posts" id="posts-container">
-                        <div class="loading-posts">
-                            <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
-                        </div>
-                        <div id="loading-more-indicator" style="display: none; text-align: center; padding: 20px;">
-                            <i class="fas fa-spinner fa-spin"></i>
-                        </div>
-                    </div>
-                </main>
-            </div>
+       <aside class="sidebar left-sidebar">
+           <div class="sidebar-section">
+               <h3>Atalhos Rápidos</h3>
+               <ul>
+                   <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
+                   <li>
+                       <a href="../pages/notificacao.html" class="notification-link-wrapper">
+                           <span><i class="fas fa-bell"></i> Notificação</span>
+                           <span class="notification-badge" id="notification-badge" style="display: none;"></span>
+                       </a>
+                   </li>
+                   <li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
+                   <li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
+                   <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
+               </ul>
+           </div>
+           <div class="sidebar-section">
+               <h3>Meus Hobbies</h3>
+               <div class="hobby-tags" id="user-hobbies">
+                   </div>
+           </div>
+       </aside>
 
-            <div id="single-post-view" style="display: none;">
-                <div class="single-post-header">
-                    <button id="back-to-feed-btn">
-                        <i class="fas fa-arrow-left"></i> Voltar ao Feed
-                    </button>
-                </div>
-                <div id="focused-post-container">
-                    </div>
-            </div>
-        </div>
 
-        <aside class="sidebar right-sidebar">
-            <div class="sidebar-section">
-                <h3>Sugestões para Seguir</h3>
-                <p class="section-subtitle">Baseado nos seus hobbies</p>
-                <div id="suggestions-container">
-                    <div class="loading-suggestions">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando sugestões...
-                    </div>
-                </div>
-                <a href="../friends/amigos.html" class="see-more">Ver mais</a>
-            </div>
-            <div class="sidebar-section">
-                <h3>Eventos Próximos</h3>
-                <div id="upcoming-events-container">
-            </div>
-                </div>
-        </aside>
+       <div class="central-content">
+           <div id="feed-view">
+               <main class="feed">
+                   <div class="create-post">
+                       <div class="post-input">
+                           <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
+                           <input type="text" placeholder="O que você está pensando?" id="post-content">
+                       </div>
+                       <div class="post-actions">
+                           <button class="post-btn" id="publish-btn">Publicar</button>
+                       </div>
+                   </div>
 
-    </div> <template id="post-template">
-    
-        <div class="post">
-            <div class="post-header">
-                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
-                <div class="post-info">
-                    <h3 class="post-author-name">Nome do Usuário</h3>
-                    <span class="post-timestamp">há 5 minutos</span>
-                </div>
-            </div>
-            <div class="post-content">
-                <p class="post-text">Conteúdo da publicação...</p>
-                <div class="post-media" style="display: none;">
-                    <img class="post-image" src="" alt="Imagem do post">
-                </div>
-            </div>
-            <div class="post-actions">
-                <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
-                <button class="post-action comment-btn"><i class="far fa-comment"></i> <span class="comment-count">0</span></button>
-                <button class="post-action repost-btn"><i class="fas fa-retweet"></i> Republicar</button>
-                 <button class="post-action save-btn"><i class="far fa-bookmark"></i> Salvar</button>
-                <button class="post-action share-btn"><i class="far fa-share-square"></i></button>
-            </div>
-            <div class="post-comments">
-                <div class="comment-input">
-                    <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic comment-user-photo">
-                    <input type="text" placeholder="O que você está pensando?" class="comment-text">
-                    <button class="send-comment-btn"><i class="fas fa-paper-plane"></i></button>
-                </div>
-                <div class="comments-list">
-                    </div>
-            </div>
-        </div>
-    </template>
 
-    <template id="comment-template">
-        <div class="comment">
-            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic comment-author-photo">
-            <div class="comment-content">
-                <h4 class="comment-author-name">Nome do Usuário</h4>
-                <p class="comment-text">Conteúdo do comentário...</p>
-                <div class="comment-footer">
-                    <span class="comment-timestamp">há 2 minutos</span>
-                    <button class="comment-like-btn"><i class="far fa-heart"></i> <span class="comment-like-count">0</span></button>
-                </div>
-            </div>
-        </div>
-    </template>
+                   <div class="posts" id="posts-container">
+                       <div class="loading-posts">
+                           <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
+                       </div>
+                       <div id="loading-more-indicator" style="display: none; text-align: center; padding: 20px;">
+                           <i class="fas fa-spinner fa-spin"></i>
+                       </div>
+                   </div>
+               </main>
+           </div>
 
-    <template id="suggestion-template">
-        <div class="suggestion">
-            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic suggestion-photo">
-            <div class="suggestion-info">
-                <h4 class="suggestion-name">Nome do Usuário</h4>
-                <p class="suggestion-hobbies">Hobbies</p>
-            </div>
-            <button class="follow-btn">Seguir</button>
-        </div>
-    </template>
+
+           <div id="single-post-view" style="display: none;">
+               <div class="single-post-header">
+                   <button id="back-to-feed-btn">
+                       <i class="fas fa-arrow-left"></i> Voltar ao Feed
+                   </button>
+               </div>
+               <div id="focused-post-container">
+                   </div>
+           </div>
+       </div>
+
+
+       <aside class="sidebar right-sidebar">
+           <div class="sidebar-section">
+               <h3>Sugestões para Seguir</h3>
+               <p class="section-subtitle">Baseado nos seus hobbies</p>
+               <div id="suggestions-container">
+                   <div class="loading-suggestions">
+                       <i class="fas fa-spinner fa-spin"></i> Carregando sugestões...
+                   </div>
+               </div>
+               <a href="../friends/amigos.html" class="see-more">Ver mais</a>
+           </div>
+           <div class="sidebar-section">
+               <h3>Eventos Próximos</h3>
+               <div id="upcoming-events-container">
+           </div>
+               </div>
+       </aside>
+
+
+   </div> <template id="post-template">
+  
+       <div class="post">
+           <div class="post-header">
+               <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
+               <div class="post-info">
+                   <h3 class="post-author-name">Nome do Usuário</h3>
+                   <span class="post-timestamp">há 5 minutos</span>
+               </div>
+           </div>
+           <div class="post-content">
+               <p class="post-text">Conteúdo da publicação...</p>
+               <div class="post-media" style="display: none;"></div>
+           </div>
+           <div class="post-actions">
+               <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
+               <button class="post-action comment-btn"><i class="far fa-comment"></i> <span class="comment-count">0</span></button>
+               <button class="post-action repost-btn"><i class="fas fa-retweet"></i> Republicar</button>
+                <button class="post-action save-btn"><i class="far fa-bookmark"></i> Salvar</button>
+               <button class="post-action share-btn"><i class="far fa-share-square"></i></button>
+           </div>
+           <div class="post-comments">
+               <div class="comment-input">
+                   <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic comment-user-photo">
+                   <input type="text" placeholder="O que você está pensando?" class="comment-text">
+                   <button class="send-comment-btn"><i class="fas fa-paper-plane"></i></button>
+               </div>
+               <div class="comments-list">
+                   </div>
+           </div>
+       </div>
+   </template>
+
+
+   <template id="comment-template">
+       <div class="comment">
+           <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic comment-author-photo">
+           <div class="comment-content">
+               <h4 class="comment-author-name">Nome do Usuário</h4>
+               <p class="comment-text">Conteúdo do comentário...</p>
+               <div class="comment-footer">
+                   <span class="comment-timestamp">há 2 minutos</span>
+                   <button class="comment-like-btn"><i class="far fa-heart"></i> <span class="comment-like-count">0</span></button>
+               </div>
+           </div>
+       </div>
+   </template>
+
+
+   <template id="suggestion-template">
+       <div class="suggestion">
+           <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic suggestion-photo">
+           <div class="suggestion-info">
+               <h4 class="suggestion-name">Nome do Usuário</h4>
+               <p class="suggestion-hobbies">Hobbies</p>
+           </div>
+           <button class="follow-btn">Seguir</button>
+       </div>
+   </template>
+
 
 <div id="customAlertModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="customAlertTitle">Aviso</h2>
-                <button class="close-modal" id="customAlertCloseBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="customAlertMessage"></p>
-            </div>
-            <div class="modal-actions">
-                <button class="primary-btn" id="customAlertOkBtn">OK</button>
-            </div>
-        </div>
-    </div>
+       <div class="modal-content">
+           <div class="modal-header">
+               <h2 id="customAlertTitle">Aviso</h2>
+               <button class="close-modal" id="customAlertCloseBtn">&times;</button>
+           </div>
+           <div class="modal-body">
+               <p id="customAlertMessage"></p>
+           </div>
+           <div class="modal-actions">
+               <button class="primary-btn" id="customAlertOkBtn">OK</button>
+           </div>
+       </div>
+   </div>
 
-    <script src="scripts.js"></script>
-    <script src="../config/darkmode.js"></script>
+
+   <script src="scripts.js"></script>
+   <script src="../config/darkmode.js"></script>
 </body>
 </html>
+
