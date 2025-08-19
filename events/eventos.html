@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <title>Eventos - Crow-d</title>
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="../home/page-styles.css">
@@ -14,21 +15,55 @@
 </head>
 <style>
     /* Adiciona o espaço que pediu entre as tags e o botão */
-.event-tags {
-    margin-bottom: 15px;
-}
+    .event-tags {
+        margin-bottom: 15px;
+    }
 
-/* Novo estilo para os itens na lista de eventos populares */
-#popular-events-container .event {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
+    /* Novo estilo para os itens na lista de eventos populares */
+    #popular-events-container .event {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
 
-#popular-events-container .event-date {
-    background-color: var(--primary-color);
-}
+    #popular-events-container .event-date {
+        background-color: var(--primary-color);
+    }
+
+    /* ... (seu CSS existente) ... */
+
+    /* Garante que todos os cards tenham a mesma altura e alinhamento */
+    .event-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        /* Ocupa a altura total do contêiner da grade */
+    }
+
+    .event-content {
+        flex-grow: 1;
+        /* Faz esta área crescer para preencher o espaço */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .event-actions {
+        margin-top: auto;
+        /* Empurra os botões para o final do card */
+    }
+
+    /* Limita a descrição a 3 linhas e adiciona "..." */
+    .event-description {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        line-height: 1.5em;
+        /* Ajuste o espaçamento entre linhas se necessário */
+        min-height: 4.5em;
+        /* line-height * line-clamp (garante altura mínima) */
+    }
 </style>
+
 <body>
     <header>
         <div class="logo">
@@ -51,7 +86,7 @@
             <div class="sidebar-section">
                 <h3>Atalhos Rápidos</h3>
                 <ul>
-                 
+
                     <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
                     <li>
                         <a href="../pages/notificacao.html" class="notification-link-wrapper">
@@ -67,20 +102,20 @@
             <div class="sidebar-section">
                 <h3>Meus Eventos</h3>
                 <ul id="my-events-list">
-                    </ul>
+                </ul>
             </div>
         </aside>
 
         <main class="feed">
             <h1 class="page-title"><i class="fas fa-calendar"></i> Eventos</h1>
-            
+
             <div class="action-buttons">
                 <button class="action-btn" id="createEventBtn"><i class="fas fa-plus"></i> Criar Evento</button>
             </div>
-            
+
             <h2>Próximos Eventos</h2>
             <div class="events-container">
-     
+
             </div>
         </main>
 
@@ -88,9 +123,9 @@
             <div class="sidebar-section">
                 <h3>Eventos Populares</h3>
                 <p class="section-subtitle">Eventos com mais participantes</p>
-                
+
                 <div id="popular-events-container">
-    </div>
+                </div>
             </div>
         </aside>
     </div>
@@ -136,4 +171,5 @@
     <script src="eventos.js"></script>
     <script src="../config/darkmode.js"></script>
 </body>
+
 </html>

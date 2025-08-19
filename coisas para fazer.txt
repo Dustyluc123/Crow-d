@@ -10,7 +10,6 @@ Geral
 -feito
 
 //Grupos 
-1-colocar mais funcao
 2-grupo privado pra entrar com senha 
 3-ver o partipantes do grupo
 4-mandar emoji 
