@@ -1,30 +1,36 @@
 Geral
-1- fazer todas as paginas irem para o perfil
-2- excluir proprio post
+1- fazer todas as paginas irem para o perfil(falta so a config)
+2- excluir proprio post(No home e nos Grupos)
 3- mudar as cores dos Alert
 
 ///Login
 -Feito
 
-//Grupos 
-1-feito
-
-//Eventos 
-1-feito
-
 //notificacao 
 -feito
 
+//Grupos 
+1-colocar mais funcao
+2-grupo privado pra entrar com senha 
+3-ver o partipantes do grupo
+4-mandar emoji 
+5-o criador do grupo poder tirar alguem do grupo
+6-colocar foto do lado da mensagem da pessoa 
+7-poder marcar talvez
+
+//Eventos 
+1-Ver o evento em (singleevent tipo clicar no evento e ver so ele mostrando tudo com mais detalhes)
+2-excluir Eventos
+3-excluir evento dps que ja passou do horrario 
+4-evento publico, evento so para amigos(dps que as config terminar)
 /Cadastro --- Joao 
 1-A senha tem que ser forte
 
-
 //Salvos 
-1- modo Dark e melhorar css
+1- modo Dark 
 
 ///Home 
 1-Mandar Imagem
-
 
 ///Friends 
 1-arrumar sistema de online 
@@ -40,9 +46,8 @@ Geral
 1-Colocar mais hobbies
 2-Deixar So a Etec Alber Einstein com escola possivel
 3-não ser possivel trocar de ano manualmente 
-4-usar o ShowCustonAlert ao inves do Alert 
+4-usar o ShowCustonAlert ou showToast ao inves do Alert 
 5-ver o proprio id(depois que for feito)
-
 
 //Profile(criar conta) 
 1- colocar iamgem de perfil
@@ -50,7 +55,7 @@ Geral
 3- nao poder mudar a escola
 4- Tela de confirmacao
 5- tela de acitar os termos(importante)
-6- colcar os cursos 
+6- colcar os cursos (infonet,dg etc)
 7-ver o proprio id(depois que for feito)
 
 ///Confing 
