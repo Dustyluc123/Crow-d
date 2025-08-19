@@ -92,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
   let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
   const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
+  let activeCommentListeners = {}; // Armazena os listeners de comentários ativos
   
   // Em home/scripts.js
 
@@ -666,13 +667,26 @@ if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
  
 commentButton.addEventListener("click", () => {
       commentsSection.classList.toggle("active");
+
       if (commentsSection.classList.contains("active")) {
-        // A mesma lógica da alteração 2: encontrar a lista e passá-la
+        // A seção de comentários foi ABERTA
         const commentsList = commentsSection.querySelector('.comments-list');
         if (commentsList) {
-            loadComments(post.id, commentsList);
+            // Se um listener para este post já existir, remove o antigo antes de criar um novo
+            if (activeCommentListeners[post.id]) {
+                activeCommentListeners[post.id]();
+            }
+            // Adiciona o novo listener e guarda sua função de "unsubscribe"
+            activeCommentListeners[post.id] = loadComments(post.id, commentsList);
         }
         commentInput.focus();
+      } else {
+        // A seção de comentários foi FECHADA
+        // Se existe um listener para este post, o removemos
+        if (activeCommentListeners[post.id]) {
+            activeCommentListeners[post.id](); // Executa a função "unsubscribe"
+            delete activeCommentListeners[post.id]; // Remove a referência
+        }
       }
     });
     sendCommentButton.addEventListener("click", () => {
@@ -1049,25 +1063,20 @@ function loadComments(postId, commentsListElement) {
   }
 
   // Função para alternar curtida em um comentário
-  async function toggleCommentLike(postId, commentId) {
+ async function toggleCommentLike(postId, commentId) {
     try {
-      // Verificar se já há uma operação de like em andamento para este comentário
       const commentKey = `${postId}_${commentId}`;
       if (commentLikeInProgress[commentKey]) {
         return;
       }
-
-      // Marcar como em andamento
       commentLikeInProgress[commentKey] = true;
 
-      // Verificar se o usuário está autenticado
       if (!currentUser) {
             showCustomAlert("Você precisa estar logado para curtir.");
         commentLikeInProgress[commentKey] = false;
         return;
       }
 
-      // Obter referência ao comentário
       const commentRef = db
         .collection("posts")
         .doc(postId)
@@ -1085,38 +1094,18 @@ function loadComments(postId, commentsListElement) {
       const likedBy = commentData.likedBy || [];
       const isLiked = likedBy.includes(currentUser.uid);
 
-      // Atualizar UI imediatamente para feedback rápido
-      const likeButton = document.querySelector(
-        `.comment[data-comment-id="${commentId}"] .comment-like-btn`
-      );
-      const likeCountElement = document.querySelector(
-        `.comment[data-comment-id="${commentId}"] .comment-like-count`
-      );
-
       if (isLiked) {
-        // Remover curtida
+        // Ação: REMOVER a curtida do banco de dados
         await commentRef.update({
           likes: firebase.firestore.FieldValue.increment(-1),
           likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
         });
-
-        // Atualizar UI
-        likeButton.classList.remove("liked");
-        likeCountElement.textContent = Math.max(
-          0,
-          parseInt(likeCountElement.textContent) - 1
-        );
       } else {
-        // Adicionar curtida
+        // Ação: ADICIONAR a curtida no banco de dados
         await commentRef.update({
           likes: firebase.firestore.FieldValue.increment(1),
           likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
         });
-
-        // Atualizar UI
-        likeButton.classList.add("liked");
-        likeCountElement.textContent =
-          parseInt(likeCountElement.textContent) + 1;
 
         // Criar notificação para o autor do comentário (se não for o próprio usuário)
         if (commentData.authorId !== currentUser.uid) {
@@ -1137,8 +1126,7 @@ function loadComments(postId, commentsListElement) {
             });
         }
       }
-
-      // Marcar como concluído
+      // A interface será atualizada automaticamente pelo listener 'onSnapshot'
       commentLikeInProgress[commentKey] = false;
     } catch (error) {
       console.error("Erro ao curtir comentário:", error);

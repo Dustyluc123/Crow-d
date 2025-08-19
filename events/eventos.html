@@ -30,7 +30,6 @@
 }
 </style>
 <body>
-    <!-- HEADER / MENU DE NAVEGAÇÃO -->
     <header>
         <div class="logo">
             <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -47,9 +46,7 @@
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-container">
-        <!-- BARRA LATERAL ESQUERDA -->
         <aside class="sidebar left-sidebar">
             <div class="sidebar-section">
                 <h3>Atalhos Rápidos</h3>
@@ -69,15 +66,11 @@
             </div>
             <div class="sidebar-section">
                 <h3>Meus Eventos</h3>
-                <ul>
-                    <li><a href="#"><i class="fas fa-graduation-cap"></i> Feira de Ciências</a></li>
-                    <li><a href="#"><i class="fas fa-basketball-ball"></i> Torneio de Basquete</a></li>
-                    <li><a href="#"><i class="fas fa-music"></i> Show da Banda Escolar</a></li>
-                </ul>
+                <ul id="my-events-list">
+                    </ul>
             </div>
         </aside>
 
-        <!-- CONTEÚDO CENTRAL -->
         <main class="feed">
             <h1 class="page-title"><i class="fas fa-calendar"></i> Eventos</h1>
             
@@ -91,7 +84,6 @@
             </div>
         </main>
 
-        <!-- BARRA LATERAL DIREITA -->
         <aside class="sidebar right-sidebar">
             <div class="sidebar-section">
                 <h3>Eventos Populares</h3>
@@ -103,7 +95,6 @@
         </aside>
     </div>
 
-    <!-- Modal para criar evento -->
     <div class="modal" id="createEventModal">
         <div class="modal-content">
             <div class="modal-header">

@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================================
     let currentUser = null;
     const eventsContainer = document.querySelector('.events-container');
-    const popularEventsContainer = document.getElementById('popular-events-container'); // Nova referência
+    const popularEventsContainer = document.getElementById('popular-events-container');
+    const myEventsContainer = document.getElementById('my-events-list'); // Nova referência
     const createEventModal = document.getElementById('createEventModal');
     const createEventForm = document.querySelector('#createEventModal .modal-form');
     const createEventBtn = document.getElementById('createEventBtn');
@@ -50,12 +51,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==========================================================
 
     /**
-     * Carrega todos os eventos, exibe-os na lista principal e
-     * os mais populares na barra lateral.
+     * Carrega todos os eventos, os populares e os do usuário.
      */
     async function loadEvents() {
         eventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando eventos...</div>';
         popularEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+        if (myEventsContainer) myEventsContainer.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i></li>';
         
         try {
             const snapshot = await db.collection('events')
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (snapshot.empty) {
                 eventsContainer.innerHTML = '<p>Nenhum evento futuro encontrado.</p>';
                 popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
+                if (myEventsContainer) myEventsContainer.innerHTML = '<li><p>Nenhum evento para mostrar.</p></li>';
                 return;
             }
 
@@ -74,19 +76,16 @@ document.addEventListener('DOMContentLoaded', function() {
             snapshot.forEach(doc => {
                 const eventData = { id: doc.id, ...doc.data() };
                 allEvents.push(eventData);
-                // Adiciona cada evento à lista principal
                 addEventToDOM(eventData);
             });
 
-            // --- LÓGICA DOS EVENTOS POPULARES ---
-            // 1. Faz uma cópia da lista de eventos
-            const sortedByPopularity = [...allEvents];
-            
-            // 2. Ordena a cópia pelo número de participantes (do maior para o menor)
-            sortedByPopularity.sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0));
-
-            // 3. Pega os 3 eventos mais populares e exibe-os na barra lateral
+            // Lógica dos eventos populares
+            const sortedByPopularity = [...allEvents].sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0));
             displayPopularEvents(sortedByPopularity.slice(0, 3));
+
+            // Nova Lógica para "Meus Eventos"
+            const myEvents = allEvents.filter(event => event.participants && event.participants.includes(currentUser.uid));
+            displayMyEvents(myEvents);
 
         } catch (error) {
             console.error("Erro ao carregar eventos:", error);
@@ -95,11 +94,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * NOVA FUNÇÃO: Cria o HTML para a lista de eventos populares.
+     * NOVA FUNÇÃO: Exibe os eventos do usuário na barra lateral.
+     * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
+     */
+    function displayMyEvents(myEvents) {
+        if (!myEventsContainer) return;
+        myEventsContainer.innerHTML = ''; // Limpa a lista
+
+        if (myEvents.length === 0) {
+            myEventsContainer.innerHTML = '<li><p>Você não participa de nenhum evento.</p></li>';
+            return;
+        }
+
+        myEvents.forEach(event => {
+            const eventElement = document.createElement('li');
+            // Usando um ícone diferente para diferenciar
+            eventElement.innerHTML = `<a href="#"><i class="fas fa-calendar-check"></i> ${event.eventName}</a>`;
+            myEventsContainer.appendChild(eventElement);
+        });
+    }
+
+    /**
+     * Cria o HTML para a lista de eventos populares.
      * @param {Array} popularEvents - Uma lista com os eventos mais populares.
      */
     function displayPopularEvents(popularEvents) {
-        popularEventsContainer.innerHTML = ''; // Limpa o contentor
+        popularEventsContainer.innerHTML = ''; 
 
         if (popularEvents.length === 0) {
             popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
@@ -166,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="event-actions">
                     <button class="event-btn participate-btn ${isParticipating ? 'secondary' : ''}">
-                        ${isParticipating ? 'Participando' : 'Participar'}
+                        ${isParticipating ? 'Sair do Evento' : 'Participar'}
                     </button>
                 </div>
             </div>
@@ -177,11 +197,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         eventsContainer.appendChild(eventCard);
     }
-
-    // (O resto do seu ficheiro eventos.js continua aqui: toggleParticipation, createEvent, e os listeners do modal)
-    // ...
-    // ... (COLE O RESTO DO SEU FICHEIRO JS A PARTIR DAQUI) ...
-    // ...
 
     async function toggleParticipation(eventId, button) {
         const eventRef = db.collection('events').doc(eventId);
@@ -235,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tags,
                 creatorId: currentUser.uid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                participants: []
+                participants: [currentUser.uid] // Criador já entra participando
             });
 
             createEventModal.style.display = 'none';
