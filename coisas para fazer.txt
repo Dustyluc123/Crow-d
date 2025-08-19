@@ -6,20 +6,25 @@ Geral
 ///Login
 -Feito
 
-//Cadastro --- Joao 
-1-A senha tem que ser forte
+//Grupos 
+1-feito
+
+//Eventos 
+1-feito
 
 //notificacao 
 -feito
 
+/Cadastro --- Joao 
+1-A senha tem que ser forte
+
+
 //Salvos 
 1- modo Dark e melhorar css
-2- poder repuplicar, compartilhar, comentar, curtir pelos salvos
-3- arrumar o atalho rapido
 
 ///Home 
 1-Mandar Imagem
-2- depois que os Eventos foi criador aparcer no Home
+
 
 ///Friends 
 1-arrumar sistema de online 
@@ -38,11 +43,6 @@ Geral
 4-usar o ShowCustonAlert ao inves do Alert 
 5-ver o proprio id(depois que for feito)
 
-//Grupos --- Barreto
-1-criar funcionamento completo dessa parte 
-
-//Eventos 
-1-feito
 
 //Profile(criar conta) 
 1- colocar iamgem de perfil
