@@ -1,33 +1,77 @@
+Geral
+1- fazer todas as paginas irem para o perfil
+2- excluir proprio post
+3- mudar as cores dos Alert
 
 ///Login
-Feito
+-Feito
 
-///Home
-Feito
+//Cadastro --- Joao 
+1-A senha tem que ser forte
 
-//notificacao
-Feito
 
-//Salvos
-Feito
+//notificacao --- Barreto 
+-Colocar o Atalho rapido
 
-///Friends
-1-tirar o botão "meu hobbies"
-2-botão de buscar amigos
-3-e adiconar amigos
+//Salvos --- Lucas
+1- modo Dark e melhorar css
+2- poder repuplicar, compartilhar, comentar, curtir pelos salvos
+3- arrumar o atalho rapido
 
-///Mensagen
+///Home --- Joao
+1-Mandar Imagem
+2- depois que os Eventos foi criador aparcer no Home
+
+///Friends 
+1-arrumar sistema de online 
+2-botão de buscar amigos funcionando com ID
+3-e adiconar amigo com ID
+4-se a pessoa ja foi pedia pra seguir ou ja é seguida, aparecer no lugar de "seguir", "solicidacao enviada" e "seguido"
+
+///Mensagen --- Lucas
 1-centralizar mensagem no canto 
+2-Tirar botão I em cima do lado direito ou dar uma funcao para ele
 
-///editprofile
-1-Colocar os Hobbys
+///editprofile --- Joao
+1-Colocar mais hobbies
+2-Deixar So a Etec Alber Einstein com escola possivel
+3-não ser possivel trocar de ano manualmente 
+4-usar o ShowCustonAlert ao inves do Alert 
+5-ver o proprio id(depois que for feito)
+
+//Grupos --- Barreto
+1-criar funcionamento completo dessa parte 
+
+//Eventos --- Barreto
+1-criar funcionamento completo dessa parte 
+
+//Profile(criar conta) --- Joao 
+1- colocar iamgem de perfil
+2- se por acaso os hobbies sairem depois de colocar a imagem colocar os hobbies de volta
+3- nao poder mudar a escola
+4- Tela de confirmacao
+5- tela de acitar os termos(importante)
+6- colcar os cursos 
+7-ver o proprio id(depois que for feito)
+
+///Confing 
+1 manter as configurado, se a pessoa deixou o usario deixo no modo dark, ou o perfil privado por exemplo, isso ira continuar ate ser mudado( ser feito de preferencia depois que
+o numero 3 e 5 de confing estaja pronto)
+2-excluir conta (Tem que ter confirmacao, "VC QUER REALMENTE EXCLUIR SUA CONTA?")
+3-perfil privado 
+4-Tirar parte de notificacao por email 
+5-perfil que não aparece online(So pode ser feito depois que o numero 1 do Friends seja feito)
+
+//User --- Barreto
+1- aparecer o repluciados de forma correta 
+2- poder compartilhar,salvar, comentar, repuplicar, curtit pelo User
+3- melhorar css, modo Dark, header
+4- aparecer os amigos da pessoa 
+5- erro ao seguir 
 
 
-
-///confing 
-1-excluir conta
-
-1-re fazer com  essa ideia "FAZER A PARTE DE PERFIL GRATIS SEM STORAGE E URL
+PROMPT JOAO
+re fazer com  essa ideia "FAZER A PARTE DE PERFIL GRATIS SEM STORAGE E URL
 
 Essa é uma excelente pergunta e uma preocupação muito válida. Você está certo, o Firebase Storage tem um generoso nível gratuito, mas ele pode gerar custos se o aplicativo crescer muito.
 
