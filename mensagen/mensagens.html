@@ -152,25 +152,30 @@
             flex: 1;
             padding: 15px;
             overflow-y: auto;
+            overflow-x: hidden; /* <<< ESSA É A LINHA QUE CORRIGE A BARRA HORIZONTAL */
             background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
         }
         
         .message {
             display: flex;
             margin-bottom: 15px;
             position: relative;
+            max-width: 70%;
         }
         
         .message-sent {
+            align-self: flex-end;
             justify-content: flex-end;
         }
         
         .message-received {
+            align-self: flex-start;
             justify-content: flex-start;
         }
         
         .message-content {
-            max-width: 70%;
             padding: 10px 15px;
             border-radius: 18px;
             position: relative;
@@ -184,12 +189,11 @@
         }
         
         .message-received .message-content {
-            background-color: #e9ecef; /* Cor de fundo para o balão */
+            background-color: #e9ecef;
             color: #333;
             border-bottom-left-radius: 5px;
         }
 
-        /* Adicionado para o modo escuro */
         body.dark-mode .message-received .message-content {
             background-color: #36373d;
             color: #ffffff;
@@ -222,6 +226,7 @@
             padding: 15px;
             border-top: 1px solid var(--border-color);
             background-color: var(--bg-secondary);
+            position: relative;
         }
         
         .chat-input {
@@ -284,60 +289,57 @@
             }
         }
         .message-delete-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    color: #888;
-    padding: 4px;
-    transition: color 0.2s ease;
-}
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #888;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
 
-.message-delete-btn:hover {
-    color: #e74c3c;
-}
+        .message-delete-btn:hover {
+            color: #e74c3c;
+        }
     
-/* Estilo geral da barra de rolagem */
-::-webkit-scrollbar {
-    width: 8px;
-}
+        /* Estilo geral da barra de rolagem */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-}
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
 
-::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-}
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
 
-::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary-color);
-}
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--primary-color);
+        }
 
-/* Ajustes específicos para modo escuro */
-body.dark-mode ::-webkit-scrollbar-track {
-    background: var(--bg-primary);
-}
+        /* Ajustes específicos para modo escuro */
+        body.dark-mode ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
 
-body.dark-mode ::-webkit-scrollbar-thumb {
-    background-color: #555;
-}
-.chat-input-area {
-    position: relative; /* Necessário para posicionar o seletor de emojis */
-}
+        body.dark-mode ::-webkit-scrollbar-thumb {
+            background-color: #555;
+        }
+        
+        emoji-picker {
+            position: absolute;
+            bottom: 65px; /* Posição acima do campo de texto */
+            left: 15px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
 
-emoji-picker {
-    position: absolute;
-    bottom: 65px; /* Posição acima do campo de texto */
-    left: 15px;
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-radius: 8px;
-}
-
-</style>
+    </style>
 </head>
 <body>
     <header>
