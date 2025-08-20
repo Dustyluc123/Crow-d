@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const seeMoreLink = document.createElement('a');
         seeMoreLink.href = "#";
         seeMoreLink.className = "see-more";
-        seeMoreLink.textContent = "Ver mais";
+        
         popularEventsContainer.appendChild(seeMoreLink);
     }
     /**
