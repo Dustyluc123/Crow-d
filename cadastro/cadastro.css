@@ -127,3 +127,26 @@ a {
 a:hover {
   text-decoration: underline;
 }
+#password-requirements {
+  text-align: left;
+  font-size: 0.9rem;
+  margin-top: -1rem; /* Puxa para mais perto do campo de senha */
+  margin-bottom: 0.5rem;
+  padding-left: 5px;
+}
+
+#password-requirements p {
+  margin: 0.3rem 0;
+  transition: color 0.3s;
+}
+
+/* Estilo para requisito inválido (não atendido) */
+.invalid {
+  color: #ff8a8a; /* Um vermelho claro para boa legibilidade */
+}
+
+/* Estilo para requisito válido (atendido) */
+.valid {
+  color: #9cff9c; /* Um verde claro */
+  text-decoration: line-through;
+}

@@ -21,15 +21,21 @@
         <input type="email" id="email" name="email" required />
       </div>
 
-      <div class="input-group">
+            <div class="input-group">
         <label for="senha">Senha</label>
         <input type="password" id="senha" name="senha" required />
       </div>
 
+      <div id="password-requirements">
+        <p id="req-length" class="invalid">Pelo menos 8 caracteres</p>
+        <p id="req-number" class="invalid">Pelo menos 2 números</p>
+        <p id="req-special" class="invalid">Pelo menos 1 caractere especial (!@#$...)</p>
+      </div>
       <div class="input-group">
         <label for="confirmarSenha">Confirme a senha</label>
         <input type="password" id="confirmarSenha" name="confirmarSenha" required />
       </div>
+      
 
       <button type="submit">Continuar</button>
 
@@ -59,6 +65,56 @@
     const auth = firebase.auth();
 
     const googleBtn = document.getElementById('login-google');
+    
+    // --- INÍCIO DA LÓGICA DE VALIDAÇÃO DE SENHA ---
+
+    // Referências aos elementos do HTML
+    const senhaInput = document.getElementById('senha');
+    const reqLength = document.getElementById('req-length');
+    const reqNumber = document.getElementById('req-number');
+    const reqSpecial = document.getElementById('req-special');
+
+    // Expressões regulares para validar cada requisito
+    const hasNumbers = /(.*\d){2,}/; // Verifica se há pelo menos 2 números
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/; // Verifica se há pelo menos 1 caractere especial
+
+    // Função para validar a senha em tempo real
+    function validatePassword() {
+      const senha = senhaInput.value;
+      let allValid = true;
+
+      // 1. Valida o comprimento
+      if (senha.length >= 8) {
+        reqLength.classList.replace('invalid', 'valid');
+      } else {
+        reqLength.classList.replace('valid', 'invalid');
+        allValid = false;
+      }
+
+      // 2. Valida os números
+      if (hasNumbers.test(senha)) {
+        reqNumber.classList.replace('invalid', 'valid');
+      } else {
+        reqNumber.classList.replace('valid', 'invalid');
+        allValid = false;
+      }
+
+      // 3. Valida os caracteres especiais
+      if (hasSpecial.test(senha)) {
+        reqSpecial.classList.replace('invalid', 'valid');
+      } else {
+        reqSpecial.classList.replace('valid', 'invalid');
+        allValid = false;
+      }
+      
+      return allValid;
+    }
+
+    // Adiciona o "escutador" que chama a validação toda vez que o usuário digita
+    senhaInput.addEventListener('input', validatePassword);
+
+    // --- FIM DA LÓGICA DE VALIDAÇÃO DE SENHA ---
+
 
     // Login com Google
     googleBtn.addEventListener('click', async () => {
@@ -78,9 +134,16 @@
       }
     });
 
-    // Cadastro com e-mail
+    // Cadastro com e-mail (ATUALIZADO)
     document.getElementById('cadastro-form').addEventListener('submit', function (e) {
       e.preventDefault();
+
+      // --- INÍCIO DA VERIFICAÇÃO FINAL ANTES DE ENVIAR ---
+      if (!validatePassword()) {
+        alert('Sua senha não atende a todos os requisitos de segurança.');
+        return;
+      }
+      // --- FIM DA VERIFICAÇÃO ---
 
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
