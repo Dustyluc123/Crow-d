@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Referências aos elementos do DOM ---
     const darkModeToggle = document.getElementById('darkModeToggle');
-    const profilePublicToggle = document.getElementById('profilePublicToggle'); // Adicionado
+    const profilePublicToggle = document.getElementById('profilePublicToggle');
     let currentUser = null;
     let userSettings = {}; // Objeto para guardar as configurações
 
@@ -63,6 +63,8 @@ document.addEventListener('DOMContentLoaded', function() {
         darkModeToggle.checked = userSettings.darkMode;
         // Aplica a classe dark-mode no body se necessário
         document.body.classList.toggle('dark-mode', userSettings.darkMode);
+        // ADICIONE ESTA LINHA: Sincroniza o localStorage com a configuração do Firestore
+        localStorage.setItem('darkMode', userSettings.darkMode);
 
         // Atualiza o toggle de Perfil Público
         profilePublicToggle.checked = userSettings.profilePublic;
@@ -99,6 +101,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const isEnabled = this.checked;
         document.body.classList.toggle('dark-mode', isEnabled);
         saveSetting('darkMode', isEnabled);
+        // ADICIONE ESTA LINHA: Atualiza o localStorage quando o usuário muda o toggle
+        localStorage.setItem('darkMode', isEnabled);
     });
 
     // Listener para o Perfil Público
