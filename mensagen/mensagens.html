@@ -24,45 +24,6 @@
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-           /* Estilos para as sugestões na página de mensagens */
-
-           .suggestions-title {
-            margin-top: 2rem;
-            text-align: center;
-        }
-
-        #suggestions-list {
-            margin-top: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .suggestion-item-link {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .suggestion-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            /* CORREÇÃO: Removido o background-color fixo e usando a variável --bg-secondary */
-            background-color: var(--bg-secondary);
-            border-radius: 8px;
-            transition: background-color 0.3s;
-            border-bottom: 1px solid var(--border-color); /* Adicionado para consistência */
-        }
-
-        .suggestion-item:hover {
-             /* CORREÇÃO: Usando a variável --bg-hover para o efeito hover */
-            background-color: var(--bg-hover);
-        }
-
-        .suggestion-info {
-            flex-grow: 1;
-        }
         
         .conversations-list {
             width: 300px;
@@ -478,10 +439,7 @@
                         <img src="../img/Design sem nome2.png" alt="Avatar" class="chat-avatar">
                         <div class="chat-user-info">
                             <h3 class="chat-user-name">Selecione uma conversa</h3>
-                            <div class="chat-user-status">
-                                <span class="status-badge"></span>
-                                Online
-                            </div>
+                           
                         </div>
                        
                     </div>
