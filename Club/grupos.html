@@ -130,6 +130,24 @@
         </div>
     </div>
 
+    <div class="modal" id="shareGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Compartilhar Grupo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Selecione os amigos com quem você quer compartilhar o grupo "<span id="shareGroupName"></span>":</p>
+                <div id="share-friends-list" style="max-height: 300px; overflow-y: auto; text-align: left; padding: 10px;">
+                    </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="group-btn secondary close-modal-btn">Cancelar</button>
+                <button type="button" class="group-btn" id="sendShareBtn">Enviar Convite</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>

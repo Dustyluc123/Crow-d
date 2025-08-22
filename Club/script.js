@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const db = firebase.firestore();
 
     let currentUser = null;
+    let currentUserProfile = null; // Para guardar os dados do perfil do usuário logado
 
     // Referências do DOM
     const myGroupsContainer = document.getElementById('my-groups-container');
@@ -31,10 +32,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const viewMembersModal = document.getElementById('viewMembersModal');
     const membersList = document.getElementById('members-list');
 
+    // Referências do NOVO Modal de Compartilhamento
+    const shareGroupModal = document.getElementById('shareGroupModal');
+    const shareGroupName = document.getElementById('shareGroupName');
+    const shareFriendsList = document.getElementById('share-friends-list');
+    const sendShareBtn = document.getElementById('sendShareBtn');
+    let currentGroupIdToShare = null;
+
     // Autenticação
-    auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged(async function(user) {
         if (user) {
             currentUser = user;
+            await loadUserProfile(user.uid); // Carrega o perfil do usuário logado
             const profileLink = document.querySelector('.main-nav a.profile-link');
             if (profileLink) {
                 profileLink.href = `../pages/user.html?uid=${user.uid}`;
@@ -44,6 +53,14 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = '../login/login.html';
         }
     });
+
+    // Função para carregar o perfil do usuário logado
+    async function loadUserProfile(userId) {
+        const doc = await db.collection("users").doc(userId).get();
+        if (doc.exists) {
+            currentUserProfile = doc.data();
+        }
+    }
 
     // Carregar Grupos
     async function loadGroups(searchTerm = '') {
@@ -93,8 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- FUNÇÃO MODIFICADA ---
-    // Criar Card do Grupo
+    // Criar Card do Grupo (com botão de compartilhar)
     function createGroupCard(group, isMember) {
         const card = document.createElement('div');
         card.className = 'group-card';
@@ -106,16 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
             actionsHTML = `
                 <button class="group-btn chat-btn"><i class="fas fa-comment"></i> Entrar no Chat</button>
                 <button class="group-btn view-members-btn"><i class="fas fa-users"></i> Ver Membros</button>
+                <button class="group-btn share-group-btn"><i class="fas fa-share-alt"></i> Compartilhar</button>
             `;
             if (isOwner) {
-                // Se for o dono, mostra o botão de excluir
                 actionsHTML += `<button class="group-btn danger delete-group-btn"><i class="fas fa-trash"></i> Excluir Grupo</button>`;
             } else {
-                // Se for apenas membro, mostra o de sair
                 actionsHTML += `<button class="group-btn secondary leave-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>`;
             }
         } else {
-            // Se não for membro, mostra o de participar
             actionsHTML = `<button class="group-btn join-btn"><i class="fas fa-plus"></i> Participar</button>`;
         }
 
@@ -143,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = `chat.html?groupId=${group.id}`;
             });
             card.querySelector('.view-members-btn').addEventListener('click', () => viewMembers(group.id));
+            card.querySelector('.share-group-btn').addEventListener('click', () => openShareModal(group.id, group.name)); // Evento para o novo botão
             
             if (isOwner) {
                 card.querySelector('.delete-group-btn').addEventListener('click', () => deleteGroup(group.id));
@@ -154,6 +169,82 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return card;
     }
+
+    // --- NOVAS FUNÇÕES PARA COMPARTILHAR O GRUPO ---
+
+    async function openShareModal(groupId, groupName) {
+        currentGroupIdToShare = groupId;
+        shareGroupName.textContent = groupName;
+        shareFriendsList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>';
+        shareGroupModal.style.display = 'flex';
+
+        try {
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            shareFriendsList.innerHTML = '';
+
+            if (friendsSnapshot.empty) {
+                shareFriendsList.innerHTML = '<p>Você não tem amigos para compartilhar.</p>';
+                sendShareBtn.style.display = 'none'; // Esconde o botão se não há amigos
+                return;
+            }
+            sendShareBtn.style.display = 'block'; // Mostra o botão se há amigos
+
+            friendsSnapshot.forEach(doc => {
+                const friend = { id: doc.id, ...doc.data() };
+                const friendElement = document.createElement('div');
+                friendElement.className = 'friend-share-item';
+                friendElement.innerHTML = `
+                    <label style="display: flex; align-items: center; padding: 5px; cursor: pointer;">
+                        <input type="checkbox" class="friend-share-checkbox" value="${friend.id}" style="margin-right: 10px;">
+                        <img src="${friend.photoURL || '../img/Design sem nome2.png'}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
+                        <span>${friend.nickname}</span>
+                    </label>
+                `;
+                shareFriendsList.appendChild(friendElement);
+            });
+        } catch (error) {
+            console.error("Erro ao carregar amigos para compartilhar:", error);
+            shareFriendsList.innerHTML = '<p>Ocorreu um erro ao carregar seus amigos.</p>';
+        }
+    }
+
+    async function sendShareInvites() {
+        const selectedFriends = document.querySelectorAll('.friend-share-checkbox:checked');
+        if (selectedFriends.length === 0) {
+            alert("Selecione pelo menos um amigo para compartilhar.");
+            return;
+        }
+
+        const groupName = shareGroupName.textContent;
+        const batch = db.batch();
+
+        selectedFriends.forEach(checkbox => {
+            const friendId = checkbox.value;
+            const notificationRef = db.collection('users').doc(friendId).collection('notifications').doc();
+            batch.set(notificationRef, {
+                type: 'group_invite',
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserProfile.nickname || 'Um usuário',
+                groupId: currentGroupIdToShare,
+                groupName: groupName,
+                content: `convidou você para se juntar ao grupo "${groupName}"`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+        });
+
+        try {
+            await batch.commit();
+            alert('Convites enviados com sucesso!');
+            shareGroupModal.style.display = 'none';
+        } catch (error) {
+            console.error("Erro ao enviar convites de grupo:", error);
+            alert('Ocorreu um erro ao enviar os convites.');
+        }
+    }
+
+
+    // --- FUNÇÕES EXISTENTES (sem alteração) ---
 
     // Criar Grupo
     createGroupForm.addEventListener('submit', async function(e) {
@@ -229,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- NOVA FUNÇÃO ---
     // Excluir um Grupo
     async function deleteGroup(groupId) {
         if (!confirm("TEM CERTEZA?\n\nExcluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.")) {
@@ -239,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const groupRef = db.collection('groups').doc(groupId);
             
-            // 1. Apagar todas as mensagens da subcoleção
             const messagesSnapshot = await groupRef.collection('messages').get();
             const batch = db.batch();
             messagesSnapshot.docs.forEach(doc => {
@@ -247,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             await batch.commit();
 
-            // 2. Apagar o documento do grupo
             await groupRef.delete();
 
             alert("Grupo excluído com sucesso.");
@@ -288,25 +376,25 @@ document.addEventListener('DOMContentLoaded', function() {
         loadGroups(e.target.value);
     });
 
-    // Lógica do Modal
+    // Lógica do Modal (com adição para o novo modal)
     if (createGroupBtn) {
         createGroupBtn.addEventListener('click', () => { createGroupModal.style.display = 'flex'; });
+    }
+    if(sendShareBtn) {
+        sendShareBtn.addEventListener('click', sendShareInvites);
     }
     closeModalBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             createGroupModal.style.display = 'none';
             viewMembersModal.style.display = 'none';
+            shareGroupModal.style.display = 'none'; // Adicionado
         });
     });
     window.addEventListener('click', (event) => {
-        if (event.target === createGroupModal) {
-            createGroupModal.style.display = 'none';
-        }
-        if (event.target === viewMembersModal) {
-            viewMembersModal.style.display = 'none';
-        }
+        if (event.target === createGroupModal) createGroupModal.style.display = 'none';
+        if (event.target === viewMembersModal) viewMembersModal.style.display = 'none';
+        if (event.target === shareGroupModal) shareGroupModal.style.display = 'none'; // Adicionado
     });
-
     isPrivateCheckbox.addEventListener('change', () => {
         passwordField.classList.toggle('visible', isPrivateCheckbox.checked);
     });
