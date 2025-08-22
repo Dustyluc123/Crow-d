@@ -199,3 +199,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+// Em edit-profile.js, adicione este bloco
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ... seu código existente (config Firebase, auth, db, elementos DOM) ...
+
+    let currentUser = null;
+    let currentUserProfile = null;
+    // ... etc ...
+
+    // --- LÓGICA PARA O BOTÃO "VER MAIS" DOS HOBBIES ---
+    document.querySelectorAll('.see-more-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                targetElement.classList.toggle('visible');
+                if (targetElement.classList.contains('visible')) {
+                    this.textContent = 'Ver menos';
+                } else {
+                    this.textContent = 'Ver mais';
+                }
+            }
+        });
+    });
+    // --- FIM DA LÓGICA DO BOTÃO ---
+
+    // ... resto do seu código (auth.onAuthStateChanged, logoutButton, etc) ...
+});

@@ -442,16 +442,7 @@ body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
                     <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
                 </ul>
             </div>
-            <div class="sidebar-section">
-                <h3>Filtrar por Hobby</h3>
-                <div class="hobby-tags">
-                    <span class="hobby-tag">Música</span>
-                    <span class="hobby-tag">Esportes</span>
-                    <span class="hobby-tag">Jogos</span>
-                    <span class="hobby-tag">Leitura</span>
-                    <span class="hobby-tag">Arte</span>
-                </div>
-            </div>
+          
         </aside>
 
         <main class="feed">
@@ -499,15 +490,24 @@ body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
         </aside>
     </div>
 
-    <div class="add-friend-section">
-  <h3>Adicionar Amigo</h3>
-  <p>Digite o apelido do usuário para enviar uma solicitação.</p> 
-  <div class="add-friend-input">
-    <input type="text" id="friend-nickname-input" placeholder="Apelido do Usuário">
-    <button id="add-friend-btn">Enviar Solicitação</button>
-  </div>
-  <p id="add-friend-status"></p>
-</div>
+    <div class="modal" id="addFriendModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Adicionar Amigo</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form class="modal-form">
+                <div class="input-group">
+                    <label for="friendEmail">E-mail ou Nome de Usuário</label>
+                    <input type="text" id="friendEmail" placeholder="Digite o e-mail ou nome de usuário" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="request-btn secondary close-modal-btn">Cancelar</button>
+                    <button type="submit" class="request-btn">Enviar Solicitação</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="scripts.js"></script>
    

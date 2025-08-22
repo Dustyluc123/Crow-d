@@ -337,3 +337,36 @@ body.dark-mode .radio-option small {
 body.dark-mode .profile-section {
     border-bottom-color: #444;
 }
+/* Em profile.css */
+
+/* Esconde a lista extra de hobbies por padrão */
+.hidden-hobbies {
+    display: none;
+    flex-wrap: wrap; /* Garante que os hobbies quebrem a linha */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Quando a lista extra estiver visível */
+.hidden-hobbies.visible {
+    display: flex;
+}
+
+/* Estilo do botão "Ver mais" */
+.see-more-btn {
+    background-color: transparent;
+    color: var(--primary-hover);
+    border: 1px solid var(--primary-hover);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.see-more-btn:hover {
+    background-color: var(--primary-hover);
+    color: white;
+}

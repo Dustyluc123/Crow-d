@@ -103,6 +103,43 @@ document.addEventListener("DOMContentLoaded", function () {
  let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
  const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
  let activeCommentListeners = {}; // Armazena os listeners de comentários ativos
+
+ // Em scripts.js, adicione este bloco no topo
+
+// --- INÍCIO DA LÓGICA DE UPLOAD DE IMAGEM PARA POSTS ---
+const postImageInput = document.getElementById('post-image-input');
+const imagePreviewContainer = document.getElementById('post-image-preview-container');
+const imagePreview = document.getElementById('post-image-preview');
+const removeImageBtn = document.getElementById('remove-image-btn');
+
+let postImageBase64 = null; // Variável para guardar a imagem do post
+
+if (postImageInput) {
+    postImageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                postImageBase64 = e.target.result;
+                imagePreview.src = postImageBase64;
+                imagePreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function clearPostImage() {
+    postImageBase64 = null;
+    postImageInput.value = ''; // Limpa o input de arquivo
+    imagePreviewContainer.style.display = 'none';
+    imagePreview.src = '#';
+}
+
+if (removeImageBtn) {
+    removeImageBtn.addEventListener('click', clearPostImage);
+}
+// --- FIM DA LÓGICA DE UPLOAD DE IMAGEM PARA POSTS ---
   // Em home/scripts.js
 
 
@@ -469,62 +506,58 @@ function handleScroll() {
        loadMorePosts();
    }
 }
- // Função para criar um novo post
- async function createPost(content) {
-   try {
-     // Verificar se o usuário está autenticado
-     if (!currentUser || !currentUserProfile) {
-           showCustomAlert("Você precisa estar logado para publicar.");
-       return;
-     }
+ // Em scripts.js, substitua a função createPost
 
+async function createPost(content) {
+  try {
+    if (!currentUser || !currentUserProfile) {
+          showCustomAlert("Você precisa estar logado para publicar.");
+      return;
+    }
 
-     // Desabilitar botão de publicar
-     if (postButton) {
-       postButton.disabled = true;
-       postButton.innerHTML =
-         '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-     }
+    // Validação: não permite post vazio sem imagem
+    if (!content && !postImageBase64) {
+        showCustomAlert("Escreva algo ou adicione uma imagem para publicar.");
+        return;
+    }
 
+    if (postButton) {
+      postButton.disabled = true;
+      postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+    }
 
-     // Criar objeto de post
-     const postData = {
-       content,
-       authorId: currentUser.uid,
-       authorName: currentUserProfile.nickname || "Usuário",
-       authorPhoto: currentUserProfile.photoURL || null,
-       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-       likes: 0,
-       likedBy: [],
-       commentCount: 0,
-     };
+    const postData = {
+      content,
+      authorId: currentUser.uid,
+      authorName: currentUserProfile.nickname || "Usuário",
+      authorPhoto: currentUserProfile.photoURL || null,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      likes: 0,
+      likedBy: [],
+      commentCount: 0,
+      // ✨ ADICIONA A IMAGEM (se houver) AO OBJETO DO POST ✨
+      imageUrl: postImageBase64 // Será null se nenhuma imagem for selecionada
+    };
 
+    await db.collection("posts").add(postData);
 
-     // Adicionar post ao Firestore
-     await db.collection("posts").add(postData);
+    // Limpa os campos após a publicação
+    postInput.value = "";
+    clearPostImage(); // Limpa a pré-visualização da imagem
 
-
-     // Reativar botão de publicar
-     if (postButton) {
-       postButton.disabled = false;
-       postButton.textContent = "Publicar";
-     }
-
-
-     console.log("Post criado com sucesso!");
-   } catch (error) {
-     console.error("Erro ao criar post:", error);
-         showCustomAlert("Erro ao criar publicação. Tente novamente.");
-
-
-     // Reativar botão de publicar
-     if (postButton) {
-       postButton.disabled = false;
-       postButton.textContent = "Publicar";
-     }
-   }
- }
-
+    if (postButton) {
+      postButton.disabled = false;
+      postButton.textContent = "Publicar";
+    }
+  } catch (error) {
+    console.error("Erro ao criar post:", error);
+        showCustomAlert("Erro ao criar publicação. Tente novamente.");
+    if (postButton) {
+      postButton.disabled = false;
+      postButton.textContent = "Publicar";
+    }
+  }
+} 
 
 // Garanta que o listener do botão de voltar seja adicionado aqui.
 backToFeedBtn.addEventListener('click', hideSinglePostView);
@@ -619,204 +652,176 @@ function hideSinglePostView() {
 }
 
 
- function addPostToDOM(post, isSingleView = false){
+ // Em scripts.js, substitua pela função completa abaixo
 
+function addPostToDOM(post, isSingleView = false) {
+    if (!postsContainer || !postTemplate) return;
 
-  
-   if (!postsContainer || !postTemplate) return;
+    const postClone = document.importNode(postTemplate.content, true);
+    const postElement = postClone.querySelector(".post");
 
+    // Lógica de clique para abrir a visualização de post único
+    if (!isSingleView && !post.isRepost) {
+        postElement.style.cursor = 'pointer';
+        postElement.addEventListener('click', (e) => {
+            // Ignora o clique se for em um botão, link, imagem ou na área de comentários
+            if (e.target.closest('button, a, .post-actions, .post-comments, .post-image')) {
+                return;
+            }
+            showSinglePostView(post.id);
+        });
+    }
 
-   const postClone = document.importNode(postTemplate.content, true);
-   const postElement = postClone.querySelector(".post");
+    // Lógica para tratar e exibir uma republicação
+    if (post.isRepost) {
+        const repostHeader = document.createElement('div');
+        repostHeader.className = 'repost-header';
+        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
+        postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
 
+        const originalPostContainer = document.createElement('div');
+        originalPostContainer.className = 'original-post-container';
 
-  
-   if (!isSingleView && !post.isRepost) {
-       postElement.style.cursor = 'pointer';
-       postElement.addEventListener('click', (e) => {
-           // AQUI ESTÁ A MUDANÇA: Adicionamos '.post-comments' à lista para ignorar
-           // Agora, cliques nos botões, links, barra de ações E na seção de comentários não levarão ao post único.
-           if (e.target.closest('button, a, .post-actions, .post-comments')) {
-               return;
-           }
-          
-           showSinglePostView(post.id);
-       });
-   }
+        const originalPostHeader = postClone.querySelector('.post-header');
+        const originalPostContent = postClone.querySelector('.post-content');
 
+        originalPostContainer.appendChild(originalPostHeader);
+        originalPostContainer.appendChild(originalPostContent);
+        originalPostContainer.style.cursor = 'pointer';
+        originalPostContainer.addEventListener('click', () => {
+            window.location.href = `home.html?post=${post.originalPostId}`;
+        });
+        postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 
-   // Se for uma republicação, adicione o cabeçalho e modifique o comportamento
-   if (post.isRepost) {
-       const repostHeader = document.createElement('div');
-       repostHeader.className = 'repost-header';
-       repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
-      
-       postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
+        const postActions = postClone.querySelector('.post-actions');
+        if (postActions) {
+            postActions.style.display = 'none';
+        }
 
+        // Modifica os dados do post para mostrar o conteúdo original
+        post.content = post.originalPost.content;
+        post.authorName = post.originalPost.authorName;
+        post.authorPhoto = post.originalPost.authorPhoto;
+        post.timestamp = post.originalPost.timestamp;
+        post.authorId = post.originalPost.authorId;
+    }
 
-       const originalPostContainer = document.createElement('div');
-       originalPostContainer.className = 'original-post-container';
-      
-       const originalPostHeader = postClone.querySelector('.post-header');
-       const originalPostContent = postClone.querySelector('.post-content');
-      
-       originalPostContainer.appendChild(originalPostHeader);
-       originalPostContainer.appendChild(originalPostContent);
-      
-       // --- INÍCIO DA ALTERAÇÃO ---
+    // Referências aos elementos do DOM dentro do post
+    const authorPhotoElement = postClone.querySelector(".post-author-photo");
+    const authorNameElement = postClone.querySelector(".post-author-name");
+    const timestampElement = postClone.querySelector(".post-timestamp");
+    const contentElement = postClone.querySelector(".post-text");
+    const likeButton = postClone.querySelector(".like-btn");
+    const likeCount = postClone.querySelector(".like-count");
+    const commentButton = postClone.querySelector(".comment-btn");
+    const commentCount = postClone.querySelector(".comment-count");
+    const repostButton = postClone.querySelector(".repost-btn");
+    const saveButton = postClone.querySelector(".save-btn");
+    const shareButton = postClone.querySelector(".share-btn");
+    const commentsSection = postClone.querySelector(".post-comments");
+    const commentInput = postClone.querySelector(".comment-text");
+    const sendCommentButton = postClone.querySelector(".send-comment-btn");
+    const commentUserPhoto = postClone.querySelector(".comment-user-photo");
+    
+    // ✨ NOVOS SELETORES PARA A IMAGEM DO POST ✨
+    const postMediaContainer = postClone.querySelector(".post-media");
+    const postImageElement = postClone.querySelector(".post-image");
 
+    // Preenche os dados do post
+    postElement.dataset.postId = post.id;
+    postElement.dataset.authorId = post.authorId;
+    postElement.dataset.originalPostId = post.originalPostId;
 
-       // 1. Adiciona o evento de clique para redirecionar ao post original
-       originalPostContainer.style.cursor = 'pointer'; // Muda o cursor para indicar que é clicável
-       originalPostContainer.addEventListener('click', () => {
-           // Usa o ID do post original para criar o link
-           window.location.href = `home.html?post=${post.originalPostId}`;
-       });
+    if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
+        saveButton.classList.add("saved");
+        saveButton.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
+    }
 
+    if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
+        repostButton.classList.add("reposted");
+        repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+    }
 
-       postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
+    if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
+    authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
 
+    authorNameElement.textContent = post.authorName;
+    authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
 
-       // 2. Esconde a barra de ações (curtir, comentar, etc.)
-       const postActions = postClone.querySelector('.post-actions');
-       if (postActions) {
-           postActions.style.display = 'none';
-       }
+    if (post.timestamp) {
+        const date = post.timestamp instanceof Date ? post.timestamp : post.timestamp.toDate();
+        timestampElement.textContent = formatTimestamp(date);
+    } else {
+        timestampElement.textContent = "Agora mesmo";
+    }
 
+    contentElement.textContent = post.content;
+    likeCount.textContent = post.likes || 0;
 
-       // --- FIM DA ALTERAÇÃO ---
+    if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
+        likeButton.classList.add("liked");
+        likeButton.querySelector("i").className = "fas fa-heart";
+    }
 
+    commentCount.textContent = post.commentCount || 0;
 
-       // Modifica os dados do post para mostrar o conteúdo original
-       post.content = post.originalPost.content;
-       post.authorName = post.originalPost.authorName;
-       post.authorPhoto = post.originalPost.authorPhoto;
-       post.timestamp = post.originalPost.timestamp;
-       post.authorId = post.originalPost.authorId;
-   }
+    if (currentUserProfile && currentUserProfile.photoURL) {
+        commentUserPhoto.src = currentUserProfile.photoURL;
+    }
 
+    // ✨ LÓGICA PARA EXIBIR A IMAGEM DO POST (se ela existir) ✨
+    if (post.imageUrl) {
+        postImageElement.src = post.imageUrl;
+        postMediaContainer.style.display = 'block';
+    } else {
+        postMediaContainer.style.display = 'none';
+    }
 
-   const authorPhotoElement = postClone.querySelector(".post-author-photo");
-   const authorNameElement = postClone.querySelector(".post-author-name");
-   const timestampElement = postClone.querySelector(".post-timestamp");
-   const contentElement = postClone.querySelector(".post-text");
-   const likeButton = postClone.querySelector(".like-btn");
-   const likeCount = postClone.querySelector(".like-count");
-   const commentButton = postClone.querySelector(".comment-btn");
-   const commentCount = postClone.querySelector(".comment-count");
-   const repostButton = postClone.querySelector(".repost-btn");
-   const saveButton = postClone.querySelector(".save-btn");
-   const shareButton = postClone.querySelector(".share-btn");
-   const commentsSection = postClone.querySelector(".post-comments");
-   const commentInput = postClone.querySelector(".comment-text");
-   const sendCommentButton = postClone.querySelector(".send-comment-btn");
-   const commentUserPhoto = postClone.querySelector(".comment-user-photo");
+    // Adiciona os event listeners para os botões e interações
+    likeButton.addEventListener("click", () => toggleLike(post.id));
+    saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
+    repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
+    shareButton.addEventListener("click", () => sharePost(post.id));
 
+    commentButton.addEventListener("click", () => {
+        commentsSection.classList.toggle("active");
+        if (commentsSection.classList.contains("active")) {
+            const commentsList = commentsSection.querySelector('.comments-list');
+            if (commentsList) {
+                if (activeCommentListeners[post.id]) {
+                    activeCommentListeners[post.id]();
+                }
+                activeCommentListeners[post.id] = loadComments(post.id, commentsList);
+            }
+            commentInput.focus();
+        } else {
+            if (activeCommentListeners[post.id]) {
+                activeCommentListeners[post.id]();
+                delete activeCommentListeners[post.id];
+            }
+        }
+    });
 
-   postElement.dataset.postId = post.id;
-   postElement.dataset.authorId = post.authorId;
-   postElement.dataset.originalPostId = post.originalPostId;
+    sendCommentButton.addEventListener("click", () => {
+        const content = commentInput.value.trim();
+        if (content) {
+            addComment(post.id, content);
+            commentInput.value = "";
+        }
+    });
 
+    commentInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            const content = commentInput.value.trim();
+            if (content) {
+                addComment(post.id, content);
+                commentInput.value = "";
+            }
+        }
+    });
 
-   if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
-       saveButton.classList.add("saved");
-       saveButton.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
-   }
-
-
-if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
-   repostButton.classList.add("reposted");
-   // Define o texto inicial como "Republicado"
-   repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+    return postElement;
 }
-
-
-   if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
-   authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-
-
-   authorNameElement.textContent = post.authorName;
-   authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-
-
-   if (post.timestamp) {
-     const date = post.timestamp instanceof Date ? post.timestamp : post.timestamp.toDate();
-     timestampElement.textContent = formatTimestamp(date);
-   } else {
-     timestampElement.textContent = "Agora mesmo";
-   }
-
-
-   contentElement.textContent = post.content;
-   likeCount.textContent = post.likes || 0;
-
-
-   if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
-     likeButton.classList.add("liked");
-     likeButton.querySelector("i").className = "fas fa-heart";
-   }
-
-
-   commentCount.textContent = post.commentCount || 0;
-
-
-   if (currentUserProfile && currentUserProfile.photoURL) {
-     commentUserPhoto.src = currentUserProfile.photoURL;
-   }
-
-
-   likeButton.addEventListener("click", () => toggleLike(post.id));
-   saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
-   repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
-   shareButton.addEventListener("click", () => sharePost(post.id));
-
-
-commentButton.addEventListener("click", () => {
-     commentsSection.classList.toggle("active");
-
-
-     if (commentsSection.classList.contains("active")) {
-       // A seção de comentários foi ABERTA
-       const commentsList = commentsSection.querySelector('.comments-list');
-       if (commentsList) {
-           // Se um listener para este post já existir, remove o antigo antes de criar um novo
-           if (activeCommentListeners[post.id]) {
-               activeCommentListeners[post.id]();
-           }
-           // Adiciona o novo listener e guarda sua função de "unsubscribe"
-           activeCommentListeners[post.id] = loadComments(post.id, commentsList);
-       }
-       commentInput.focus();
-     } else {
-       // A seção de comentários foi FECHADA
-       // Se existe um listener para este post, o removemos
-       if (activeCommentListeners[post.id]) {
-           activeCommentListeners[post.id](); // Executa a função "unsubscribe"
-           delete activeCommentListeners[post.id]; // Remove a referência
-       }
-     }
-   });
-   sendCommentButton.addEventListener("click", () => {
-       const content = commentInput.value.trim();
-       if (content) {
-           addComment(post.id, content);
-           commentInput.value = "";
-       }
-   });
-  
-   commentInput.addEventListener("keypress", (e) => {
-       if (e.key === "Enter") {
-           const content = commentInput.value.trim();
-           if (content) {
-               addComment(post.id, content);
-               commentInput.value = "";
-           }
-       }
-   });
-
-
-   return postElement;
- }
  // Função para redirecionar para o perfil do usuário
  function redirectToUserProfile(userId) {
    window.location.href = `../pages/user.html?uid=${userId}`;

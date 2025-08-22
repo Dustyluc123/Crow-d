@@ -67,30 +67,7 @@
                             <select id="school" name="school" required>
                                 <option value="">Selecione uma ETEC...</option>
                                 <option value="ETEC Albert Einstein">ETEC Albert Einstein</option>
-                                <option value="ETEC Carlos de Campos">ETEC Carlos de Campos</option>
-                                <option value="ETEC Getúlio Vargas">ETEC Getúlio Vargas</option>
-                                <option value="ETEC Guaracy Silveira">ETEC Guaracy Silveira</option>
-                                <option value="ETEC Jardim Ângela">ETEC Jardim Ângela</option>
-                                <option value="ETEC José Rocha Mendes">ETEC José Rocha Mendes</option>
-                                <option value="ETEC Parque Belém">ETEC Parque Belém</option>
-                                <option value="ETEC Parque da Juventude">ETEC Parque da Juventude</option>
-                                <option value="ETEC Paulistano">ETEC Paulistano</option>
-                                <option value="ETEC Prof. Adhemar Batista Heméritas">ETEC Prof. Adhemar Batista Heméritas</option>
-                                <option value="ETEC Prof. Aprígio Gonzaga">ETEC Prof. Aprígio Gonzaga</option>
-                                <option value="ETEC Prof. Basilides de Godoy">ETEC Prof. Basilides de Godoy</option>
-                                <option value="ETEC Prof. Camargo Aranha">ETEC Prof. Camargo Aranha</option>
-                                <option value="ETEC Prof. Horácio Augusto da Silveira">ETEC Prof. Horácio Augusto da Silveira</option>
-                                <option value="ETEC Santa Ifigênia">ETEC Santa Ifigênia</option>
-                                <option value="ETEC São Paulo">ETEC São Paulo</option>
-                                <option value="ETEC Zona Leste">ETEC Zona Leste</option>
-                                <option value="ETEC Zona Sul">ETEC Zona Sul</option>
-                                <option value="ETEC de Artes">ETEC de Artes</option>
-                                <option value="ETEC de Cidade Tiradentes">ETEC de Cidade Tiradentes</option>
-                                <option value="ETEC de Guaianazes">ETEC de Guaianazes</option>
-                                <option value="ETEC de Heliópolis">ETEC de Heliópolis</option>
-                                <option value="ETEC de Itaquera">ETEC de Itaquera</option>
-                                <option value="ETEC de Sapopemba">ETEC de Sapopemba</option>
-                                <option value="ETEC de Vila Formosa">ETEC de Vila Formosa</option>
+                            
                             </select>
                         </div>
 
@@ -109,32 +86,116 @@
                         <h2><i class="fas fa-star"></i> Seus Hobbies</h2>
                         <p class="section-subtitle">Selecione seus interesses para se conectar com outros estudantes.</p>
                         
-                        <div class="hobbies-container">
-                            <div class="hobby-category">
-                                <h3>Esportes</h3>
-                                <div class="hobby-options">
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Futebol"><span>Futebol</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Basquete"><span>Basquete</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Vôlei"><span>Vôlei</span></label>
-                                </div>
-                            </div>
-                            <div class="hobby-category">
-                                <h3>Artes</h3>
-                                <div class="hobby-options">
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Desenho"><span>Desenho</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Pintura"><span>Pintura</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Fotografia"><span>Fotografia</span></label>
-                                </div>
-                            </div>
-                             <div class="hobby-category">
-                                <h3>Música</h3>
-                                <div class="hobby-options">
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Tocar instrumento"><span>Tocar instrumento</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Cantar"><span>Cantar</span></label>
-                                    <label class="checkbox-option"><input type="checkbox" name="hobbies" value="Ouvir música"><span>Ouvir música</span></label>
-                                </div>
-                            </div>
-                            </div>
+                       <div class="hobbies-container">
+
+    <div class="hobby-category">
+        <h3>Esportes</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Futebol"><span class="hobby-name">Futebol</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Basquete"><span class="hobby-name">Basquete</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Vôlei"><span class="hobby-name">Vôlei</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Corrida"><span class="hobby-name">Corrida</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-esportes">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Ciclismo"><span class="hobby-name">Ciclismo</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Natação"><span class="hobby-name">Natação</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Skate"><span class="hobby-name">Skate</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Artes Marciais"><span class="hobby-name">Artes Marciais</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Tênis"><span class="hobby-name">Tênis</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Handebol"><span class="hobby-name">Handebol</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Yoga"><span class="hobby-name">Yoga</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Academia"><span class="hobby-name">Academia</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-esportes">Ver mais</button>
+    </div>
+
+    <div class="hobby-category">
+        <h3>Artes</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Desenho"><span class="hobby-name">Desenho</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Pintura"><span class="hobby-name">Pintura</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Fotografia"><span class="hobby-name">Fotografia</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Dança"><span class="hobby-name">Dança</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-artes">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Escultura"><span class="hobby-name">Escultura</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Arte Digital"><span class="hobby-name">Arte Digital</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Teatro"><span class="hobby-name">Teatro</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Caligrafia"><span class="hobby-name">Caligrafia</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Cerâmica"><span class="hobby-name">Cerâmica</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-artes">Ver mais</button>
+    </div>
+
+    <div class="hobby-category">
+        <h3>Música</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Ouvir música"><span class="hobby-name">Ouvir música</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Tocar instrumento"><span class="hobby-name">Tocar instrumento</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Cantar"><span class="hobby-name">Cantar</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Shows"><span class="hobby-name">Shows</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-musica">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Produção Musical"><span class="hobby-name">Produção Musical</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Compor"><span class="hobby-name">Compor</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="DJing"><span class="hobby-name">DJing</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Colecionar Discos"><span class="hobby-name">Colecionar Discos</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-musica">Ver mais</button>
+    </div>
+
+    <div class="hobby-category">
+        <h3>Tecnologia</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Programação"><span class="hobby-name">Programação</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Jogos"><span class="hobby-name">Jogos</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Robótica"><span class="hobby-name">Robótica</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Design"><span class="hobby-name">Design</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-tecnologia">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Edição de Vídeo"><span class="hobby-name">Edição de Vídeo</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Streaming"><span class="hobby-name">Streaming</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Montagem de PC"><span class="hobby-name">Montagem de PC</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Cibersegurança"><span class="hobby-name">Cibersegurança</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-tecnologia">Ver mais</button>
+    </div>
+
+    <div class="hobby-category">
+        <h3>Cultura Pop</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Filmes"><span class="hobby-name">Filmes</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Séries"><span class="hobby-name">Séries</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Animes"><span class="hobby-name">Animes</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Livros"><span class="hobby-name">Livros</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-cultura">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Quadrinhos/Mangás"><span class="hobby-name">Quadrinhos/Mangás</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Ficção Científica"><span class="hobby-name">Ficção Científica</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Fantasia"><span class="hobby-name">Fantasia</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Poesia"><span class="hobby-name">Poesia</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-cultura">Ver mais</button>
+    </div>
+
+    <div class="hobby-category">
+        <h3>Estilo de Vida & Outros</h3>
+        <div class="hobby-options">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Culinária"><span class="hobby-name">Culinária</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Viagens"><span class="hobby-name">Viagens</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Idiomas"><span class="hobby-name">Idiomas</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Voluntariado"><span class="hobby-name">Voluntariado</span></label>
+        </div>
+        <div class="hidden-hobbies" id="hobbies-outros">
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Jardinagem"><span class="hobby-name">Jardinagem</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Acampar"><span class="hobby-name">Acampar</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Astronomia"><span class="hobby-name">Astronomia</span></label>
+            <label class="hobby-option"><input type="checkbox" name="hobbies" value="Animais de Estimação"><span class="hobby-name">Animais de Estimação</span></label>
+        </div>
+        <button type="button" class="see-more-btn" data-target="#hobbies-outros">Ver mais</button>
+    </div>
+
+</div>
                     </div>
                     <div class="form-actions">
                         <button type="button" class="secondary-btn" onclick="window.location.href='../home/home.html'">Cancelar</button>

@@ -47,6 +47,138 @@ document.addEventListener('DOMContentLoaded', function() {
     let processedConversations = new Map(); 
     let messagesSent = new Set(); 
 
+    document.addEventListener('DOMContentLoaded', function() {
+    // Configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
+        authDomain: "tcclogin-7e7b8.firebaseapp.com",
+        projectId: "tcclogin-7e7b8",
+        storageBucket: "tcclogin-7e7b8.appspot.com",
+        messagingSenderId: "1066633833169",
+        appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Referências aos elementos do DOM
+    const conversationsContainer = document.getElementById('conversations-list-container');
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const suggestionTemplate = document.getElementById('suggestion-template');
+    
+    let currentUser = null;
+
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            currentUser = user;
+            checkConversations();
+        } else {
+            window.location.href = '../login/login.html';
+        }
+    });
+
+    /**
+     * Verifica se o usuário tem conversas existentes.
+     * Se tiver, carrega as conversas. Senão, carrega as sugestões.
+     */
+    async function checkConversations() {
+        if (!currentUser) return;
+
+        // Procura por conversas onde o ID do usuário atual está no array 'participants'
+        const conversationsRef = db.collection('conversations')
+            .where('participants', 'array-contains', currentUser.uid);
+
+        const snapshot = await conversationsRef.get();
+
+        if (snapshot.empty) {
+            // Nenhuma conversa encontrada, mostra as sugestões
+            conversationsContainer.style.display = 'none';
+            suggestionsContainer.style.display = 'block';
+            loadFriendSuggestions();
+        } else {
+            // Conversas encontradas, esconde as sugestões e carrega as conversas
+            suggestionsContainer.style.display = 'none';
+            conversationsContainer.style.display = 'block';
+            loadConversations(snapshot); // Chama a função que você usa para listar as conversas
+        }
+    }
+
+    /**
+     * Carrega os amigos do usuário para exibi-los como sugestões.
+     */
+    async function loadFriendSuggestions() {
+        try {
+            // 1. Pega a lista de IDs de amigos
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            
+            if (friendsSnapshot.empty) {
+                suggestionsList.innerHTML = '<p>Você ainda não tem amigos para sugerir. Adicione amigos primeiro!</p>';
+                return;
+            }
+
+            suggestionsList.innerHTML = ''; // Limpa o "Carregando..."
+
+            // 2. Para cada amigo, busca os detalhes do perfil
+            friendsSnapshot.forEach(async (friendDoc) => {
+                const friendId = friendDoc.id;
+                const userDoc = await db.collection('users').doc(friendId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    addSuggestionToDOM(userDoc.id, userData);
+                }
+            });
+
+        } catch (error) {
+            console.error("Erro ao carregar sugestões de amigos:", error);
+            suggestionsList.innerHTML = '<p>Ocorreu um erro ao carregar as sugestões.</p>';
+        }
+    }
+
+    /**
+     * Adiciona uma sugestão de amigo na tela.
+     * @param {string} userId - O ID do usuário amigo.
+     * @param {object} userData - Os dados do perfil do amigo.
+     */
+    function addSuggestionToDOM(userId, userData) {
+        const suggestionClone = document.importNode(suggestionTemplate.content, true);
+        const linkElement = suggestionClone.querySelector('.suggestion-item-link');
+        const photoElement = suggestionClone.querySelector('.suggestion-photo');
+        const nameElement = suggestionClone.querySelector('.suggestion-name');
+        const courseElement = suggestionClone.querySelector('.suggestion-course');
+
+        // Cria o link para iniciar a conversa
+        linkElement.href = `../chat/chat.html?userId=${userId}`; // Ajuste o caminho se necessário
+
+        photoElement.src = userData.photoURL || '../img/Design sem nome2.png';
+        nameElement.textContent = `${userData.nickname}#${userData.tag}`;
+        courseElement.textContent = userData.grade || 'Curso não informado';
+
+        suggestionsList.appendChild(suggestionClone);
+    }
+    
+    /**
+     * Função placeholder para carregar e exibir as conversas.
+     * Você deve substituir isso pela sua lógica real.
+     */
+    function loadConversations(snapshot) {
+        // Exemplo:
+        conversationsContainer.innerHTML = ''; // Limpa o container
+        snapshot.forEach(doc => {
+            const conversationData = doc.data();
+            const conversationElement = document.createElement('div');
+            conversationElement.className = 'conversation-preview';
+            // Lógica para encontrar o nome do outro participante, a última mensagem, etc.
+            conversationElement.textContent = `Conversa com ${conversationData.participants.find(p => p !== currentUser.uid)}`;
+            conversationsContainer.appendChild(conversationElement);
+        });
+        console.log(`${snapshot.size} conversas carregadas.`);
+    }
+});
+
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
           const profileLink = document.querySelector('.main-nav a.profile-link');

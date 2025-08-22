@@ -62,14 +62,23 @@
            <div id="feed-view">
                <main class="feed">
                    <div class="create-post">
-                       <div class="post-input">
-                           <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
-                           <input type="text" placeholder="O que você está pensando?" id="post-content">
-                       </div>
-                       <div class="post-actions">
-                           <button class="post-btn" id="publish-btn">Publicar</button>
-                       </div>
-                   </div>
+    <div class="post-input">
+        <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic" id="current-user-photo">
+        <input type="text" placeholder="O que você está pensando?" id="post-content">
+    </div>
+
+    <div class="image-preview-container" id="post-image-preview-container" style="display: none;">
+        <img id="post-image-preview" src="#" alt="Pré-visualização da imagem">
+        <button id="remove-image-btn" class="remove-image-btn">&times;</button>
+    </div>
+    <div class="post-actions">
+        <label for="post-image-input" class="post-action-icon">
+            <i class="fas fa-image"></i>
+        </label>
+        <input type="file" id="post-image-input" accept="image/*" style="display: none;">
+        <button class="post-btn" id="publish-btn">Publicar</button>
+    </div>
+</div>
 
 
                    <div class="posts" id="posts-container">
@@ -127,7 +136,9 @@
            </div>
            <div class="post-content">
                <p class="post-text">Conteúdo da publicação...</p>
-               <div class="post-media" style="display: none;"></div>
+               <div class="post-media" style="display: none;">
+    <img src="" alt="Imagem da publicação" class="post-image">
+</div>
            </div>
            <div class="post-actions">
                <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
