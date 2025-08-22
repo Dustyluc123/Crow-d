@@ -486,3 +486,46 @@ body.dark-mode .mark-all-read-btn:hover {
     background-color: #36373d;
     color: #ffffff;
 }
+
+/* Adicione no final de pages/notificacao.css */
+
+.notification-item-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.notification-action-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.accept-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.accept-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+.decline-btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .decline-btn {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--dark-text-secondary);
+    border-color: var(--dark-border);
+}
+
+.decline-btn:hover {
+    background-color: var(--bg-hover);
+}

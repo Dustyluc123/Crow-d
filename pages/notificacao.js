@@ -17,73 +17,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // ==========================================================
-    //      INÍCIO DA CORREÇÃO
-    // ==========================================================
-    
-    // CORREÇÃO: A variável agora busca pelo ID correto 'notifications-container'
     const notificationsContainer = document.getElementById('notifications-container');
-    
-    // ==========================================================
-    //       FIM DA CORREÇÃO
-    // ==========================================================
-
-    const notificationFilters = document.querySelectorAll('.notification-filter');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const logoutButton = document.getElementById('logout-btn');
 
-    // Variáveis globais
     let currentUser = null;
-    let currentUserProfile = null;
     let notificationsListener = null;
-    let currentFilter = 'all';
 
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
-          const profileLink = document.querySelector('.main-nav a.profile-link');
-        if (profileLink) {
-            // Define o link para a página do utilizador logado (user.html) com o UID correto
-            profileLink.href = `../pages/user.html?uid=${user.uid}`;
-        }
         if (user) {
             currentUser = user;
-            await loadUserProfile(user.uid);
-            loadNotifications(currentFilter); // Carrega as notificações
-            markNotificationsAsRead(user.uid); // Marca as não lidas como lidas ao entrar
+            const profileLink = document.querySelector('.main-nav a.profile-link');
+            if (profileLink) {
+                profileLink.href = `../pages/user.html?uid=${user.uid}`;
+            }
+            loadNotifications();
+            markNotificationsAsRead(user.uid);
         } else {
             window.location.href = '../login/login.html';
         }
     });
 
-    // Event listener para o botão de logout
     if (logoutButton) {
-        logoutButton.addEventListener('click', function(e) {
+        logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
-            auth.signOut().then(() => {
-                window.location.href = '../login/login.html';
-            });
+            auth.signOut().then(() => { window.location.href = '../login/login.html'; });
         });
     }
 
-    // Event listener para o botão de marcar todas como lidas
     if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', () => markAllAsRead(true)); // Passa 'true' para forçar a marcação
-    }
-
-    // Função para carregar o perfil do usuário
-    async function loadUserProfile(userId) {
-        const doc = await db.collection('users').doc(userId).get();
-        if (doc.exists) {
-            currentUserProfile = doc.data();
-        } else {
-            console.log('Perfil do usuário não encontrado.');
-            // window.location.href = '../profile/profile.html'; // Desativado para evitar redirects
-        }
+        markAllReadBtn.addEventListener('click', () => markAllAsRead(true));
     }
 
     // Função para carregar notificações
-    function loadNotifications(filter) {
-        if (!notificationsContainer) return; // Checagem de segurança
+    function loadNotifications() {
+        if (!notificationsContainer) return;
 
         notificationsContainer.innerHTML = '<div class="notification-loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
         
@@ -97,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .limit(50);
         
         notificationsListener = query.onSnapshot(snapshot => {
-            notificationsContainer.innerHTML = ''; // Limpa o container
+            notificationsContainer.innerHTML = '';
             
             if (snapshot.empty) {
                 notificationsContainer.innerHTML = `
@@ -118,59 +87,126 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para adicionar uma notificação ao DOM
+    // Adiciona uma notificação ao DOM (MODIFICADA)
     function addNotificationToDOM(notification) {
-        const notificationElement = document.createElement('a'); // Usar 'a' para ser clicável
+        const notificationElement = document.createElement('div'); // Alterado de 'a' para 'div'
         notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
-        
-        // Define o link baseado no tipo de notificação
-        if (notification.type === 'follow') {
-            notificationElement.href = `../pages/user.html?uid=${notification.fromUserId}`;
-        } else {
-            notificationElement.href = `../home/home.html?post=${notification.postId}`;
-        }
         
         const userPhoto = notification.fromUserPhoto || '../img/Design sem nome2.png';
         const timestamp = notification.timestamp ? formatTimestamp(notification.timestamp.toDate()) : '';
 
-        notificationElement.innerHTML = `
+        // Constrói o HTML base da notificação
+        let notificationHTML = `
             <img src="${userPhoto}" alt="Avatar" class="notification-avatar">
             <div class="notification-content">
                 <p class="notification-text"><strong>${notification.fromUserName}</strong> ${notification.content || ''}</p>
                 <span class="notification-time">${timestamp}</span>
-            </div>
         `;
+
+        // Se for um convite de grupo, adiciona os botões
+        if (notification.type === 'group_invite') {
+            notificationHTML += `
+                <div class="notification-item-actions">
+                    <button class="notification-action-btn accept-btn" data-group-id="${notification.groupId}" data-notification-id="${notification.id}">Aceitar</button>
+                    <button class="notification-action-btn decline-btn" data-notification-id="${notification.id}">Recusar</button>
+                </div>
+            `;
+        }
         
+        notificationHTML += `</div>`; // Fecha notification-content
+        notificationElement.innerHTML = notificationHTML;
+        
+        // Adiciona os event listeners aos botões se existirem
+        const acceptBtn = notificationElement.querySelector('.accept-btn');
+        const declineBtn = notificationElement.querySelector('.decline-btn');
+
+        if (acceptBtn) {
+            acceptBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                acceptGroupInvite(e.target.dataset.groupId, e.target.dataset.notificationId);
+            });
+        }
+        if (declineBtn) {
+            declineBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                declineGroupInvite(e.target.dataset.notificationId);
+            });
+        }
+        
+        // Adiciona um clique geral para outros tipos de notificação
+        if (notification.type !== 'group_invite') {
+            notificationElement.style.cursor = 'pointer';
+            notificationElement.addEventListener('click', () => {
+                let url = '#';
+                if (notification.type === 'follow') {
+                    url = `../pages/user.html?uid=${notification.fromUserId}`;
+                } else {
+                    url = `../home/home.html?post=${notification.postId}`;
+                }
+                window.location.href = url;
+            });
+        }
+
         notificationsContainer.appendChild(notificationElement);
     }
+
+    // --- NOVAS FUNÇÕES ---
+
+    // Função para aceitar um convite de grupo
+    async function acceptGroupInvite(groupId, notificationId) {
+        if (!currentUser) return;
+
+        const groupRef = db.collection('groups').doc(groupId);
+        try {
+            // Adiciona o usuário ao array de membros do grupo
+            await groupRef.update({
+                members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+
+            // Deleta a notificação após aceitar
+            await db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId).delete();
+            
+            alert("Você entrou no grupo com sucesso!");
+            
+        } catch (error) {
+            console.error("Erro ao aceitar convite:", error);
+            alert("Não foi possível entrar no grupo. Ele pode ter sido excluído.");
+        }
+    }
+
+    // Função para recusar um convite de grupo (apenas deleta a notificação)
+    async function declineGroupInvite(notificationId) {
+        if (!currentUser) return;
+        try {
+            await db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId).delete();
+        } catch (error) {
+            console.error("Erro ao recusar convite:", error);
+        }
+    }
     
-    // Função para marcar notificações como lidas ao carregar a página
+    // --- FUNÇÕES EXISTENTES ---
+
     async function markNotificationsAsRead(userId) {
         const notificationsRef = db.collection('users').doc(userId).collection('notifications');
         const snapshot = await notificationsRef.where('read', '==', false).get();
-
         if (snapshot.empty) return;
-
         const batch = db.batch();
         snapshot.docs.forEach(doc => {
             batch.update(doc.ref, { read: true });
         });
-
         await batch.commit();
     }
 
-    // Função para marcar TODAS como lidas via botão
     async function markAllAsRead(force = false) {
-        if (!force) return;
-
+        if (!force || !currentUser) return;
         const notificationsRef = db.collection('users').doc(currentUser.uid).collection('notifications');
         const snapshot = await notificationsRef.where('read', '==', false).get();
-
         if (snapshot.empty) {
             alert("Todas as notificações já estão lidas.");
             return;
         }
-
         const batch = db.batch();
         snapshot.docs.forEach(doc => {
             batch.update(doc.ref, { read: true });
@@ -179,7 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
         alert(`${snapshot.size} notificações marcadas como lidas.`);
     }
 
-    // Função para formatar timestamp
     function formatTimestamp(date) {
         if (!date) return '';
         const now = new Date();
