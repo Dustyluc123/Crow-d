@@ -406,7 +406,6 @@ body.dark-mode .friend-card .friend-name {
         </main>
     </div>
 
-    <!-- Templates -->
     <template id="post-template">
         <div class="post">
             <div class="post-header">
@@ -415,16 +414,21 @@ body.dark-mode .friend-card .friend-name {
                     <h3 class="post-author-name">Nome do Usuário</h3>
                     <span class="post-timestamp">há 5 minutos</span>
                 </div>
+                <button class="delete-btn post-delete-btn" style="display: none;" title="Excluir publicação">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
             <div class="post-content">
                 <p class="post-text">Conteúdo da publicação...</p>
-                <div class="post-media" style="display: none;"></div>
+                <div class="post-media" style="display: none;">
+                    <img src="" alt="Imagem da publicação" class="post-image">
+                </div>
             </div>
             <div class="post-actions">
                 <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
                 <button class="post-action comment-btn"><i class="far fa-comment"></i> <span class="comment-count">0</span></button>
                 <button class="post-action repost-btn"><i class="fas fa-retweet"></i> Republicar</button>
-                 <button class="post-action save-btn"><i class="far fa-bookmark"></i> Salvar</button>
+                <button class="post-action save-btn"><i class="far fa-bookmark"></i> Salvar</button>
                 <button class="post-action share-btn"><i class="far fa-share-square"></i></button>
             </div>
             <div class="post-comments">
@@ -438,7 +442,6 @@ body.dark-mode .friend-card .friend-name {
             </div>
         </div>
     </template>
-
     <template id="comment-template">
         <div class="comment">
             <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic small comment-author-photo">

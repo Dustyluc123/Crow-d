@@ -74,10 +74,15 @@
                     <h3 class="post-author-name">Nome do Usuário</h3>
                     <span class="post-timestamp">há 5 minutos</span>
                 </div>
+                <button class="delete-btn post-delete-btn" style="display: none;" title="Excluir publicação">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
             <div class="post-content">
                 <p class="post-text">Conteúdo da publicação...</p>
-                <div class="post-media" style="display: none;"></div>
+                <div class="post-media" style="display: none;">
+                     <img src="" alt="Imagem da publicação" class="post-image">
+                </div>
             </div>
             <div class="post-actions">
                 <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
@@ -92,22 +97,7 @@
                     <input type="text" placeholder="O que você está pensando?" class="comment-text">
                     <button class="send-comment-btn"><i class="fas fa-paper-plane"></i></button>
                 </div>
-                <div class="comments-list">
-                    </div>
-            </div>
-        </div>
-    </template>
-
-    <template id="comment-template">
-        <div class="comment">
-            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic comment-author-photo">
-            <div class="comment-content">
-                <h4 class="comment-author-name">Nome do Usuário</h4>
-                <p class="comment-text-content">Conteúdo do comentário...</p>
-                <div class="comment-footer">
-                    <span class="comment-timestamp">há 2 minutos</span>
-                    <button class="comment-like-btn"><i class="far fa-heart"></i> <span class="comment-like-count">0</span></button>
-                </div>
+                <div class="comments-list"></div>
             </div>
         </div>
     </template>

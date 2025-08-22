@@ -884,3 +884,267 @@ body.dark-mode .event-btn.secondary {
 body.dark-mode .event-btn.secondary:hover {
     background-color: var(--dark-bg);
 }
+/* ====================================================== */
+/* MELHORIAS PARA O MODAL DE CRIAR GRUPO */
+/* ====================================================== */
+
+/* Animação de entrada suave para o modal */
+.modal-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Adiciona um ícone ao cabeçalho do modal */
+#createGroupModal .modal-header h2::before {
+    content: '\f0c0'; /* Ícone de usuários do Font Awesome */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    margin-right: 10px;
+    color: var(--primary-color);
+}
+
+/* Melhora o espaçamento e a organização do formulário */
+#createGroupModal .modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espaçamento consistente entre os campos */
+}
+
+/* Garante que a descrição tenha um tamanho mínimo */
+#createGroupModal #groupDescription {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* --- Estilo para o switch 'Privado' --- */
+
+/* Transforma o input-group em um container flexível */
+.input-group.switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--light-border);
+    border-bottom: 1px solid var(--light-border);
+    margin-top: 10px;
+}
+
+body.dark-mode .input-group.switch-container {
+    border-color: var(--dark-border);
+}
+
+.input-group.switch-container label {
+    margin-bottom: 0; /* Remove a margem padrão da label */
+    font-weight: bold;
+}
+
+/* Oculta o checkbox padrão */
+#isPrivate {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Container do switch */
+.switch-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+/* Fundo do switch */
+.switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: .4s;
+}
+/* ====================================================== */
+/* MELHORIAS PARA O MODAL DE CRIAR GRUPO */
+/* ====================================================== */
+
+/* ... (outros estilos do modal) ... */
+
+/* --- Estilo para o switch 'Privado' --- */
+.input-group.switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--light-border);
+    border-bottom: 1px solid var(--light-border);
+    margin-top: 10px;
+}
+
+body.dark-mode .input-group.switch-container {
+    border-color: var(--dark-border);
+}
+
+.input-group.switch-container label {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
+.switch-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+#isPrivate {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: .4s;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+/* O seletor corrigido que faz a mágica acontecer */
+#isPrivate:checked ~ .switch-slider {
+    background-color: var(--primary-color);
+}
+
+#isPrivate:checked ~ .switch-slider:before {
+    transform: translateX(22px);
+}
+
+/* --- Fim do estilo do switch --- */
+
+#password-field {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, margin-top 0.4s ease-out;
+    margin-top: 0;
+}
+
+#password-field.visible {
+    max-height: 100px;
+    margin-top: 15px;
+}
+/* Bolinha do switch */
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+/* ====================================================== */
+/* MELHORIAS PARA O MODAL DE CRIAR GRUPO */
+/* ====================================================== */
+
+/* ... (outros estilos do modal) ... */
+
+/* --- Estilo para o switch 'Privado' --- */
+.input-group.switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--light-border);
+    border-bottom: 1px solid var(--light-border);
+    margin-top: 10px;
+}
+
+body.dark-mode .input-group.switch-container {
+    border-color: var(--dark-border);
+}
+
+.input-group.switch-container label {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
+.switch-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+#isPrivate {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: .4s;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+/* O seletor corrigido que faz a mágica acontecer */
+#isPrivate:checked + .switch-slider {
+    background-color: var(--primary-color);
+}
+
+#isPrivate:checked + .switch-slider:before {
+    transform: translateX(22px);
+}
+
+/* --- Fim do estilo do switch --- */
+
+#password-field {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, margin-top 0.4s ease-out;
+    margin-top: 0;
+}
+
+#password-field.visible {
+    max-height: 100px;
+    margin-top: 15px;
+}
+
+/* Estilo quando o switch está ativado */

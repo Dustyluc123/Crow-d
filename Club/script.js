@@ -257,7 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // --- CORREÇÃO APLICADA AQUI ---
     isPrivateCheckbox.addEventListener('change', () => {
-        passwordField.style.display = isPrivateCheckbox.checked ? 'block' : 'none';
+        // Usa classList.toggle para adicionar/remover a classe .visible
+        // que controla a animação do CSS.
+        passwordField.classList.toggle('visible', isPrivateCheckbox.checked);
     });
 });

@@ -25,6 +25,32 @@
             left: 10px;
             z-index: 100;
         }
+        .message.sent {
+    position: relative; /* Necessário para posicionar o botão */
+    padding-right: 30px; /* Cria espaço para o botão não sobrepor o texto */
+}
+
+.message-delete-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #ffffff9a; /* Cor do ícone um pouco transparente */
+    cursor: pointer;
+    font-size: 0.8rem;
+    opacity: 0; /* O botão só aparece ao passar o mouse */
+    transition: opacity 0.2s, color 0.2s;
+}
+
+.message.sent:hover .message-delete-btn {
+    opacity: 1; /* Mostra o botão no hover */
+}
+
+.message-delete-btn:hover {
+    color: #ff4d4d; /* Cor vermelha no hover */
+}
     </style>
 </head>
 <body>

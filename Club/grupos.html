@@ -90,11 +90,15 @@
                     <label for="groupTags">Tags (separadas por vírgula)</label>
                     <input type="text" id="groupTags" placeholder="Ex: Música, Arte, Esportes">
                 </div>
-                <div class="input-group">
-                    <label for="isPrivate">Grupo Privado</label>
-                    <input type="checkbox" id="isPrivate">
+                
+                <div class="input-group switch-container">
+                    <label>Grupo Privado</label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="isPrivate">
+                        <span class="switch-slider"></span>
+                    </label>
                 </div>
-                <div class="input-group" id="password-field" style="display: none;">
+                <div class="input-group" id="password-field">
                     <label for="groupPassword">Senha</label>
                     <input type="password" id="groupPassword" placeholder="Digite a senha do grupo">
                 </div>

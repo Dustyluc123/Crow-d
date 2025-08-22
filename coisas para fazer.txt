@@ -1,89 +1,18 @@
 Geral
-1- fazer todas as paginas irem para o perfil(falta so a config)
-2- excluir proprio post(No home e nos Grupos)
 3- mudar as cores dos Alert
 
-///Login
--Feito
-
-//notificacao 
--feito
-
-//Grupos 
-2-grupo privado pra entrar com senha 
-3-ver o partipantes do grupo
-4-mandar emoji 
-5-o criador do grupo poder tirar alguem do grupo
-6-colocar foto do lado da mensagem da pessoa 
-7-poder marcar talvez
-
-//Eventos 
-1-Ver o evento em (singleevent tipo clicar no evento e ver so ele mostrando tudo com mais detalhes)
-2-excluir Eventos
-3-excluir evento dps que ja passou do horrario 
-4-evento publico, evento so para amigos(dps que as config terminar)
-/Cadastro --- Joao 
-1-A senha tem que ser forte
-
-//Salvos 
-1- modo Dark 
-
-///Home 
-1-Mandar Imagem
-
-///Friends 
-1-arrumar sistema de online 
-2-botão de buscar amigos funcionando com ID
-3-e adiconar amigo com ID
-4-se a pessoa ja foi pedia pra seguir ou ja é seguida, aparecer no lugar de "seguir", "solicidacao enviada" e "seguido"
-
-///Mensagen 
-1-centralizar mensagem no canto 
-2-Tirar botão I em cima do lado direito ou dar uma funcao para ele
-
-///editprofile 
-1-Colocar mais hobbies
-2-Deixar So a Etec Alber Einstein com escola possivel
-3-não ser possivel trocar de ano manualmente 
-4-usar o ShowCustonAlert ou showToast ao inves do Alert 
-5-ver o proprio id(depois que for feito)
 
 //Profile(criar conta) 
-1- colocar iamgem de perfil
-2- se por acaso os hobbies sairem depois de colocar a imagem colocar os hobbies de volta
-3- nao poder mudar a escola
-4- Tela de confirmacao
 5- tela de acitar os termos(importante)
-6- colcar os cursos (infonet,dg etc)
-7-ver o proprio id(depois que for feito)
+
 
 ///Confing 
 1 manter as configurado, se a pessoa deixou o usario deixo no modo dark, ou o perfil privado por exemplo, isso ira continuar ate ser mudado( ser feito de preferencia depois que
 o numero 3 e 5 de confing estaja pronto)
 2-excluir conta (Tem que ter confirmacao, "VC QUER REALMENTE EXCLUIR SUA CONTA?")
 3-perfil privado 
-4-Tirar parte de notificacao por email 
-5-perfil que não aparece online(So pode ser feito depois que o numero 1 do Friends seja feito)
+
 
 //User --- Barreto
 5- erro ao seguir (firebase)
 
-
-PROMPT JOAO
-re fazer com  essa ideia "FAZER A PARTE DE PERFIL GRATIS SEM STORAGE E URL
-
-Essa é uma excelente pergunta e uma preocupação muito válida. Você está certo, o Firebase Storage tem um generoso nível gratuito, mas ele pode gerar custos se o aplicativo crescer muito.
-
-Sim, existe uma alternativa totalmente gratuita que podemos implementar agora mesmo.
-
-A Solução Gratuita: Armazenar a Imagem no Banco de Dados
-
-Em vez de enviar a imagem para um serviço de armazenamento de arquivos, podemos convertê-la em um formato de texto chamado Base64 (ou Data URL) e salvar esse texto diretamente no campo avatarUrl do seu perfil no Firestore.
-
-Vantagens: É 100% gratuito, pois estamos usando apenas o Firestore, que já está configurado. Não requer regras de segurança adicionais.
-Desvantagens: Aumenta o tamanho do documento do usuário no banco de dados. Para fotos de perfil, que geralmente são pequenas, isso não é um problema. Mas não seria ideal para imagens de alta resolução.
-Para nossa aplicação, essa é uma solução perfeita. Vou fazer as seguintes alterações:
-
-Modificar a Lógica de Upload: Em src/lib/auth.ts, vou remover a lógica de upload para o Firebase Storage. Em vez disso, vou adicionar uma pequena função que converte o arquivo de imagem em um texto Base64.
-Remover o Firebase Storage: Como não vamos mais usá-lo, vou remover a inicialização do Storage em src/lib/firebase.ts para manter o código limpo.
-O restante do aplicativo, incluindo o diálogo de edição, já funciona perfeitamente com essa abordagem."

@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendBtn = document.getElementById('send-btn');
     const membersList = document.getElementById('members-list');
     
-    // --- CORREÇÃO EMOJI ---
     const emojiBtn = document.getElementById('emoji-btn');
     const emojiPicker = document.querySelector('emoji-picker');
 
@@ -93,13 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .onSnapshot(snapshot => {
                 messagesContainer.innerHTML = '';
                 snapshot.forEach(doc => {
-                    addMessageToDOM(doc.data());
+                    // Passa o ID da mensagem para a função que a cria na tela
+                    addMessageToDOM(doc.id, doc.data());
                 });
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             });
     }
 
     function loadMembers() {
+        // ... (nenhuma alteração nesta função)
         db.collection('groups').doc(groupId).onSnapshot(async (doc) => {
             const groupData = doc.data();
             const members = groupData.members;
@@ -124,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function kickMember(memberId) {
+        // ... (nenhuma alteração nesta função)
         if (!confirm("Tem certeza que deseja remover este membro?")) return;
         try {
             await db.collection('groups').doc(groupId).update({
@@ -134,7 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function addMessageToDOM(message) {
+    // --- FUNÇÃO MODIFICADA ---
+    function addMessageToDOM(messageId, message) {
         const senderProfile = membersProfiles[message.senderId] || { nickname: 'Usuário', photoURL: '../img/Design sem nome2.png' };
         const isSentByMe = message.senderId === currentUser.uid;
 
@@ -144,8 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const avatar = document.createElement('img');
         avatar.src = senderProfile.photoURL || '../img/Design sem nome2.png';
         avatar.className = 'message-avatar';
-        messageWrapper.appendChild(avatar);
-
+        
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
         
@@ -165,12 +167,44 @@ document.addEventListener('DOMContentLoaded', function() {
         messageTime.className = 'message-time';
         messageTime.textContent = message.timestamp ? message.timestamp.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
         messageContent.appendChild(messageTime);
-
+        
+        // Adiciona os elementos na ordem correta
+        messageWrapper.appendChild(avatar);
         messageWrapper.appendChild(messageContent);
+        
+        // --- ADIÇÃO: Lógica para o botão de excluir ---
+        if (isSentByMe) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'message-delete-btn'; // Use uma classe para estilizar
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.title = 'Excluir mensagem';
+            deleteBtn.addEventListener('click', () => {
+                deleteMessage(messageId);
+            });
+            messageWrapper.appendChild(deleteBtn);
+        }
+        // --- FIM DA ADIÇÃO ---
+
         messagesContainer.appendChild(messageWrapper);
     }
     
+    // --- NOVA FUNÇÃO ---
+    async function deleteMessage(messageId) {
+        if (!confirm("Tem certeza que deseja excluir esta mensagem?")) {
+            return;
+        }
+        try {
+            await db.collection('groups').doc(groupId).collection('messages').doc(messageId).delete();
+            // A mensagem será removida da tela automaticamente pelo onSnapshot do loadMessages
+        } catch (error) {
+            console.error("Erro ao excluir mensagem:", error);
+            alert("Não foi possível excluir a mensagem.");
+        }
+    }
+    // --- FIM DA NOVA FUNÇÃO ---
+    
     async function sendMessage() {
+        // ... (nenhuma alteração nesta função)
         const text = messageInput.value.trim();
         if (text === '') return;
 
@@ -195,33 +229,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- LÓGICA CORRIGIDA DO EMOJI PICKER ---
     emojiBtn.addEventListener('click', (event) => {
+        // ... (nenhuma alteração nesta função)
         event.stopPropagation();
         emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
     });
 
     emojiPicker.addEventListener('emoji-click', event => {
+        // ... (nenhuma alteração nesta função)
         messageInput.value += event.detail.emoji.unicode;
         emojiPicker.style.display = 'none';
     });
 
     document.addEventListener('click', (event) => {
+        // ... (nenhuma alteração nesta função)
         if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
             emojiPicker.style.display = 'none';
-        }
-    });
-
-    // Mentions (básico)
-    messageInput.addEventListener('input', () => {
-        const text = messageInput.value;
-        const mentionMatch = text.match(/@(\w*)$/);
-        if (mentionMatch) {
-            const search = mentionMatch[1].toLowerCase();
-            const members = Object.keys(membersProfiles).map(id => ({id, ...membersProfiles[id]}));
-            const suggestions = members.filter(m => m.nickname.toLowerCase().includes(search));
-            // Aqui você pode implementar uma caixa de sugestões para os membros
-            console.log("Sugestões de menção:", suggestions);
         }
     });
 });
