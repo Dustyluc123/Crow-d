@@ -305,27 +305,27 @@ auth.onAuthStateChanged(async function (user) {
 
 
  // Event listener para o botão de publicar
- if (postButton && postInput) {
-   postButton.addEventListener("click", function () {
-     const content = postInput.value.trim();
-     if (content) {
-       createPost(content);
-       postInput.value = "";
-     }
-   });
+// Em scripts.js, substitua este event listener
 
+// Event listener para o botão de publicar
+if (postButton && postInput) {
+  postButton.addEventListener("click", function () {
+    const content = postInput.value.trim();
+    // ✨ CORREÇÃO APLICADA AQUI ✨
+    // Agora a função createPost é chamada mesmo se o texto estiver vazio,
+    // pois a própria função irá verificar se há uma imagem.
+    createPost(content);
+  });
 
-   // Permitir publicar com Enter
-   postInput.addEventListener("keypress", function (e) {
-     if (e.key === "Enter") {
-       const content = postInput.value.trim();
-       if (content) {
-         createPost(content);
-         postInput.value = "";
-       }
-     }
-   });
- }
+  // Permitir publicar com Enter
+  postInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      const content = postInput.value.trim();
+      // ✨ CORREÇÃO APLICADA AQUI TAMBÉM ✨
+      createPost(content);
+    }
+  });
+}
 
 
  // Função para carregar o perfil do usuário
@@ -506,7 +506,53 @@ function handleScroll() {
        loadMorePosts();
    }
 }
- // Em scripts.js, substitua a função createPost
+// Em scripts.js, adicione estas duas novas funções
+
+/**
+ * Exclui uma publicação do Firestore.
+ * @param {string} postId O ID da publicação a ser excluída.
+ */
+async function deletePost(postId) {
+    if (!confirm("Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.")) {
+        return;
+    }
+    try {
+        await db.collection('posts').doc(postId).delete();
+        showToast("Publicação excluída com sucesso.", "success");
+        // O onSnapshot do feed cuidará de remover o post da tela.
+    } catch (error) {
+        console.error("Erro ao excluir publicação:", error);
+        showCustomAlert("Ocorreu um erro ao excluir a publicação.");
+    }
+}
+
+/**
+ * Exclui um comentário de uma publicação.
+ * @param {string} postId O ID da publicação pai.
+ * @param {string} commentId O ID do comentário a ser excluído.
+ */
+async function deleteComment(postId, commentId) {
+    if (!confirm("Tem certeza que deseja excluir este comentário?")) {
+        return;
+    }
+    try {
+        const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+        await commentRef.delete();
+
+        // Decrementa a contagem de comentários no post
+        const postRef = db.collection('posts').doc(postId);
+        await postRef.update({
+            commentCount: firebase.firestore.FieldValue.increment(-1)
+        });
+
+        showToast("Comentário excluído.", "info");
+        // O onSnapshot dos comentários cuidará de remover da tela.
+    } catch (error) {
+        console.error("Erro ao excluir comentário:", error);
+        showCustomAlert("Ocorreu um erro ao excluir o comentário.");
+    }
+}
+// Em scripts.js, substitua a função createPost
 
 async function createPost(content) {
   try {
@@ -515,7 +561,8 @@ async function createPost(content) {
       return;
     }
 
-    // Validação: não permite post vazio sem imagem
+    // ✨ CORREÇÃO APLICADA AQUI ✨
+    // Agora, a publicação é impedida apenas se AMBOS, texto e imagem, estiverem vazios.
     if (!content && !postImageBase64) {
         showCustomAlert("Escreva algo ou adicione uma imagem para publicar.");
         return;
@@ -535,15 +582,13 @@ async function createPost(content) {
       likes: 0,
       likedBy: [],
       commentCount: 0,
-      // ✨ ADICIONA A IMAGEM (se houver) AO OBJETO DO POST ✨
-      imageUrl: postImageBase64 // Será null se nenhuma imagem for selecionada
+      imageUrl: postImageBase64
     };
 
     await db.collection("posts").add(postData);
 
-    // Limpa os campos após a publicação
     postInput.value = "";
-    clearPostImage(); // Limpa a pré-visualização da imagem
+    clearPostImage();
 
     if (postButton) {
       postButton.disabled = false;
@@ -557,7 +602,7 @@ async function createPost(content) {
       postButton.textContent = "Publicar";
     }
   }
-} 
+}
 
 // Garanta que o listener do botão de voltar seja adicionado aqui.
 backToFeedBtn.addEventListener('click', hideSinglePostView);
@@ -652,7 +697,9 @@ function hideSinglePostView() {
 }
 
 
- // Em scripts.js, substitua pela função completa abaixo
+// Em scripts.js, substitua sua função por esta versão completa
+
+// Em scripts.js, substitua sua função por esta versão completa
 
 function addPostToDOM(post, isSingleView = false) {
     if (!postsContainer || !postTemplate) return;
@@ -664,13 +711,19 @@ function addPostToDOM(post, isSingleView = false) {
     if (!isSingleView && !post.isRepost) {
         postElement.style.cursor = 'pointer';
         postElement.addEventListener('click', (e) => {
-            // Ignora o clique se for em um botão, link, imagem ou na área de comentários
             if (e.target.closest('button, a, .post-actions, .post-comments, .post-image')) {
                 return;
             }
             showSinglePostView(post.id);
         });
     }
+
+    // Seleciona os botões de ação ANTES da lógica de repost
+    const likeButton = postClone.querySelector(".like-btn");
+    const commentButton = postClone.querySelector(".comment-btn");
+    const repostButton = postClone.querySelector(".repost-btn");
+    const saveButton = postClone.querySelector(".save-btn");
+    const shareButton = postClone.querySelector(".share-btn");
 
     // Lógica para tratar e exibir uma republicação
     if (post.isRepost) {
@@ -681,7 +734,6 @@ function addPostToDOM(post, isSingleView = false) {
 
         const originalPostContainer = document.createElement('div');
         originalPostContainer.className = 'original-post-container';
-
         const originalPostHeader = postClone.querySelector('.post-header');
         const originalPostContent = postClone.querySelector('.post-content');
 
@@ -693,17 +745,35 @@ function addPostToDOM(post, isSingleView = false) {
         });
         postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 
-        const postActions = postClone.querySelector('.post-actions');
-        if (postActions) {
-            postActions.style.display = 'none';
-        }
+        // ✨ NOVA LÓGICA PARA O BOTÃO DE REPOST EM ITENS REPUBLICADOS ✨
+        // Esconde os botões de interação, mas mantém o de republicar e compartilhar
+        likeButton.style.display = 'none';
+        commentButton.style.display = 'none';
+        saveButton.style.display = 'none';
 
-        // Modifica os dados do post para mostrar o conteúdo original
+        repostButton.classList.add('reposted');
+        repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+        // Adiciona o listener para DESFAZER a republicação, usando o ID do post original
+        repostButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleRepost(post.originalPostId); 
+        });
+
+        // Modifica os dados do post para mostrar o conteúdo e a imagem original
         post.content = post.originalPost.content;
+        post.imageUrl = post.originalPost.imageUrl;
         post.authorName = post.originalPost.authorName;
         post.authorPhoto = post.originalPost.authorPhoto;
         post.timestamp = post.originalPost.timestamp;
         post.authorId = post.originalPost.authorId;
+
+    } else {
+        // Lógica para posts originais
+        if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
+            repostButton.classList.add("reposted");
+            repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+        }
+        repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
     }
 
     // Referências aos elementos do DOM dentro do post
@@ -711,21 +781,15 @@ function addPostToDOM(post, isSingleView = false) {
     const authorNameElement = postClone.querySelector(".post-author-name");
     const timestampElement = postClone.querySelector(".post-timestamp");
     const contentElement = postClone.querySelector(".post-text");
-    const likeButton = postClone.querySelector(".like-btn");
     const likeCount = postClone.querySelector(".like-count");
-    const commentButton = postClone.querySelector(".comment-btn");
     const commentCount = postClone.querySelector(".comment-count");
-    const repostButton = postClone.querySelector(".repost-btn");
-    const saveButton = postClone.querySelector(".save-btn");
-    const shareButton = postClone.querySelector(".share-btn");
     const commentsSection = postClone.querySelector(".post-comments");
     const commentInput = postClone.querySelector(".comment-text");
     const sendCommentButton = postClone.querySelector(".send-comment-btn");
     const commentUserPhoto = postClone.querySelector(".comment-user-photo");
-    
-    // ✨ NOVOS SELETORES PARA A IMAGEM DO POST ✨
     const postMediaContainer = postClone.querySelector(".post-media");
     const postImageElement = postClone.querySelector(".post-image");
+    const deletePostBtn = postClone.querySelector('.post-delete-btn');
 
     // Preenche os dados do post
     postElement.dataset.postId = post.id;
@@ -735,11 +799,6 @@ function addPostToDOM(post, isSingleView = false) {
     if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
         saveButton.classList.add("saved");
         saveButton.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
-    }
-
-    if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
-        repostButton.classList.add("reposted");
-        repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
     }
 
     if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
@@ -769,7 +828,6 @@ function addPostToDOM(post, isSingleView = false) {
         commentUserPhoto.src = currentUserProfile.photoURL;
     }
 
-    // ✨ LÓGICA PARA EXIBIR A IMAGEM DO POST (se ela existir) ✨
     if (post.imageUrl) {
         postImageElement.src = post.imageUrl;
         postMediaContainer.style.display = 'block';
@@ -777,10 +835,18 @@ function addPostToDOM(post, isSingleView = false) {
         postMediaContainer.style.display = 'none';
     }
 
+    // Mostra o botão de excluir apenas para o autor do post (não em republicações)
+    if (!post.isRepost && post.authorId === currentUser.uid) {
+        deletePostBtn.style.display = 'block';
+        deletePostBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePost(post.id);
+        });
+    }
+
     // Adiciona os event listeners para os botões e interações
     likeButton.addEventListener("click", () => toggleLike(post.id));
     saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
-    repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
     shareButton.addEventListener("click", () => sharePost(post.id));
 
     commentButton.addEventListener("click", () => {
@@ -1066,69 +1132,71 @@ function loadComments(postId, commentsListElement) {
    });
 }
 
-// Em scripts.js
-// Função para adicionar um comentário ao DOM
+// Em scripts.js, substitua sua função por esta versão completa
+
 function addCommentToDOM(postId, comment, commentsList) {
-  if (!commentTemplate || !commentsList) return;
+    if (!commentTemplate || !commentsList) return;
 
-  // Clonar template
-  const commentClone = document.importNode(commentTemplate.content, true);
-  const commentElement = commentClone.querySelector(".comment");
+    const commentClone = document.importNode(commentTemplate.content, true);
+    const commentElement = commentClone.querySelector(".comment");
 
-  // Referências aos elementos do comentário
-  const authorPhotoElement = commentClone.querySelector(".comment-author-photo");
-  const authorNameElement = commentClone.querySelector(".comment-author-name");
-  const timestampElement = commentClone.querySelector(".comment-timestamp");
-  const contentElement = commentClone.querySelector(".comment-text");
-  const likeButton = commentClone.querySelector(".comment-like-btn");
-  const likeCount = commentClone.querySelector(".comment-like-count");
+    // Referências aos elementos do comentário
+    const authorPhotoElement = commentClone.querySelector(".comment-author-photo");
+    const authorNameElement = commentClone.querySelector(".comment-author-name");
+    const timestampElement = commentClone.querySelector(".comment-timestamp");
+    const contentElement = commentClone.querySelector(".comment-text");
+    const likeButton = commentClone.querySelector(".comment-like-btn");
+    const likeCount = commentClone.querySelector(".comment-like-count");
+    // ✨ NOVO: Referência ao botão de excluir comentário
+    const deleteCommentBtn = commentClone.querySelector('.comment-delete-btn');
 
-  // Adiciona a ação de clique ao botão de curtir
-  likeButton.addEventListener("click", function () {
-    toggleCommentLike(postId, comment.id);
-  });
+    // Adiciona a ação de clique ao botão de curtir
+    likeButton.addEventListener("click", function () {
+        toggleCommentLike(postId, comment.id);
+    });
 
-  // Definir IDs
-  commentElement.dataset.commentId = comment.id;
-  commentElement.dataset.authorId = comment.authorId;
+    // Definir IDs
+    commentElement.dataset.commentId = comment.id;
+    commentElement.dataset.authorId = comment.authorId;
 
-  // Definir foto do autor
-  if (comment.authorPhoto) {
-    authorPhotoElement.src = comment.authorPhoto;
-  }
-  authorPhotoElement.addEventListener("click", function() {
-    redirectToUserProfile(comment.authorId);
-  });
+    // Preenche os dados do comentário
+    if (comment.authorPhoto) {
+        authorPhotoElement.src = comment.authorPhoto;
+    }
+    authorPhotoElement.addEventListener("click", function() {
+        redirectToUserProfile(comment.authorId);
+    });
 
-  // Definir nome do autor
-  authorNameElement.textContent = comment.authorName;
-  authorNameElement.addEventListener("click", function() {
-    redirectToUserProfile(comment.authorId);
-  });
+    authorNameElement.textContent = comment.authorName;
+    authorNameElement.addEventListener("click", function() {
+        redirectToUserProfile(comment.authorId);
+    });
 
-  // Definir timestamp
-  if (comment.timestamp) {
-    const date = comment.timestamp instanceof Date ? comment.timestamp : comment.timestamp.toDate();
-    timestampElement.textContent = formatTimestamp(date);
-  } else {
-    timestampElement.textContent = "Agora mesmo";
-  }
+    if (comment.timestamp) {
+        const date = comment.timestamp instanceof Date ? comment.timestamp : comment.timestamp.toDate();
+        timestampElement.textContent = formatTimestamp(date);
+    } else {
+        timestampElement.textContent = "Agora mesmo";
+    }
 
-  // Definir conteúdo do comentário
-  contentElement.textContent = comment.content;
+    contentElement.textContent = comment.content;
+    likeCount.textContent = comment.likes || 0;
 
-  // Definir contagem de likes
-  likeCount.textContent = comment.likes || 0;
+    if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {
+        likeButton.classList.add("liked");
+    }
 
-  // Verificar se o usuário atual já curtiu o comentário
-  if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {
-    likeButton.classList.add("liked");
-  }
+    // ✨ NOVO: Mostra o botão de excluir apenas para o autor do comentário
+    if (comment.authorId === currentUser.uid) {
+        deleteCommentBtn.style.display = 'block';
+        deleteCommentBtn.addEventListener('click', () => {
+            deleteComment(postId, comment.id);
+        });
+    }
 
-  // ✨ CORREÇÃO APLICADA AQUI ✨
-  // Em vez de adicionar no final, insere o novo comentário no início da lista.
-  commentsList.insertBefore(commentClone, commentsList.firstChild);
-}
+    // Adiciona o comentário no topo da lista
+    commentsList.insertBefore(commentClone, commentsList.firstChild);
+} 
 
 
 // Em scripts.js
@@ -1513,18 +1581,18 @@ async function toggleCommentLike(postId, commentId) {
 // Em scripts.js
 
 
+// Em scripts.js, substitua sua função por esta versão completa
+
 async function toggleRepost(postId, buttonElement) {
    try {
-       // 1. VERIFICAÇÕES INICIAIS DE SEGURANÇA
+       // 1. VERIFICAÇÕES INICIAIS
        if (!currentUser || !currentUserProfile) {
            showCustomAlert("Você precisa estar logado para republicar.");
            return;
        }
 
-
        const postRef = db.collection("posts").doc(postId);
        const postDoc = await postRef.get();
-
 
        if (!postDoc.exists) {
            showCustomAlert("Esta publicação não existe mais.");
@@ -1533,25 +1601,20 @@ async function toggleRepost(postId, buttonElement) {
       
        const originalPostData = postDoc.data();
 
-
        // Impede que alguém republique uma republicação
        if (originalPostData.isRepost) {
            showCustomAlert("Não é possível republicar uma republicação.");
            return;
        }
 
-
        // 2. DETERMINA A AÇÃO (REPUBLICAR OU DESFAZER)
        const repostedBy = originalPostData.repostedBy || [];
        const hasReposted = repostedBy.includes(currentUser.uid);
       
-       // Pega a referência do botão na tela para poder atualizá-lo
        const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
-
 
        if (hasReposted) {
            // --- AÇÃO: DESFAZER REPUBLICAÇÃO ---
-
 
            // Encontra e deleta a republicação do banco de dados
            const repostQuery = db.collection("posts")
@@ -1565,25 +1628,20 @@ async function toggleRepost(postId, buttonElement) {
                await Promise.all(deletePromises);
            }
 
-
            // Remove o usuário da lista de 'repostedBy' no post original
            await postRef.update({
                repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
            });
 
-
            // ATUALIZAÇÃO DA INTERFACE EM TEMPO REAL:
-           // Encontra o elemento da republicação que está visível na tela para removê-lo
+           // O listener do feed (onSnapshot) já deve remover o post automaticamente.
+           // Esta linha é um fallback caso o listener falhe ou para feedback imediato.
            const repostElementToRemove = document.querySelector(
                `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
            );
-
-
-           // Se o elemento for encontrado, remove-o imediatamente
            if (repostElementToRemove) {
                repostElementToRemove.remove();
            }
-
 
            // Atualiza o botão e mostra a notificação
            if (repostButtonUI) {
@@ -1592,10 +1650,8 @@ async function toggleRepost(postId, buttonElement) {
            }
            showToast("Republicação removida.", "info");
 
-
        } else {
            // --- AÇÃO: CRIAR REPUBLICAÇÃO ---
-
 
            // Cria o objeto da nova publicação
            const repostData = {
@@ -1603,6 +1659,8 @@ async function toggleRepost(postId, buttonElement) {
                originalPostId: postId,
                originalPost: {
                    content: originalPostData.content,
+                   // ✨ CORREÇÃO APLICADA AQUI ✨
+                   imageUrl: originalPostData.imageUrl || null, // Garante que a imagem seja incluída
                    authorName: originalPostData.authorName,
                    authorPhoto: originalPostData.authorPhoto,
                    authorId: originalPostData.authorId,
@@ -1617,10 +1675,8 @@ async function toggleRepost(postId, buttonElement) {
                commentCount: 0,
            };
 
-
            // Adiciona o novo documento de republicação ao banco de dados
            await db.collection("posts").add(repostData);
-
 
            // Adiciona o usuário na lista 'repostedBy' do post original
            await postRef.update({
@@ -1648,7 +1704,6 @@ async function toggleRepost(postId, buttonElement) {
            }
            showToast("Publicação republicada!", "success");
        }
-
 
    } catch (error) {
        console.error("Erro ao republicar/desrepublicar:", error);

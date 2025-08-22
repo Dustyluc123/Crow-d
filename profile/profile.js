@@ -1,7 +1,5 @@
-// Script para a página de criação de perfil (profile.js)
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuração do Firebase
+    // --- Configuração Firebase e Variáveis (sem alterações) ---
     const firebaseConfig = {
         apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
         authDomain: "tcclogin-7e7b8.firebaseapp.com",
@@ -11,110 +9,181 @@ document.addEventListener('DOMContentLoaded', function() {
         appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
     };
 
-    // Inicializar Firebase
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const functions = firebase.functions(); // Inicializa o Firebase Functions
 
-    // Referências aos elementos do DOM
+    // --- Referências aos elementos do DOM (com adições) ---
     const profileForm = document.getElementById('profileForm');
     const photoPreview = document.getElementById('photoPreview');
-    const photoFileInput = document.getElementById('photoFile'); // Novo
+    const photoFileInput = document.getElementById('photoFile');
     const customHobbyInput = document.getElementById('customHobby');
     const addCustomHobbyBtn = document.getElementById('addCustomHobby');
     const customHobbiesList = document.getElementById('customHobbiesList');
-    
-    // Variáveis globais
+
+    // Elementos do Modal
+    const confirmationModal = document.getElementById('confirmationModal');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const editBtn = document.getElementById('editBtn');
+    const confirmBtn = document.getElementById('confirmBtn');
+
     let currentUser = null;
     let savingProfile = false;
-    let photoBase64 = null; // Variável para armazenar a foto em Base64
+    let photoBase64 = null;
 
-    // Em profile.js, adicione este bloco após as "Variáveis globais"
-
-// --- LÓGICA PARA O BOTÃO "VER MAIS" DOS HOBBIES ---
-document.querySelectorAll('.see-more-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        // Encontra o alvo (a div de hobbies escondidos) usando o atributo data-target
-        const targetId = this.dataset.target;
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-            // Alterna a classe 'visible' para mostrar ou esconder os hobbies
-            targetElement.classList.toggle('visible');
-
-            // Muda o texto do botão
-            if (targetElement.classList.contains('visible')) {
-                this.textContent = 'Ver menos';
-            } else {
-                this.textContent = 'Ver mais';
+    // --- Lógica do "Ver Mais" (sem alterações) ---
+    document.querySelectorAll('.see-more-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.classList.toggle('visible');
+                this.textContent = targetElement.classList.contains('visible') ? 'Ver menos' : 'Ver mais';
             }
-        }
+        });
     });
-});
-// --- FIM DA LÓGICA DO BOTÃO ---
 
-    // Verificar se o usuário está autenticado
+    // --- Autenticação (sem alterações) ---
     auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
-            // Verifica se o usuário já tem um perfil para não criar outro
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (doc.exists) {
-                    // Se o perfil já existe, redireciona para a home
-                    console.log("Perfil já existe. Redirecionando...");
                     window.location.href = '../home/home.html';
                 }
             });
         } else {
-            alert('Você precisa estar logado para criar um perfil.');
             window.location.href = '../login/login.html';
         }
     });
-    
-    // --- LÓGICA DE UPLOAD EM BASE64 ---
+
+    // --- Upload Base64 (sem alterações) ---
     photoFileInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                // O resultado é o texto em Base64
                 photoBase64 = e.target.result;
-                // Atualiza a imagem de preview na tela
                 photoPreview.src = photoBase64;
             };
-            reader.readAsDataURL(file); // Converte o arquivo para Base64
+            reader.readAsDataURL(file);
         }
     });
     
-    // Event listener para adicionar hobby personalizado
+    // --- Hobbies Personalizados (sem alterações) ---
     addCustomHobbyBtn.addEventListener('click', addCustomHobby);
-    customHobbyInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addCustomHobby();
-        }
-    });
-    
-    // Event delegation para remover hobbies personalizados
-    customHobbiesList.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-hobby') || e.target.parentElement.classList.contains('remove-hobby')) {
-            e.target.closest('.hobby-tag')?.remove();
-        }
-    });
-    
-    // Event listener para salvar o formulário
+    // ... (resto da lógica de hobbies)
+
+    // --- LÓGICA PRINCIPAL ALTERADA ---
     profileForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        if (!currentUser) return alert('Você precisa estar logado.');
-        if (savingProfile) return;
+        if (!currentUser || savingProfile) return;
         
-        saveProfileData(currentUser.uid);
+        // Em vez de salvar, agora mostramos o modal de confirmação
+        showConfirmationModal();
     });
     
-    // Função para adicionar hobby personalizado
+    editBtn.addEventListener('click', () => {
+        confirmationModal.style.display = 'none';
+    });
+
+    confirmBtn.addEventListener('click', () => {
+        confirmationModal.style.display = 'none';
+        loadingOverlay.style.display = 'flex'; // Mostra o carregamento
+        saveProfileData(currentUser.uid); // Agora sim, salva os dados
+    });
+
+
+    function showConfirmationModal() {
+        // Coleta todos os dados do formulário
+        const nickname = document.getElementById('nickname').value.trim();
+        const bio = document.getElementById('bio').value.trim();
+        const school = document.getElementById('school').value;
+        const grade = document.getElementById('grade').value;
+        const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
+        const customHobbies = getCustomHobbies();
+        const allHobbies = [...selectedHobbies, ...customHobbies];
+
+        // Validação básica
+        if (!nickname || !school || !grade) {
+            alert("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.");
+            return;
+        }
+
+        // Preenche o modal com os dados
+        document.getElementById('confirmPhoto').src = photoBase64 || photoPreview.src;
+        document.getElementById('confirmNickname').textContent = nickname;
+        document.getElementById('confirmSchool').textContent = school;
+        document.getElementById('confirmGrade').textContent = grade;
+        document.getElementById('confirmBio').textContent = bio || "Nenhuma biografia informada.";
+        
+        const hobbiesContainer = document.getElementById('confirmHobbies');
+        hobbiesContainer.innerHTML = ''; // Limpa antes de adicionar
+        if (allHobbies.length > 0) {
+            allHobbies.forEach(hobby => {
+                const tag = document.createElement('span');
+                tag.className = 'hobby-tag';
+                tag.textContent = hobby;
+                hobbiesContainer.appendChild(tag);
+            });
+        } else {
+            hobbiesContainer.textContent = "Nenhum hobby selecionado.";
+        }
+
+        // Mostra o modal
+        confirmationModal.style.display = 'flex';
+    }
+
+    async function saveProfileData(userId) {
+        savingProfile = true;
+
+        try {
+            // Coleta os dados novamente para garantir que estão corretos
+            const nickname = document.getElementById('nickname').value.trim();
+            const bio = document.getElementById('bio').value.trim();
+            const school = document.getElementById('school').value;
+            const grade = document.getElementById('grade').value;
+            const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
+            const customHobbies = getCustomHobbies();
+            const visibility = document.querySelector('input[name="visibility"]:checked').value;
+
+            // Verificação de apelido único
+            const nicknameQuery = await db.collection('users').where('nickname', '==', nickname).get();
+            if (!nicknameQuery.empty) {
+                throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
+            }
+            
+            const profileData = {
+                nickname,
+                bio,
+                school,
+                grade,
+                hobbies: selectedHobbies,
+                customHobbies: customHobbies,
+                visibility,
+                photoURL: photoBase64 || '../img/Design sem nome2.png',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            await db.collection('users').doc(userId).set(profileData);
+            
+            // Não precisa de alert, apenas redireciona
+            window.location.href = '../home/home.html';
+
+        } catch (error) {
+            console.error('Erro ao salvar perfil:', error);
+            alert('Erro ao salvar perfil: ' + error.message);
+        } finally {
+            // Esconde o overlay de carregamento em qualquer caso (sucesso ou erro)
+            loadingOverlay.style.display = 'none';
+            savingProfile = false;
+        }
+    }
+
+    // --- Funções de Hobby (sem alterações) ---
     function addCustomHobby() {
         const hobbyText = customHobbyInput.value.trim();
         if (hobbyText) {
@@ -126,67 +195,14 @@ document.querySelectorAll('.see-more-btn').forEach(button => {
         }
     }
     
-    // Função para coletar hobbies personalizados do DOM
     function getCustomHobbies() {
         return Array.from(customHobbiesList.querySelectorAll('.hobby-tag'))
             .map(tag => tag.textContent.trim());
     }
-// Em profile.js, substitua a função saveProfileData por esta
-
-async function saveProfileData(userId) {
-    savingProfile = true;
-    const saveButton = profileForm.querySelector('button[type="submit"]');
-    saveButton.disabled = true;
-    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-
-    try {
-        const nickname = document.getElementById('nickname').value.trim();
-        if (!nickname) throw new Error("O apelido é obrigatório.");
-
-        // --- VERIFICAÇÃO DE APELIDO ÚNICO (LÓGICA ANTIGA) ---
-        const nicknameQuery = await db.collection('users').where('nickname', '==', nickname).get();
-        if (!nicknameQuery.empty) {
-            // Se a busca não for vazia, o apelido já existe
-            throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
+    
+    customHobbiesList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-hobby') || e.target.parentElement.classList.contains('remove-hobby')) {
+            e.target.closest('.hobby-tag')?.remove();
         }
-        
-        // Coletar outros dados do formulário
-        const bio = document.getElementById('bio').value;
-        const school = document.getElementById('school').value;
-        const grade = document.getElementById('grade').value;
-        
-        const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked'))
-            .map(checkbox => checkbox.value);
-        
-        const customHobbies = getCustomHobbies();
-        const visibility = document.querySelector('input[name="visibility"]:checked').value;
-        
-        const profileData = {
-            nickname: nickname,
-            // O campo "tag" não é mais adicionado
-            bio: bio,
-            school: school,
-            grade: grade,
-            hobbies: selectedHobbies,
-            customHobbies: customHobbies,
-            visibility: visibility,
-            photoURL: photoBase64 || '../img/Design sem nome2.png',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        
-        await db.collection('users').doc(userId).set(profileData);
-        
-        alert('Perfil criado com sucesso!');
-        window.location.href = '../home/home.html';
-
-    } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
-        alert('Erro ao salvar perfil: ' + error.message);
-    } finally {
-        savingProfile = false;
-        saveButton.disabled = false;
-        saveButton.textContent = 'Salvar perfil';
-    }
-}
+    });
 });

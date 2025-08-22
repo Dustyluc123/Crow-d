@@ -1470,3 +1470,27 @@ body.dark-mode .notification-badge {
     border-radius: 8px;
     margin-top: 10px;
 }
+/* Em home.css, adicione no final */
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #a0a0a0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 5px 8px;
+    border-radius: 50%;
+    margin-left: auto; /* Joga o botão para a direita */
+}
+
+.delete-btn:hover {
+    background-color: #ff4d4d20; /* Fundo avermelhado fraco */
+    color: #ff4d4d; /* Cor vermelha */
+}
+
+/* Para o cabeçalho do comentário */
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
