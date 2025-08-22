@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         /* Estilos específicos para a página de configurações */
-        /*oi*/
     </style>
 </head>
 <body>
@@ -72,8 +71,6 @@
                     </div>
                 </div>
                 
-               
-                
                 <div class="config-section">
                     <h2><i class="fas fa-lock"></i> Privacidade</h2>
                     
@@ -83,12 +80,11 @@
                             <p>Permitir que outros estudantes vejam seu perfil</p>
                         </div>
                         <label class="switch">
-                            <input type="checkbox" checked>
+                            <!-- AQUI ESTÁ A CORREÇÃO -->
+                            <input type="checkbox" id="profilePublicToggle" checked>
                             <span class="slider"></span>
                         </label>
                     </div>
-                    
-                   
                 </div>
             </div>
         </main>
@@ -102,13 +98,15 @@
                 <ul>
                     <li><a href="../editprofile/edit-profile.html"><i class="fas fa-user-edit"></i> Editar perfil</a></li>
                     <li><a href="../esqueceu-senha/esqueceu-senha.html"><i class="fas fa-key"></i> Alterar senha</a></li>
-                   
                 </ul>
             </div>
         </aside>
     </div>
 
-    <script src="darkmode.js"></script>
+    <!-- Adicione os scripts do Firebase e o seu config.js aqui -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="config.js"></script>
 </body>
 </html>

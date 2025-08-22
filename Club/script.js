@@ -93,11 +93,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- FUNÇÃO MODIFICADA ---
     // Criar Card do Grupo
     function createGroupCard(group, isMember) {
         const card = document.createElement('div');
         card.className = 'group-card';
         card.dataset.groupId = group.id;
+        const isOwner = group.createdBy === currentUser.uid;
+
+        let actionsHTML = '';
+        if (isMember) {
+            actionsHTML = `
+                <button class="group-btn chat-btn"><i class="fas fa-comment"></i> Entrar no Chat</button>
+                <button class="group-btn view-members-btn"><i class="fas fa-users"></i> Ver Membros</button>
+            `;
+            if (isOwner) {
+                // Se for o dono, mostra o botão de excluir
+                actionsHTML += `<button class="group-btn danger delete-group-btn"><i class="fas fa-trash"></i> Excluir Grupo</button>`;
+            } else {
+                // Se for apenas membro, mostra o de sair
+                actionsHTML += `<button class="group-btn secondary leave-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>`;
+            }
+        } else {
+            // Se não for membro, mostra o de participar
+            actionsHTML = `<button class="group-btn join-btn"><i class="fas fa-plus"></i> Participar</button>`;
+        }
 
         card.innerHTML = `
             <div class="group-header">
@@ -112,23 +132,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${group.tags.map(tag => `<span class="hobby-tag">${tag}</span>`).join('')}
                 </div>
                 <div class="group-actions">
-                    ${isMember ? `
-                        <button class="group-btn chat-btn"><i class="fas fa-comment"></i> Entrar no Chat</button>
-                        <button class="group-btn view-members-btn"><i class="fas fa-users"></i> Ver Membros</button>
-                        <button class="group-btn secondary leave-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>
-                    ` : `
-                        <button class="group-btn join-btn"><i class="fas fa-plus"></i> Participar</button>
-                    `}
+                    ${actionsHTML}
                 </div>
             </div>
         `;
 
+        // Adiciona os eventos aos botões
         if (isMember) {
             card.querySelector('.chat-btn').addEventListener('click', () => {
                 window.location.href = `chat.html?groupId=${group.id}`;
             });
-            card.querySelector('.leave-btn').addEventListener('click', () => leaveGroup(group.id));
             card.querySelector('.view-members-btn').addEventListener('click', () => viewMembers(group.id));
+            
+            if (isOwner) {
+                card.querySelector('.delete-group-btn').addEventListener('click', () => deleteGroup(group.id));
+            } else {
+                card.querySelector('.leave-btn').addEventListener('click', () => leaveGroup(group.id));
+            }
         } else {
             card.querySelector('.join-btn').addEventListener('click', () => joinGroup(group.id, group.isPrivate, group.password));
         }
@@ -209,6 +229,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // --- NOVA FUNÇÃO ---
+    // Excluir um Grupo
+    async function deleteGroup(groupId) {
+        if (!confirm("TEM CERTEZA?\n\nExcluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.")) {
+            return;
+        }
+
+        try {
+            const groupRef = db.collection('groups').doc(groupId);
+            
+            // 1. Apagar todas as mensagens da subcoleção
+            const messagesSnapshot = await groupRef.collection('messages').get();
+            const batch = db.batch();
+            messagesSnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+
+            // 2. Apagar o documento do grupo
+            await groupRef.delete();
+
+            alert("Grupo excluído com sucesso.");
+            loadGroups();
+
+        } catch (error) {
+            console.error("Erro ao excluir o grupo:", error);
+            alert("Ocorreu um erro ao excluir o grupo.");
+        }
+    }
+
     // Ver Membros
     async function viewMembers(groupId) {
         membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
@@ -257,10 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- CORREÇÃO APLICADA AQUI ---
     isPrivateCheckbox.addEventListener('change', () => {
-        // Usa classList.toggle para adicionar/remover a classe .visible
-        // que controla a animação do CSS.
         passwordField.classList.toggle('visible', isPrivateCheckbox.checked);
     });
 });

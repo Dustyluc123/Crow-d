@@ -25,31 +25,44 @@
             left: 10px;
             z-index: 100;
         }
-        .message.sent {
-    position: relative; /* Necessário para posicionar o botão */
-    padding-right: 30px; /* Cria espaço para o botão não sobrepor o texto */
+/* EM CHAT.HTML, DENTRO DA TAG <style> */
+
+/* Remova a posição relativa do wrapper da mensagem */
+.message.sent {
+    /* Não precisa mais de position: relative aqui */
 }
 
+/* Adicione a posição relativa e o padding ao balão de conteúdo.
+   Isso faz com que o botão se posicione em relação a este elemento. */
+.message.sent .message-content {
+    position: relative; /* Contexto para o posicionamento do botão */
+    padding-right: 30px; /* Espaço para o botão aparecer */
+}
+
+/* Estilo do botão de exclusão */
 .message-delete-btn {
     position: absolute;
-    right: 5px;
+    right: 8px;  /* Ajuste para ficar dentro do padding */
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #ffffff9a; /* Cor do ícone um pouco transparente */
+    color: #a7a7a7;
     cursor: pointer;
     font-size: 0.8rem;
-    opacity: 0; /* O botão só aparece ao passar o mouse */
+    opacity: 0; /* O botão começa invisível */
     transition: opacity 0.2s, color 0.2s;
+    z-index: 1; 
 }
 
-.message.sent:hover .message-delete-btn {
-    opacity: 1; /* Mostra o botão no hover */
+/* O botão aparece quando o mouse está sobre o balão da mensagem */
+.message.sent .message-content:hover .message-delete-btn {
+    opacity: 1; 
 }
 
 .message-delete-btn:hover {
-    color: #ff4d4d; /* Cor vermelha no hover */
+ 
+    color: #ff4d4d; /* Cor mais forte ao passar o mouse */
 }
     </style>
 </head>

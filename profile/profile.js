@@ -23,11 +23,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const addCustomHobbyBtn = document.getElementById('addCustomHobby');
     const customHobbiesList = document.getElementById('customHobbiesList');
 
-    // Elementos do Modal
+    // Elementos dos Modais
     const confirmationModal = document.getElementById('confirmationModal');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const termsModal = document.getElementById('termsModal'); // Novo
     const editBtn = document.getElementById('editBtn');
     const confirmBtn = document.getElementById('confirmBtn');
+    const acceptTermsBtn = document.getElementById('acceptTermsBtn'); // Novo
+    const declineTermsBtn = document.getElementById('declineTermsBtn'); // Novo
 
     let currentUser = null;
     let savingProfile = false;
@@ -72,16 +75,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // --- Hobbies Personalizados (sem alterações) ---
-    addCustomHobbyBtn.addEventListener('click', addCustomHobby);
-    // ... (resto da lógica de hobbies)
-
     // --- LÓGICA PRINCIPAL ALTERADA ---
     profileForm.addEventListener('submit', function(e) {
         e.preventDefault();
         if (!currentUser || savingProfile) return;
         
-        // Em vez de salvar, agora mostramos o modal de confirmação
+        // Passo 1: Mostra o modal de confirmação dos dados
         showConfirmationModal();
     });
     
@@ -89,12 +88,23 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmationModal.style.display = 'none';
     });
 
+    // Passo 2: Após revisar os dados, o usuário clica em "Confirmar"
     confirmBtn.addEventListener('click', () => {
-        confirmationModal.style.display = 'none';
-        loadingOverlay.style.display = 'flex'; // Mostra o carregamento
-        saveProfileData(currentUser.uid); // Agora sim, salva os dados
+        confirmationModal.style.display = 'none'; // Esconde o modal de revisão
+        termsModal.style.display = 'flex';        // Mostra o modal de termos
     });
 
+    // Passo 3 (Opção A): O usuário recusa os termos
+    declineTermsBtn.addEventListener('click', () => {
+        termsModal.style.display = 'none'; // Apenas fecha o modal de termos
+    });
+
+    // Passo 3 (Opção B): O usuário aceita os termos e o perfil é salvo
+    acceptTermsBtn.addEventListener('click', () => {
+        termsModal.style.display = 'none';      // Esconde o modal de termos
+        loadingOverlay.style.display = 'flex';  // Mostra o carregamento
+        saveProfileData(currentUser.uid);       // Finalmente, salva os dados
+    });
 
     function showConfirmationModal() {
         // Coleta todos os dados do formulário
@@ -106,13 +116,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const customHobbies = getCustomHobbies();
         const allHobbies = [...selectedHobbies, ...customHobbies];
 
-        // Validação básica
         if (!nickname || !school || !grade) {
             alert("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.");
             return;
         }
 
-        // Preenche o modal com os dados
         document.getElementById('confirmPhoto').src = photoBase64 || photoPreview.src;
         document.getElementById('confirmNickname').textContent = nickname;
         document.getElementById('confirmSchool').textContent = school;
@@ -120,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('confirmBio').textContent = bio || "Nenhuma biografia informada.";
         
         const hobbiesContainer = document.getElementById('confirmHobbies');
-        hobbiesContainer.innerHTML = ''; // Limpa antes de adicionar
+        hobbiesContainer.innerHTML = '';
         if (allHobbies.length > 0) {
             allHobbies.forEach(hobby => {
                 const tag = document.createElement('span');
@@ -132,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hobbiesContainer.textContent = "Nenhum hobby selecionado.";
         }
 
-        // Mostra o modal
         confirmationModal.style.display = 'flex';
     }
 
@@ -140,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
         savingProfile = true;
 
         try {
-            // Coleta os dados novamente para garantir que estão corretos
             const nickname = document.getElementById('nickname').value.trim();
             const bio = document.getElementById('bio').value.trim();
             const school = document.getElementById('school').value;
@@ -149,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const customHobbies = getCustomHobbies();
             const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
-            // Verificação de apelido único
             const nicknameQuery = await db.collection('users').where('nickname', '==', nickname).get();
             if (!nicknameQuery.empty) {
                 throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
@@ -165,20 +170,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 visibility,
                 photoURL: photoBase64 || '../img/Design sem nome2.png',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                termsAccepted: true // Adicionamos um campo para registrar a aceitação
             };
             
             await db.collection('users').doc(userId).set(profileData);
             
-            // Não precisa de alert, apenas redireciona
             window.location.href = '../home/home.html';
 
         } catch (error) {
             console.error('Erro ao salvar perfil:', error);
             alert('Erro ao salvar perfil: ' + error.message);
-        } finally {
-            // Esconde o overlay de carregamento em qualquer caso (sucesso ou erro)
             loadingOverlay.style.display = 'none';
+        } finally {
             savingProfile = false;
         }
     }

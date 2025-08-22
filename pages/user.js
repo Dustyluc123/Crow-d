@@ -136,16 +136,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (doc.exists) currentUserProfile = doc.data();
     }
 
-    async function loadProfileUser(userId) {
-        const doc = await db.collection('users').doc(userId).get();
-        if (doc.exists) {
-            profileUser = doc.data();
-            updateProfileUI();
-        } else {
-            window.location.href = '../home/home.html';
-        }
-    }
+    // EM pages/user.js
 
+async function loadProfileUser(userId) {
+    const doc = await db.collection('users').doc(userId).get();
+    if (doc.exists) {
+        profileUser = doc.data();
+
+        // --- INÍCIO DA LÓGICA DE PRIVACIDADE ---
+        const settings = profileUser.settings || { profilePublic: true };
+        const isPublic = settings.profilePublic;
+        const isMyProfile = currentUser.uid === userId;
+
+        // Verifica se o perfil é privado e se o visitante não é o dono
+        if (!isPublic && !isMyProfile) {
+            // Checa se são amigos
+            const friendDoc = await db.collection('users').doc(currentUser.uid).collection('friends').doc(userId).get();
+            if (!friendDoc.exists) {
+                // Se não forem amigos, bloqueia o conteúdo
+                document.getElementById('postsSection').innerHTML = '<div class="no-content"><i class="fas fa-lock"></i> Este perfil é privado.</div>';
+                document.getElementById('friendsSection').innerHTML = '<div class="no-content"><i class="fas fa-lock"></i> Este perfil é privado.</div>';
+                // Esconde os botões de abas (posts/amigos)
+                document.querySelector('.profile-tabs').style.display = 'none';
+            }
+        }
+        // --- FIM DA LÓGICA DE PRIVACIDADE ---
+
+        updateProfileUI();
+    } else {
+        window.location.href = '../home/home.html';
+    }
+}
     function updateProfileUI() {
         if (profileUser.photoURL) profilePhoto.src = profileUser.photoURL;
         profileName.textContent = profileUser.nickname || 'Usuário';

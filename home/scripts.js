@@ -390,66 +390,74 @@ async function loadUserProfile(userId) {
 // Em scripts.js
 
 // --- FUNÇÃO PARA CARREGAR OS POSTS INICIAIS (VERSÃO CORRIGIDA) ---
+// EM home/scripts.js
+
 function loadInitialPosts() {
-    if (postsContainer) {
-        postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
-    }
+  if (postsContainer) {
+      postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando publicações...</div>';
+  }
 
-    const query = db.collection("posts").orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
+  const query = db.collection("posts").orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
 
-    // Este listener agora vai lidar tanto com a carga inicial quanto com os novos posts
-    postsListener = query.onSnapshot((snapshot) => {
-        const loadingIndicator = postsContainer.querySelector('.loading-posts');
-        if (loadingIndicator) {
-            loadingIndicator.remove(); // Remove o "Carregando..."
-        }
+  postsListener = query.onSnapshot(async (snapshot) => {
+      // Pega a lista de amigos do usuário atual UMA VEZ para otimizar
+      const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+      const friendIds = new Set(friendsSnapshot.docs.map(doc => doc.id));
 
-        snapshot.docChanges().forEach((change) => {
-            const postData = { id: change.doc.id, ...change.doc.data() };
-            // Para posts removidos, o seletor busca pelo data-post-id
-            const postElement = document.querySelector(`.post[data-post-id="${postData.id}"]`);
+      const loadingIndicator = postsContainer.querySelector('.loading-posts');
+      if (loadingIndicator) {
+          loadingIndicator.remove();
+      }
 
-            // Se um post foi ADICIONADO
-            if (change.type === "added") {
-                if (postElement) return; // Evita adicionar duplicatas
+      // Processa as alterações
+      for (const change of snapshot.docChanges()) {
+          const postData = { id: change.doc.id, ...change.doc.data() };
+          const postElement = document.querySelector(`.post[data-post-id="${postData.id}"]`);
 
-                const newPostElement = addPostToDOM(postData);
-                
-                // Adiciona posts da carga inicial no final e posts novos (em tempo real) no topo
-                if (change.newIndex > 0 && postsContainer.children.length > 0) {
-                    postsContainer.appendChild(newPostElement);
-                } else {
-                    postsContainer.insertBefore(newPostElement, postsContainer.firstChild);
-                }
-            }
+          if (change.type === "added") {
+              if (postElement) continue;
 
-            // ✨ CORREÇÃO APLICADA AQUI ✨
-            // Se um post foi REMOVIDO (como ao des-republicar)
-            if (change.type === "removed") {
-                if (postElement) {
-                    postElement.remove(); // Remove o elemento da tela
-                }
-            }
-            
-            // (Opcional) Se um post for MODIFICADO (ex: contagem de curtidas atualizada por outro)
-            // if (change.type === "modified") {
-            //     // Lógica para atualizar o post na tela sem recarregar tudo
-            // }
-        });
+              // --- LÓGICA DE FILTRO DE PRIVACIDADE ---
+              const authorDoc = await db.collection('users').doc(postData.authorId).get();
+              if (authorDoc.exists) {
+                  const authorData = authorDoc.data();
+                  const authorSettings = authorData.settings || { profilePublic: true };
 
-        // Guarda o último post da leva inicial para a paginação
-        if (!snapshot.empty) {
-            lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
-        } else {
-            noMorePosts = true;
-        }
+                  // Mostra o post se:
+                  // 1. O perfil do autor é público
+                  // 2. O post é do próprio usuário logado
+                  // 3. O autor do post está na lista de amigos do usuário logado
+                  if (authorSettings.profilePublic || postData.authorId === currentUser.uid || friendIds.has(postData.authorId)) {
+                      const newPostElement = addPostToDOM(postData);
+                      if (change.newIndex > 0 && postsContainer.children.length > 0) {
+                          postsContainer.appendChild(newPostElement);
+                      } else {
+                          postsContainer.insertBefore(newPostElement, postsContainer.firstChild);
+                      }
+                  }
+              }
+              // --- FIM DA LÓGICA DE FILTRO ---
+          }
 
-    }, (error) => {
-        console.error("Erro ao carregar posts:", error);
-        if (postsContainer) {
-            postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
-        }
-    });
+          if (change.type === "removed") {
+              if (postElement) {
+                  postElement.remove();
+              }
+          }
+      }
+
+      if (!snapshot.empty) {
+          lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+      } else {
+          noMorePosts = true;
+      }
+
+  }, (error) => {
+      console.error("Erro ao carregar posts:", error);
+      if (postsContainer) {
+          postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
+      }
+  });
 }
 // --- FUNÇÃO PARA CARREGAR MAIS POSTS AO ROLAR A PÁGINA ---
 async function loadMorePosts() {

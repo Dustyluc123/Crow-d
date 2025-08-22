@@ -257,18 +257,7 @@
                 
                 <div class="input-group">
                     <label>Visibilidade do perfil</label>
-                    <div class="radio-options">
-                        <label class="radio-option">
-                            <input type="radio" name="visibility" value="public" checked>
-                            <span>Público</span>
-                            <small>Todos os estudantes podem ver seu perfil</small>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="visibility" value="friends">
-                            <span>Apenas amigos</span>
-                            <small>Somente seus amigos podem ver seu perfil completo</small>
-                        </label>
-                    </div>
+                   
                 </div>
             </div>
 
@@ -299,6 +288,27 @@
         <div class="modal-actions">
             <button type="button" class="secondary-btn" id="editBtn">Voltar e Editar</button>
             <button type="button" class="primary-btn" id="confirmBtn">Confirmar e Salvar</button>
+        </div>
+    </div>
+</div>
+<div id="termsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2><i class="fas fa-file-contract"></i> Termos de Uso e Condições</h2>
+        <div class="terms-content" style="max-height: 300px; overflow-y: auto; margin: 15px 0; padding: 0 10px; text-align: left; border-top: 1px solid #eee; border-bottom: 1px solid #eee;">
+            <p style="margin-top: 15px;"><strong>Bem-vindo à Crow-d!</strong></p>
+            <p>Ao criar seu perfil, você concorda em usar nossa plataforma de forma responsável e respeitosa. Lembre-se que este é um ambiente para conectar estudantes e promover a colaboração acadêmica e social.</p>
+            <p><strong>Você concorda em:</strong></p>
+            <ul style="list-style-position: inside;">
+                <li>Fornecer informações verdadeiras e precisas em seu perfil.</li>
+                <li>Não compartilhar conteúdo ofensivo, ilegal ou que viole os direitos de outros.</li>
+                <li>Respeitar todos os membros da comunidade, sem praticar bullying, assédio ou discriminação.</li>
+                <li>Não usar a plataforma para fins comerciais não autorizados ou spam.</li>
+            </ul>
+            <p>O descumprimento destes termos pode resultar na suspensão ou exclusão da sua conta. Ao clicar em "Aceito", você confirma que leu e concorda com todas as condições.</p>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="secondary-btn" id="declineTermsBtn">Recusar</button>
+            <button type="button" class="primary-btn" id="acceptTermsBtn">Aceito</button>
         </div>
     </div>
 </div>

@@ -136,57 +136,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- FUNÇÃO MODIFICADA ---
-    function addMessageToDOM(messageId, message) {
-        const senderProfile = membersProfiles[message.senderId] || { nickname: 'Usuário', photoURL: '../img/Design sem nome2.png' };
-        const isSentByMe = message.senderId === currentUser.uid;
+    // EM CHAT.JS
 
-        const messageWrapper = document.createElement('div');
-        messageWrapper.className = `message ${isSentByMe ? 'sent' : 'received'}`;
-        
-        const avatar = document.createElement('img');
-        avatar.src = senderProfile.photoURL || '../img/Design sem nome2.png';
-        avatar.className = 'message-avatar';
-        
-        const messageContent = document.createElement('div');
-        messageContent.className = 'message-content';
-        
-        if (!isSentByMe) {
-            const senderName = document.createElement('div');
-            senderName.className = 'message-header';
-            senderName.textContent = senderProfile.nickname;
-            messageContent.appendChild(senderName);
-        }
+function addMessageToDOM(messageId, message) {
+    const senderProfile = membersProfiles[message.senderId] || { nickname: 'Usuário', photoURL: '../img/Design sem nome2.png' };
+    const isSentByMe = message.senderId === currentUser.uid;
 
-        const messageText = document.createElement('p');
-        messageText.className = 'message-text';
-        messageText.textContent = message.text;
-        messageContent.appendChild(messageText);
-        
-        const messageTime = document.createElement('span');
-        messageTime.className = 'message-time';
-        messageTime.textContent = message.timestamp ? message.timestamp.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-        messageContent.appendChild(messageTime);
-        
-        // Adiciona os elementos na ordem correta
-        messageWrapper.appendChild(avatar);
-        messageWrapper.appendChild(messageContent);
-        
-        // --- ADIÇÃO: Lógica para o botão de excluir ---
-        if (isSentByMe) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'message-delete-btn'; // Use uma classe para estilizar
-            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-            deleteBtn.title = 'Excluir mensagem';
-            deleteBtn.addEventListener('click', () => {
-                deleteMessage(messageId);
-            });
-            messageWrapper.appendChild(deleteBtn);
-        }
-        // --- FIM DA ADIÇÃO ---
-
-        messagesContainer.appendChild(messageWrapper);
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = `message ${isSentByMe ? 'sent' : 'received'}`;
+    
+    const avatar = document.createElement('img');
+    avatar.src = senderProfile.photoURL || '../img/Design sem nome2.png';
+    avatar.className = 'message-avatar';
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    
+    if (!isSentByMe) {
+        const senderName = document.createElement('div');
+        senderName.className = 'message-header';
+        senderName.textContent = senderProfile.nickname;
+        messageContent.appendChild(senderName);
     }
+
+    const messageText = document.createElement('p');
+    messageText.className = 'message-text';
+    messageText.textContent = message.text;
+    messageContent.appendChild(messageText);
+    
+    const messageTime = document.createElement('span');
+    messageTime.className = 'message-time';
+    messageTime.textContent = message.timestamp ? message.timestamp.toDate().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    messageContent.appendChild(messageTime);
+    
+    messageWrapper.appendChild(avatar);
+    messageWrapper.appendChild(messageContent);
+    
+    // --- Lógica para o botão de excluir (CORRIGIDA) ---
+    if (isSentByMe) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'message-delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.title = 'Excluir mensagem';
+        deleteBtn.addEventListener('click', () => {
+            deleteMessage(messageId);
+        });
+        // AQUI ESTÁ A MUDANÇA: Adicionamos o botão dentro do balão da mensagem
+        messageContent.appendChild(deleteBtn); 
+    }
+    // --- FIM DA CORREÇÃO ---
+
+    messagesContainer.appendChild(messageWrapper);
+}
     
     // --- NOVA FUNÇÃO ---
     async function deleteMessage(messageId) {
