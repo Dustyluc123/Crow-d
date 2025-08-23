@@ -1451,139 +1451,114 @@ async function toggleCommentLike(postId, commentId) {
      }
    }
  }
- // Função para adicionar uma sugestão ao DOM
- function addSuggestionToDOM(user, commonHobbiesCount) {
-   if (!suggestionsContainer || !suggestionTemplate) return;
+function addSuggestionToDOM(user, commonHobbiesCount) {
+    if (!suggestionsContainer || !suggestionTemplate) return;
 
+    const suggestionClone = document.importNode(suggestionTemplate.content, true);
+    const suggestionElement = suggestionClone.querySelector(".suggestion");
+    const photoElement = suggestionClone.querySelector(".suggestion-photo");
+    const nameElement = suggestionClone.querySelector(".suggestion-name");
+    const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies");
+    const followButton = suggestionClone.querySelector(".follow-btn");
 
-   // Clonar template
-   const suggestionClone = document.importNode(suggestionTemplate.content, true);
-   const suggestionElement = suggestionClone.querySelector(".suggestion");
+    suggestionElement.dataset.userId = user.id;
 
+    if (user.photoURL) {
+        photoElement.src = user.photoURL;
+    }
+    photoElement.addEventListener("click", () => redirectToUserProfile(user.id));
 
-   // Referências aos elementos da sugestão
-   const photoElement = suggestionClone.querySelector(".suggestion-photo");
-   const nameElement = suggestionClone.querySelector(".suggestion-name");
-   const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies");
-   const followButton = suggestionClone.querySelector(".follow-btn");
+    nameElement.textContent = user.nickname || "Usuário";
+    nameElement.addEventListener("click", () => redirectToUserProfile(user.id));
 
+    hobbiesElement.textContent = `${commonHobbiesCount} ${commonHobbiesCount === 1 ? "hobby" : "hobbies"} em comum`;
 
-   // Definir ID
-   suggestionElement.dataset.userId = user.id;
+    // Ação de clique corrigida
+    followButton.addEventListener("click", async function() {
+        // Desativa o botão para evitar cliques múltiplos
+        this.disabled = true;
+        this.textContent = 'Aguarde...';
 
+        const success = await sendFriendRequest(user.id, user);
+        
+        if (success) {
+            // Remove o card da tela apenas se o pedido for enviado com sucesso
+            suggestionElement.remove();
+        } else {
+            // Reativa o botão se o envio falhar
+            this.disabled = false;
+            this.textContent = 'Seguir';
+        }
+    });
 
-   // Definir foto do usuário
-   if (user.photoURL) {
-     photoElement.src = user.photoURL;
-   }
-
-
-   // Adicionar evento de clique para redirecionar ao perfil do usuário
-   photoElement.addEventListener("click", function() {
-     redirectToUserProfile(user.id);
-   });
-
-
-   // Definir nome do usuário
-   nameElement.textContent = user.nickname || "Usuário";
-   nameElement.addEventListener("click", function() {
-     redirectToUserProfile(user.id);
-   });
-
-
-   // Definir hobbies em comum
-   hobbiesElement.textContent = `${commonHobbiesCount} ${
-     commonHobbiesCount === 1 ? "hobby" : "hobbies"
-   } em comum`;
-
-
-   // Adicionar event listener para o botão de seguir
-   followButton.addEventListener("click", function () {
-     sendFriendRequest(user.id, user);
-     suggestionElement.remove();
-   });
-
-
-   // Adicionar sugestão ao container
-   suggestionsContainer.appendChild(suggestionClone);
- }
-
-
- // Função para enviar uma solicitação de amizade
- async function sendFriendRequest(userId, userData) {
-   try {
-     // Verificar se é o próprio usuário
-     if (userId === currentUser.uid) {
-           showToast("Você não pode adicionar a si mesmo como amigo.");
-       return;
-     }
-
-
-     // Verificar se já é amigo
-     const friendDoc = await db
-       .collection("users")
-       .doc(currentUser.uid)
-       .collection("friends")
-       .doc(userId)
-       .get();
-
-
-     if (friendDoc.exists) {
-           showToast("Este usuário já é seu amigo.");
-       return;
-     }
-
-
-     // Verificar se já existe uma solicitação pendente
-     const requestsSnapshot = await db
-       .collection("users")
-       .doc(userId)
-       .collection("friendRequests")
-       .where("fromUserId", "==", currentUser.uid)
-       .where("status", "==", "pending")
-       .get();
-
-
-     if (!requestsSnapshot.empty) {
-           showToast("Você já enviou uma solicitação de amizade para este usuário.");
-       return;
-     }
-
-
-     // Criar solicitação de amizade
-     await db.collection("users").doc(userId).collection("friendRequests").add({
-       fromUserId: currentUser.uid,
-       fromUserName: currentUserProfile.nickname || "Usuário",
-       fromUserPhoto: currentUserProfile.photoURL || null,
-       status: "pending",
-       mutualFriends: 0, // Implementar cálculo de amigos em comum no futuro
-       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-     });
-
-
-     // Criar notificação para o outro usuário
-     await db.collection("users").doc(userId).collection("notifications").add({
-       type: "friend_request",
-       fromUserId: currentUser.uid,
-       fromUserName: currentUserProfile.nickname || "Usuário",
-       fromUserPhoto: currentUserProfile.photoURL || null,
-       content: "enviou uma solicitação de amizade",
-       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-       read: false,
-     });
-
-
-     // Exibir mensagem de sucesso
-         showToast("Solicitação de amizade enviada com sucesso!");
-   } catch (error) {
-     console.error("Erro ao enviar solicitação de amizade:", error);
-         showToast("Erro ao enviar solicitação. Tente novamente.");
-   }
- }
+    suggestionsContainer.appendChild(suggestionClone);
+}
 
 
 
+// Em home/scripts.js
 
+async function sendFriendRequest(userId, userData) {
+    const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
+    if (followButton) {
+        followButton.disabled = true;
+        followButton.textContent = 'Aguarde...';
+    }
+
+    try {
+        if (userId === currentUser.uid) {
+            throw new Error('Você não pode adicionar a si mesmo como amigo.');
+        }
+
+        const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
+        if (friendDoc.exists) {
+            throw new Error('Este usuário já é seu amigo.');
+        }
+
+        // Cria um ID único e consistente para o pedido, não importa quem envia
+        const requestId = [currentUser.uid, userId].sort().join('_');
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        const requestDoc = await requestRef.get();
+
+        if (requestDoc.exists) {
+            throw new Error('Já existe uma solicitação de amizade pendente entre vocês.');
+        }
+
+        const batch = db.batch();
+
+        batch.set(requestRef, {
+            from: currentUser.uid,
+            to: userId,
+            fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserPhoto: currentUserProfile.photoURL || null,
+            status: "pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
+        batch.set(notificationRef, {
+            type: "friend_request",
+            fromUserId: currentUser.uid,
+            fromUserName: currentUserProfile.nickname || "Usuário",
+            content: "enviou uma solicitação de amizade",
+            requestId: requestRef.id,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false,
+        });
+
+        await batch.commit();
+        showToast("Solicitação de amizade enviada com sucesso!", "success");
+        return true; // Retorna sucesso
+
+    } catch (error) {
+        showToast(error.message, 'error');
+        if (followButton) {
+            followButton.disabled = false;
+            followButton.textContent = 'Seguir';
+        }
+        return false; // Retorna falha
+    }
+}
 
 
 // Em scripts.js

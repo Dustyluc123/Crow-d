@@ -1,4 +1,5 @@
-// Sistema de notificações para o Crow-d com Firebase
+// Ficheiro Completo: pages/notificacao/notificacao.js
+
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração do Firebase
     const firebaseConfig = {
@@ -17,19 +18,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Referências aos elementos do DOM
     const notificationsContainer = document.getElementById('notifications-container');
     const markAllReadBtn = document.getElementById('markAllReadBtn');
     const logoutButton = document.getElementById('logout-btn');
 
+    // Variáveis Globais
     let currentUser = null;
-    let currentUserProfile = null; // ADICIONADO: Para guardar os dados do perfil
+    let currentUserProfile = null; // Essencial para a nova lógica
     let notificationsListener = null;
 
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
         if (user) {
             currentUser = user;
-            await loadUserProfile(user.uid); // ADICIONADO: Carregar perfil do usuário logado
+            await loadUserProfile(user.uid); // Carrega os dados do perfil do usuário logado
             const profileLink = document.querySelector('.main-nav a.profile-link');
             if (profileLink) {
                 profileLink.href = `../pages/user.html?uid=${user.uid}`;
@@ -41,14 +44,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // NOVA FUNÇÃO: Carrega o perfil do usuário logado
+    // Função para carregar o perfil do usuário logado (necessário para obter o nickname, etc.)
     async function loadUserProfile(userId) {
         const doc = await db.collection("users").doc(userId).get();
         if (doc.exists) {
             currentUserProfile = doc.data();
+        } else {
+            console.error("Perfil do usuário logado não encontrado!");
         }
     }
 
+    // Listener do botão de logout
     if (logoutButton) {
         logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -56,15 +62,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Listener do botão de marcar todas como lidas
     if (markAllReadBtn) {
-        markAllReadBtn.addEventListener('click', () => markAllAsRead(true));
+        markAllReadBtn.addEventListener('click', () => markAllAsRead());
     }
 
+    // Carrega as notificações em tempo real
     function loadNotifications() {
-        // ... (esta função não precisa de alterações)
         if (!notificationsContainer) return;
         notificationsContainer.innerHTML = '<div class="notification-loading"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        if (notificationsListener) notificationsListener();
+        
+        if (notificationsListener) notificationsListener(); // Limpa o listener anterior para evitar duplicados
+
         let query = db.collection('users').doc(currentUser.uid)
             .collection('notifications')
             .orderBy('timestamp', 'desc')
@@ -92,27 +101,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- FUNÇÃO MODIFICADA ---
+    // --- CÓDIGO ATUALIZADO ---
+    // Constrói cada item de notificação no HTML
     function addNotificationToDOM(notification) {
         const notificationElement = document.createElement('div');
         notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
         
         const userPhoto = notification.fromUserPhoto || '../img/Design sem nome2.png';
         const timestamp = notification.timestamp ? formatTimestamp(notification.timestamp.toDate()) : '';
-
+    
         let notificationHTML = `
             <img src="${userPhoto}" alt="Avatar" class="notification-avatar">
             <div class="notification-content">
                 <p class="notification-text"><strong>${notification.fromUserName}</strong> ${notification.content || ''}</p>
                 <span class="notification-time">${timestamp}</span>
         `;
-
-        // Se for um pedido de amizade, adiciona os botões
-        if (notification.type === 'friend_request') {
+    
+        if (notification.type === 'friend_request' && notification.requestId) {
             notificationHTML += `
                 <div class="notification-item-actions">
-                    <button class="notification-action-btn accept-btn" data-request-id="${notification.id}" data-from-id="${notification.fromUserId}">Aceitar</button>
-                    <button class="notification-action-btn decline-btn" data-request-id="${notification.id}">Recusar</button>
+                    <button class="notification-action-btn accept-btn">Aceitar</button>
+                    <button class="notification-action-btn decline-btn">Recusar</button>
                 </div>
             `;
         }
@@ -120,100 +129,126 @@ document.addEventListener('DOMContentLoaded', function() {
         notificationHTML += `</div>`;
         notificationElement.innerHTML = notificationHTML;
         
-        // Adiciona os event listeners aos botões se existirem
         const acceptBtn = notificationElement.querySelector('.accept-btn');
-        const declineBtn = notificationElement.querySelector('.decline-btn');
-
         if (acceptBtn) {
             acceptBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                acceptFriendRequest(e.target.dataset.requestId, e.target.dataset.fromId);
+                acceptBtn.disabled = true;
+                acceptBtn.textContent = '...';
+                acceptFriendRequest(notification.requestId, notification.fromUserId, notification.id, notificationElement);
             });
         }
+    
+        const declineBtn = notificationElement.querySelector('.decline-btn');
         if (declineBtn) {
             declineBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                rejectFriendRequest(e.target.dataset.requestId);
+                declineBtn.disabled = true;
+                declineBtn.textContent = '...';
+                rejectFriendRequest(notification.requestId, notification.id, notificationElement);
             });
         }
         
-        // Adiciona um clique geral para outros tipos de notificação
-        if (notification.type !== 'friend_request' && notification.type !== 'group_invite') {
+        if (notification.type !== 'friend_request') {
             notificationElement.style.cursor = 'pointer';
             notificationElement.addEventListener('click', () => {
-                let url = `../home/home.html?post=${notification.postId}`;
-                if (notification.type === 'follow' || notification.type === 'friend_accept') {
+                let url = '#';
+                if (notification.postId) {
+                    url = `../home/home.html?post=${notification.postId}`;
+                } else if (notification.fromUserId) {
                     url = `../pages/user.html?uid=${notification.fromUserId}`;
                 }
                 window.location.href = url;
             });
         }
-
+    
         notificationsContainer.appendChild(notificationElement);
     }
-    
-    // --- NOVAS FUNÇÕES (adaptadas de friends/scripts.js) ---
-    async function acceptFriendRequest(notificationId, fromUserId) {
-        try {
-            const userDoc = await db.collection('users').doc(fromUserId).get();
-            if (!userDoc.exists) return;
-            
-            const fromUserData = userDoc.data();
-            const batch = db.batch();
 
-            // Adiciona amigo em ambos os lados
+    // --- CÓDIGO ATUALIZADO ---
+    // Função para ACEITAR pedido (lógica no cliente)
+    async function acceptFriendRequest(requestId, fromUserId, notificationId, element) {
+        try {
+            if (!currentUser || !currentUserProfile) {
+                throw new Error("Utilizador não autenticado ou perfil não carregado.");
+            }
+    
+            const fromUserDoc = await db.collection('users').doc(fromUserId).get();
+            if (!fromUserDoc.exists) {
+                throw new Error("O utilizador que enviou o pedido não existe mais.");
+            }
+            const fromUserData = fromUserDoc.data();
+    
+            const batch = db.batch();
+    
+            // 1. Adiciona o remetente à lista de amigos do utilizador atual
             const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
             batch.set(currentUserFriendRef, {
                 nickname: fromUserData.nickname || 'Usuário',
-                photoURL: fromUserData.photoURL || null,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                photoURL: fromUserData.photoURL || null
             });
-
+    
+            // 2. Adiciona o utilizador atual à lista de amigos do remetente
             const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
             batch.set(fromUserFriendRef, {
                 nickname: currentUserProfile.nickname || 'Usuário',
-                photoURL: currentUserProfile.photoURL || null,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                photoURL: currentUserProfile.photoURL || null
             });
+    
+            // 3. APAGA o documento da solicitação de amizade
+            const requestRef = db.collection('friendRequests').doc(requestId);
+            batch.delete(requestRef);
+    
+            // 4. APAGA a notificação sobre este pedido
+            const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
+            batch.delete(notificationRef);
+    
+            await batch.commit();
+            showToast("Amigo adicionado com sucesso!", "success");
+    
+        } catch (error) {
+            console.error("Erro ao aceitar solicitação:", error);
+            alert("Ocorreu um erro ao aceitar a solicitação: " + error.message);
+            if (element) {
+                const acceptBtn = element.querySelector('.accept-btn');
+                if(acceptBtn) { acceptBtn.disabled = false; acceptBtn.textContent = 'Aceitar'; }
+            }
+        }
+    }
 
-            // Deleta a notificação de pedido
+    // --- CÓDIGO ATUALIZADO ---
+    // Função para RECUSAR pedido (lógica no cliente)
+    async function rejectFriendRequest(requestId, notificationId, element) {
+        try {
+            const batch = db.batch();
+    
+            // 1. APAGA o documento da solicitação de amizade
+            const requestRef = db.collection('friendRequests').doc(requestId);
+            batch.delete(requestRef);
+    
+            // 2. APAGA a notificação sobre este pedido
             const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
             batch.delete(notificationRef);
             
-            // Cria uma nova notificação para o outro usuário a informar que o pedido foi aceite
-            const newNotificationRef = db.collection('users').doc(fromUserId).collection('notifications').doc();
-            batch.set(newNotificationRef, {
-                type: 'friend_accept',
-                fromUserId: currentUser.uid,
-                fromUserName: currentUserProfile.nickname || 'Usuário',
-                fromUserPhoto: currentUserProfile.photoURL || null,
-                content: 'aceitou a sua solicitação de amizade.',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false
-            });
-
             await batch.commit();
-
-        } catch (error) {
-            console.error("Erro ao aceitar solicitação:", error);
-            alert("Ocorreu um erro ao aceitar a solicitação.");
-        }
-    }
-
-    async function rejectFriendRequest(notificationId) {
-        try {
-            // Apenas apaga a notificação
-            await db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId).delete();
+            showToast("Solicitação recusada.", "info");
+    
         } catch (error) {
             console.error("Erro ao recusar solicitação:", error);
+            alert("Ocorreu um erro ao recusar a solicitação: " + error.message);
+            if (element) {
+                const declineBtn = element.querySelector('.decline-btn');
+                if(declineBtn) { declineBtn.disabled = false; declineBtn.textContent = 'Recusar'; }
+            }
         }
     }
 
+    // Marca as notificações como lidas ao carregar a página
     async function markNotificationsAsRead(userId) {
-        // ... (função sem alterações)
         const notificationsRef = db.collection('users').doc(userId).collection('notifications');
         const snapshot = await notificationsRef.where('read', '==', false).get();
         if (snapshot.empty) return;
+
         const batch = db.batch();
         snapshot.docs.forEach(doc => {
             batch.update(doc.ref, { read: true });
@@ -221,25 +256,26 @@ document.addEventListener('DOMContentLoaded', function() {
         await batch.commit();
     }
 
-    async function markAllAsRead(force = false) {
-        // ... (função sem alterações)
-        if (!force || !currentUser) return;
+    // Marca TODAS como lidas através do botão
+    async function markAllAsRead() {
+        if (!currentUser) return;
         const notificationsRef = db.collection('users').doc(currentUser.uid).collection('notifications');
         const snapshot = await notificationsRef.where('read', '==', false).get();
         if (snapshot.empty) {
-            alert("Todas as notificações já estão lidas.");
+            showToast("Todas as notificações já estão lidas.", "info");
             return;
         }
+
         const batch = db.batch();
         snapshot.docs.forEach(doc => {
             batch.update(doc.ref, { read: true });
         });
         await batch.commit();
-        alert(`${snapshot.size} notificações marcadas como lidas.`);
+        showToast(`${snapshot.size} notificações marcadas como lidas.`, "success");
     }
 
+    // Formata o tempo para exibição
     function formatTimestamp(date) {
-        // ... (função sem alterações)
         if (!date) return '';
         const now = new Date();
         const diff = now - date;
@@ -247,5 +283,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (diff < 3600000) return `${Math.floor(diff/60000)}m atrás`;
         if (diff < 86400000) return `${Math.floor(diff/3600000)}h atrás`;
         return `${Math.floor(diff/86400000)}d atrás`;
+    }
+
+    // Função auxiliar para mostrar alertas rápidos
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container') || document.body;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`; // Adicione classes CSS para 'success', 'error', 'info'
+        toast.textContent = message;
+        
+        // Adiciona o toast ao container e remove após 3 segundos
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
     }
 });

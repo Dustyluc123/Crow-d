@@ -195,8 +195,10 @@ async function loadProfileUser(userId) {
     }
 }
 
-    async function checkFriendStatus() {
-    // Verifica se já são amigos
+    // Em pages/user.js
+
+async function checkFriendStatus() {
+    // 1. Verifica se já são amigos (isto não muda)
     const friendDoc = await db.collection('users').doc(currentUser.uid).collection('friends').doc(profileUserId).get();
     if (friendDoc.exists) {
         isFriend = true;
@@ -204,79 +206,123 @@ async function loadProfileUser(userId) {
         return;
     }
 
-    // Se não são amigos, verifica se uma solicitação foi enviada
-    const requestSnapshot = await db.collection('users').doc(profileUserId).collection('friendRequests')
-        .where('fromUserId', '==', currentUser.uid)
-        .where('status', '==', 'pending')
-        .get();
-
-    if (!requestSnapshot.empty) {
-        // Marca como "pendente" para o botão mudar o texto
-        isFriend = 'pending'; 
+    // 2. Verifica se existe um pedido pendente na nova coleção principal
+    // Verifica se eu enviei um pedido para eles
+    const sentRequestQuery = db.collection('friendRequests')
+        .where('from', '==', currentUser.uid)
+        .where('to', '==', profileUserId)
+        .where('status', '==', 'pending');
+    
+    // Verifica se eles me enviaram um pedido
+    const receivedRequestQuery = db.collection('friendRequests')
+        .where('from', '==', profileUserId)
+        .where('to', '==', currentUser.uid)
+        .where('status', '==', 'pending');
+    
+    const [sentSnapshot, receivedSnapshot] = await Promise.all([
+        sentRequestQuery.get(),
+        receivedRequestQuery.get()
+    ]);
+    
+    if (!sentSnapshot.empty) {
+        isFriend = 'pending'; // Eu enviei o pedido
+    } else if (!receivedSnapshot.empty) {
+        isFriend = 'respond'; // Eles enviaram um pedido, preciso de responder
     } else {
-        isFriend = false;
+        isFriend = false; // Não há pedidos nem amizade
     }
     updateFriendButton();
 }
- async function toggleFriendship() {
+
+function updateFriendButton() {
+    if (!followBtn) return;
+    
+    // Desativa e reativa o botão para evitar cliques duplos e reatribuir o evento de clique
+    followBtn.disabled = true;
+
     if (isFriend === true) {
-        // Lógica para DEIXAR DE SEGUIR (desfazer amizade)
-        if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) return;
+        followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+        followBtn.classList.add('following');
+        followBtn.onclick = toggleFriendship; // Função para deixar de seguir
+    } else if (isFriend === 'pending') {
+        followBtn.innerHTML = '<i class="fas fa-clock"></i> Pendente';
+        followBtn.classList.add('following'); 
+        // Ação de clique é desativada ao final da função
+    } else if (isFriend === 'respond') {
+        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Responder Solicitação';
+        followBtn.classList.remove('following');
+        // Redireciona para a página de notificações para aceitar/recusar
+        followBtn.onclick = () => { window.location.href = '../pages/notificacao.html'; }; 
+    } else {
+        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+        followBtn.classList.remove('following');
+        followBtn.onclick = toggleFriendship; // Função para seguir
+    }
+    
+    // Reativa o botão, exceto se o estado for 'pending'
+    followBtn.disabled = (isFriend === 'pending');
+}
+
+
+async function toggleFriendship() {
+    followBtn.disabled = true;
+
+    // Lógica para DEIXAR DE SEGUIR
+    if (isFriend === true) {
+        if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) {
+            followBtn.disabled = false;
+            return;
+        }
         
-        followBtn.disabled = true;
         try {
+            const batch = db.batch();
             const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(profileUserId);
             const profileUserFriendRef = db.collection('users').doc(profileUserId).collection('friends').doc(currentUser.uid);
-            await currentUserFriendRef.delete();
-            await profileUserFriendRef.delete();
+            batch.delete(currentUserFriendRef);
+            batch.delete(profileUserFriendRef);
+            await batch.commit();
             isFriend = false;
             updateFriendButton();
         } catch (error) {
             console.error("Erro ao deixar de seguir:", error);
-        } finally {
             followBtn.disabled = false;
         }
 
+    // Lógica para ENVIAR PEDIDO
     } else if (isFriend === false) {
-        // Lógica para ENVIAR SOLICITAÇÃO DE AMIZADE
-        followBtn.disabled = true;
         try {
-            // Reutiliza a lógica de enviar solicitação que já existe em `friends/scripts.js`
-            await db.collection('users').doc(profileUserId).collection('friendRequests').add({
-                fromUserId: currentUser.uid,
+            // Reutiliza a mesma lógica do home/scripts.js
+            const requestRef = db.collection("friendRequests").doc();
+            const batch = db.batch();
+            
+            batch.set(requestRef, {
+                from: currentUser.uid,
+                to: profileUserId,
                 fromUserName: currentUserProfile.nickname || 'Usuário',
                 fromUserPhoto: currentUserProfile.photoURL || null,
                 status: 'pending',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            await db.collection('users').doc(profileUserId).collection('notifications').add({
+
+            const notificationRef = db.collection("users").doc(profileUserId).collection("notifications").doc();
+            batch.set(notificationRef, {
                 type: 'friend_request',
                 fromUserId: currentUser.uid,
                 fromUserName: currentUserProfile.nickname || 'Usuário',
                 content: 'enviou uma solicitação de amizade',
+                requestId: requestRef.id,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 read: false
             });
+
+            await batch.commit();
             isFriend = 'pending';
             updateFriendButton();
+
         } catch (error) {
             console.error("Erro ao enviar solicitação:", error);
-        } finally {
             followBtn.disabled = false;
         }
-    }
-    // Se isFriend for 'pending', não faz nada ao clicar
-}
-function updateFriendButton() {
-    if (isFriend === true) {
-        followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
-        followBtn.classList.add('following');
-    } else if (isFriend === 'pending') {
-        followBtn.innerHTML = '<i class="fas fa-clock"></i> Pendente';
-        followBtn.classList.add('following'); // Reutiliza o estilo para o botão parecer "desativado"
-    } else {
-        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
-        followBtn.classList.remove('following');
     }
 }
     function loadUserPosts() {
