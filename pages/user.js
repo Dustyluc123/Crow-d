@@ -264,10 +264,14 @@ function updateFriendButton() {
 }
 
 
+// Em pages/user.js
+
+// Em pages/user.js
+
 async function toggleFriendship() {
     followBtn.disabled = true;
 
-    // Lógica para DEIXAR DE SEGUIR
+    // Lógica para DEIXAR DE SEGUIR (não muda)
     if (isFriend === true) {
         if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) {
             followBtn.disabled = false;
@@ -285,16 +289,19 @@ async function toggleFriendship() {
             updateFriendButton();
         } catch (error) {
             console.error("Erro ao deixar de seguir:", error);
+            showToast("Erro ao deixar de seguir.", "error");
             followBtn.disabled = false;
         }
 
-    // Lógica para ENVIAR PEDIDO
+    // Lógica para ENVIAR PEDIDO (CORRIGIDA)
     } else if (isFriend === false) {
         try {
-            // Reutiliza a mesma lógica do home/scripts.js
-            const requestRef = db.collection("friendRequests").doc();
+            const requestId = [currentUser.uid, profileUserId].sort().join('_');
+            const requestRef = db.collection('friendRequests').doc(requestId);
+            const notificationRef = db.collection("users").doc(profileUserId).collection("notifications").doc();
             const batch = db.batch();
-            
+
+            // ADICIONA NOME E FOTO AO PEDIDO (CORREÇÃO)
             batch.set(requestRef, {
                 from: currentUser.uid,
                 to: profileUserId,
@@ -304,11 +311,12 @@ async function toggleFriendship() {
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            const notificationRef = db.collection("users").doc(profileUserId).collection("notifications").doc();
+            // GARANTE NOME E FOTO NA NOTIFICAÇÃO (CORREÇÃO)
             batch.set(notificationRef, {
                 type: 'friend_request',
                 fromUserId: currentUser.uid,
                 fromUserName: currentUserProfile.nickname || 'Usuário',
+                fromUserPhoto: currentUserProfile.photoURL || null,
                 content: 'enviou uma solicitação de amizade',
                 requestId: requestRef.id,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -316,12 +324,16 @@ async function toggleFriendship() {
             });
 
             await batch.commit();
+            
+            showToast("Solicitação de amizade enviada!", "success");
             isFriend = 'pending';
             updateFriendButton();
 
         } catch (error) {
             console.error("Erro ao enviar solicitação:", error);
-            followBtn.disabled = false;
+            showToast("Erro ao enviar solicitação: " + error.message, "error");
+            isFriend = false;
+            updateFriendButton();
         }
     }
 }

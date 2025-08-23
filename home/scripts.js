@@ -1455,6 +1455,13 @@ function addSuggestionToDOM(user, commonHobbiesCount) {
 
 // Em home/scripts.js
 
+// Em home/scripts.js E em friends/scripts.js
+
+// Em home/scripts.js
+
+// Substitua em: home/scripts.js
+// Substitua também em: friends/scripts.js
+
 async function sendFriendRequest(userId, userData) {
     const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
     if (followButton) {
@@ -1463,49 +1470,56 @@ async function sendFriendRequest(userId, userData) {
     }
 
     try {
+        // Validações iniciais (não mude)
         if (userId === currentUser.uid) {
-            throw new Error('Você não pode adicionar a si mesmo como amigo.');
+            throw new Error('Você não pode adicionar a si mesmo.');
         }
-
         const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
         if (friendDoc.exists) {
             throw new Error('Este usuário já é seu amigo.');
         }
-
-        // Cria um ID único e consistente para o pedido, não importa quem envia
         const requestId = [currentUser.uid, userId].sort().join('_');
         const requestRef = db.collection('friendRequests').doc(requestId);
         const requestDoc = await requestRef.get();
-
         if (requestDoc.exists) {
-            throw new Error('Já existe uma solicitação de amizade pendente entre vocês.');
+            throw new Error('Já existe um pedido de amizade pendente.');
         }
 
         const batch = db.batch();
 
-        batch.set(requestRef, {
+        // --- INÍCIO DA CORREÇÃO CRUCIAL ---
+        // Este objeto AGORA INCLUI todos os campos que a sua regra exige.
+        const requestData = {
             from: currentUser.uid,
             to: userId,
             fromUserName: currentUserProfile.nickname || "Usuário",
             fromUserPhoto: currentUserProfile.photoURL || null,
             status: "pending",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        });
+        };
+        batch.set(requestRef, requestData);
+        // --- FIM DA CORREÇÃO CRUCIAL ---
 
+        // A criação da notificação já estava correta, mas a mantemos para consistência.
         const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
         batch.set(notificationRef, {
             type: "friend_request",
             fromUserId: currentUser.uid,
             fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserPhoto: currentUserProfile.photoURL || null,
             content: "enviou uma solicitação de amizade",
             requestId: requestRef.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            read: false,
+            read: false
         });
-
+        
         await batch.commit();
-        showToast("Solicitação de amizade enviada com sucesso!", "success");
-        return true; // Retorna sucesso
+        
+        showToast("Solicitação de amizade enviada!", "success");
+        if (followButton) {
+            followButton.textContent = 'Pendente';
+        }
+        return true;
 
     } catch (error) {
         showToast(error.message, 'error');
@@ -1513,10 +1527,9 @@ async function sendFriendRequest(userId, userData) {
             followButton.disabled = false;
             followButton.textContent = 'Seguir';
         }
-        return false; // Retorna falha
+        return false;
     }
 }
-
 
 // Em scripts.js
 

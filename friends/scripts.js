@@ -210,66 +210,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function sendFriendRequest(userId, userData) {
-        const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
-        if (followButton) {
-            followButton.disabled = true;
-            followButton.textContent = 'Aguarde...';
-        }
+    // Em home/scripts.js E em friends/scripts.js
 
-        try {
-            if (userId === currentUser.uid) {
-                throw new Error('Você não pode adicionar a si mesmo como amigo.');
-            }
+// Em friends/scripts.js
 
-            const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
-            if (friendDoc.exists) {
-                throw new Error('Este usuário já é seu amigo.');
-            }
+// Substitua em: home/scripts.js
+// Substitua também em: friends/scripts.js
 
-            const requestId = [currentUser.uid, userId].sort().join('_');
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            const requestDoc = await requestRef.get();
-
-            if (requestDoc.exists) {
-                throw new Error('Já existe uma solicitação de amizade pendente entre vocês.');
-            }
-
-            const batch = db.batch();
-            batch.set(requestRef, {
-                from: currentUser.uid,
-                to: userId,
-                fromUserName: currentUserProfile.nickname || "Usuário",
-                fromUserPhoto: currentUserProfile.photoURL || null,
-                status: "pending",
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            });
-
-            const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
-            batch.set(notificationRef, {
-                type: "friend_request",
-                fromUserId: currentUser.uid,
-                fromUserName: currentUserProfile.nickname || "Usuário",
-                content: "enviou uma solicitação de amizade",
-                requestId: requestRef.id,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false,
-            });
-
-            await batch.commit();
-            showToast("Solicitação de amizade enviada com sucesso!", "success");
-            return true;
-
-        } catch (error) {
-            showToast(error.message, 'error');
-            if (followButton) {
-                followButton.disabled = false;
-                followButton.textContent = 'Seguir';
-            }
-            return false;
-        }
+async function sendFriendRequest(userId, userData) {
+    const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
+    if (followButton) {
+        followButton.disabled = true;
+        followButton.textContent = 'Aguarde...';
     }
 
+    try {
+        // Validações iniciais (não mude)
+        if (userId === currentUser.uid) {
+            throw new Error('Você não pode adicionar a si mesmo.');
+        }
+        const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
+        if (friendDoc.exists) {
+            throw new Error('Este usuário já é seu amigo.');
+        }
+        const requestId = [currentUser.uid, userId].sort().join('_');
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        const requestDoc = await requestRef.get();
+        if (requestDoc.exists) {
+            throw new Error('Já existe um pedido de amizade pendente.');
+        }
+
+        const batch = db.batch();
+
+        // --- INÍCIO DA CORREÇÃO CRUCIAL ---
+        // Este objeto AGORA INCLUI todos os campos que a sua regra exige.
+        const requestData = {
+            from: currentUser.uid,
+            to: userId,
+            fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserPhoto: currentUserProfile.photoURL || null,
+            status: "pending",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+        batch.set(requestRef, requestData);
+        // --- FIM DA CORREÇÃO CRUCIAL ---
+
+        // A criação da notificação já estava correta, mas a mantemos para consistência.
+        const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
+        batch.set(notificationRef, {
+            type: "friend_request",
+            fromUserId: currentUser.uid,
+            fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserPhoto: currentUserProfile.photoURL || null,
+            content: "enviou uma solicitação de amizade",
+            requestId: requestRef.id,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false
+        });
+        
+        await batch.commit();
+        
+        showToast("Solicitação de amizade enviada!", "success");
+        if (followButton) {
+            followButton.textContent = 'Pendente';
+        }
+        return true;
+
+    } catch (error) {
+        showToast(error.message, 'error');
+        if (followButton) {
+            followButton.disabled = false;
+            followButton.textContent = 'Seguir';
+        }
+        return false;
+    }
+}
     function loadFriendRequests() {
         if (!pendingRequestsSection) return;
         pendingRequestsSection.innerHTML = '<h2><i class="fas fa-user-clock"></i> Solicitações Pendentes</h2><div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
