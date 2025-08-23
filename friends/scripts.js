@@ -551,43 +551,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    async function loadSuggestions() {
-        // Esta função pode ser complexa e será mantida como está para simplicidade.
-        // A lógica de carregar sugestões permanece a mesma.
-        if (!suggestionsContainer) return;
-        suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        
-        try {
-            const [friendsSnapshot, allUsersSnapshot] = await Promise.all([
-                db.collection('users').doc(currentUser.uid).collection('friends').get(),
-                db.collection('users').limit(10).get() // Limite para performance
-            ]);
+   // Em scripts.js, substitua a sua função loadSuggestions por esta versão:
 
-            const friendIds = new Set(friendsSnapshot.docs.map(doc => doc.id));
-            friendIds.add(currentUser.uid); // Não sugerir a si mesmo
+async function loadSuggestions() {
+    if (!suggestionsContainer) return;
+    suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
 
-            suggestionsContainer.innerHTML = '';
-            let suggestionsAdded = 0;
-            
-            allUsersSnapshot.forEach(doc => {
-                if (!friendIds.has(doc.id)) {
-                    const user = { id: doc.id, ...doc.data() };
-                    addSuggestionToDOM(user, 0); // Contagem de hobbies em comum simplificada
-                    suggestionsAdded++;
-                }
-            });
+    try {
+        // 1. Obter todos os IDs que devem ser excluídos das sugestões
+        const exclusionIds = new Set();
+        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
 
-            if (suggestionsAdded === 0) {
-                suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma sugestão encontrada.</p>';
+        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
+        const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+        friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+
+        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
+        const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
+        sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+
+        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
+        const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
+        receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
+
+        // 5. Buscar todos os usuários (aqui limitamos para performance, pode ajustar)
+        const allUsersSnapshot = await db.collection('users').limit(20).get();
+
+        suggestionsContainer.innerHTML = '';
+        let suggestionsAdded = 0;
+
+        allUsersSnapshot.forEach(doc => {
+            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, mostra como sugestão
+            if (!exclusionIds.has(doc.id)) {
+                const user = { id: doc.id, ...doc.data() };
+                addSuggestionToDOM(user, 0); // Contagem de hobbies em comum simplificada por agora
+                suggestionsAdded++;
             }
+        });
 
-        } catch (error) {
-            console.error('Erro ao carregar sugestões:', error);
-            if (suggestionsContainer) {
-                suggestionsContainer.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
-            }
+        if (suggestionsAdded === 0) {
+            suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar sugestões:', error);
+        if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
         }
     }
+}
 
     async function loadMoreSuggestions() {
         showToast("Funcionalidade 'Ver mais' para sugestões ainda em desenvolvimento.", "info");

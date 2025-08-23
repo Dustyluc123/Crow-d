@@ -1359,98 +1359,55 @@ async function toggleCommentLike(postId, commentId) {
    }
  }
 
+// Em scripts.js, substitua a sua função loadSuggestions por esta versão:
 
- // Função para carregar sugestões de amizade
- async function loadSuggestions() {
-   try {
-     if (!suggestionsContainer) return;
+async function loadSuggestions() {
+    if (!suggestionsContainer) return;
+    suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
 
+    try {
+        // 1. Obter todos os IDs que devem ser excluídos das sugestões
+        const exclusionIds = new Set();
+        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
 
-     // Exibir indicador de carregamento
-     suggestionsContainer.innerHTML =
-       '<div class="loading-suggestions"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
+        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
+        const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+        friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
 
+        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
+        const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
+        sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
 
-     // Obter hobbies do usuário atual
-     const userHobbies = currentUserProfile.hobbies || [];
+        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
+        const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
+        receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
+        // 5. Buscar todos os usuários (aqui limitamos para performance, pode ajustar)
+        const allUsersSnapshot = await db.collection('users').limit(20).get();
 
-     // Buscar usuários com hobbies semelhantes
-     const usersSnapshot = await db
-       .collection("users")
-       .where(firebase.firestore.FieldPath.documentId(), "!=", currentUser.uid)
-       .limit(5)
-       .get();
+        suggestionsContainer.innerHTML = '';
+        let suggestionsAdded = 0;
 
+        allUsersSnapshot.forEach(doc => {
+            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, mostra como sugestão
+            if (!exclusionIds.has(doc.id)) {
+                const user = { id: doc.id, ...doc.data() };
+                addSuggestionToDOM(user, 0); // Contagem de hobbies em comum simplificada por agora
+                suggestionsAdded++;
+            }
+        });
 
-     // Limpar container de sugestões
-     suggestionsContainer.innerHTML = "";
+        if (suggestionsAdded === 0) {
+            suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
+        }
 
-
-     // Verificar se há sugestões
-     if (usersSnapshot.empty) {
-       suggestionsContainer.innerHTML =
-         '<div class="no-suggestions">Nenhuma sugestão encontrada.</div>';
-       return;
-     }
-
-
-     // Filtrar usuários que já são amigos
-     const friendsSnapshot = await db
-       .collection("users")
-       .doc(currentUser.uid)
-       .collection("friends")
-       .get();
-
-
-     const friendIds = friendsSnapshot.docs.map((doc) => doc.id);
-
-
-     // Adicionar cada sugestão ao DOM
-     let suggestionsAdded = 0;
-
-
-     for (const doc of usersSnapshot.docs) {
-       // Pular se já é amigo
-       if (friendIds.includes(doc.id)) continue;
-
-
-       const user = {
-         id: doc.id,
-         ...doc.data(),
-       };
-
-
-       // Calcular relevância com base em hobbies em comum
-       const userHobbiesList = user.hobbies || [];
-       const commonHobbies = userHobbiesList.filter((hobby) =>
-         userHobbies.includes(hobby)
-       );
-
-
-       // Adicionar ao DOM
-       addSuggestionToDOM(user, commonHobbies.length);
-       suggestionsAdded++;
-
-
-       // Limitar a 3 sugestões
-       if (suggestionsAdded >= 3) break;
-     }
-
-
-     // Verificar se há sugestões
-     if (suggestionsAdded === 0) {
-       suggestionsContainer.innerHTML =
-         '<div class="no-suggestions">Nenhuma sugestão encontrada.</div>';
-     }
-   } catch (error) {
-     console.error("Erro ao carregar sugestões:", error);
-     if (suggestionsContainer) {
-       suggestionsContainer.innerHTML =
-         '<div class="error-message">Erro ao carregar sugestões. Tente novamente mais tarde.</div>';
-     }
-   }
- }
+    } catch (error) {
+        console.error('Erro ao carregar sugestões:', error);
+        if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
+        }
+    }
+}
 function addSuggestionToDOM(user, commonHobbiesCount) {
     if (!suggestionsContainer || !suggestionTemplate) return;
 
