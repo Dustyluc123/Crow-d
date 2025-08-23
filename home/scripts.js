@@ -1450,19 +1450,21 @@ function addSuggestionToDOM(user, commonHobbiesCount) {
 
     suggestionsContainer.appendChild(suggestionClone);
 }
+// Substitua esta função em:
+// 1. home/scripts.js
+// 2. friends/scripts.js
 
-
-
-// Em home/scripts.js
-
-// Em home/scripts.js E em friends/scripts.js
-
-// Em home/scripts.js
-
-// Substitua em: home/scripts.js
-// Substitua também em: friends/scripts.js
+// Substitua esta função em:
+// 1. home/scripts.js
+// 2. friends/scripts.js
 
 async function sendFriendRequest(userId, userData) {
+    // 1. Trava de segurança: impede o envio se o seu próprio perfil não foi carregado
+    if (!currentUserProfile || !currentUserProfile.nickname) {
+        showToast("Seu perfil ainda não foi carregado, tente novamente em um instante.", "error");
+        return false;
+    }
+
     const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
     if (followButton) {
         followButton.disabled = true;
@@ -1470,49 +1472,44 @@ async function sendFriendRequest(userId, userData) {
     }
 
     try {
-        // Validações iniciais (não mude)
-        if (userId === currentUser.uid) {
-            throw new Error('Você não pode adicionar a si mesmo.');
-        }
+        // 2. Validações Padrão
+        if (userId === currentUser.uid) throw new Error('Você não pode adicionar a si mesmo.');
         const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
-        if (friendDoc.exists) {
-            throw new Error('Este usuário já é seu amigo.');
-        }
+        if (friendDoc.exists) throw new Error('Este usuário já é seu amigo.');
         const requestId = [currentUser.uid, userId].sort().join('_');
         const requestRef = db.collection('friendRequests').doc(requestId);
         const requestDoc = await requestRef.get();
-        if (requestDoc.exists) {
-            throw new Error('Já existe um pedido de amizade pendente.');
-        }
+        if (requestDoc.exists) throw new Error('Já existe um pedido de amizade pendente.');
 
+        // 3. Criação dos dados para o batch
         const batch = db.batch();
+        const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
 
-        // --- INÍCIO DA CORREÇÃO CRUCIAL ---
-        // Este objeto AGORA INCLUI todos os campos que a sua regra exige.
+        // Dados para o friendRequest
         const requestData = {
             from: currentUser.uid,
             to: userId,
-            fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserName: currentUserProfile.nickname,
             fromUserPhoto: currentUserProfile.photoURL || null,
             status: "pending",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         };
         batch.set(requestRef, requestData);
-        // --- FIM DA CORREÇÃO CRUCIAL ---
 
-        // A criação da notificação já estava correta, mas a mantemos para consistência.
-        const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
-        batch.set(notificationRef, {
+        // Dados para a notificação
+        const notificationData = {
             type: "friend_request",
             fromUserId: currentUser.uid,
-            fromUserName: currentUserProfile.nickname || "Usuário",
+            fromUserName: currentUserProfile.nickname,
             fromUserPhoto: currentUserProfile.photoURL || null,
             content: "enviou uma solicitação de amizade",
             requestId: requestRef.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             read: false
-        });
+        };
+        batch.set(notificationRef, notificationData);
         
+        // 4. Envio do batch
         await batch.commit();
         
         showToast("Solicitação de amizade enviada!", "success");
@@ -1530,11 +1527,6 @@ async function sendFriendRequest(userId, userData) {
         return false;
     }
 }
-
-// Em scripts.js
-
-
-// Em scripts.js, substitua sua função por esta versão completa
 
 async function toggleRepost(postId, buttonElement) {
    try {
