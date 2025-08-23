@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Configuração Firebase e Variáveis (sem alterações) ---
+    // --- Configuração Firebase e Variáveis ---
     const firebaseConfig = {
         apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
         authDomain: "tcclogin-7e7b8.firebaseapp.com",
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // --- Referências aos elementos do DOM (com adições) ---
+    // --- Referências ao DOM (com adições para o editor) ---
     const profileForm = document.getElementById('profileForm');
     const photoPreview = document.getElementById('photoPreview');
     const photoFileInput = document.getElementById('photoFile');
@@ -26,15 +26,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elementos dos Modais
     const confirmationModal = document.getElementById('confirmationModal');
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const termsModal = document.getElementById('termsModal'); // Novo
+    const termsModal = document.getElementById('termsModal');
     const editBtn = document.getElementById('editBtn');
     const confirmBtn = document.getElementById('confirmBtn');
-    const acceptTermsBtn = document.getElementById('acceptTermsBtn'); // Novo
-    const declineTermsBtn = document.getElementById('declineTermsBtn'); // Novo
+    const acceptTermsBtn = document.getElementById('acceptTermsBtn');
+    const declineTermsBtn = document.getElementById('declineTermsBtn');
+
+    // NOVO: Elementos do Modal do Cropper
+    const cropperModal = document.getElementById('cropperModal');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const cropSaveBtn = document.getElementById('cropSaveBtn');
+    const cropCancelBtn = document.getElementById('cropCancelBtn');
+    const rotateBtn = document.getElementById('rotateBtn');
+    const flipHorizontalBtn = document.getElementById('flipHorizontalBtn');
+    const flipVerticalBtn = document.getElementById('flipVerticalBtn');
 
     let currentUser = null;
     let savingProfile = false;
-    let photoBase64 = null;
+    let photoBase64 = null; // Guarda o resultado final da imagem editada
+    let cropper = null;     // Guarda a instância do editor
+    let scaleX = 1;
+    let scaleY = 1;
+
 
     // --- Lógica do "Ver Mais" (sem alterações) ---
     document.querySelectorAll('.see-more-btn').forEach(button => {
@@ -62,25 +75,80 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- Upload Base64 (sem alterações) ---
+    // --- LÓGICA DO EDITOR DE IMAGEM (CROPPER.JS) ---
+
     photoFileInput.addEventListener('change', function() {
         const file = this.files[0];
-        if (file) {
+        if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                photoBase64 = e.target.result;
-                photoPreview.src = photoBase64;
+                imageToCrop.src = e.target.result;
+                cropperModal.style.display = 'flex';
+                
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 1, // Força um corte quadrado, ideal para perfis
+                    viewMode: 1,
+                    background: false,
+                    autoCropArea: 0.8,
+                });
             };
             reader.readAsDataURL(file);
         }
     });
+
+    // Ações dos botões do editor
+    rotateBtn.addEventListener('click', () => {
+        if (cropper) cropper.rotate(90);
+    });
+
+    flipHorizontalBtn.addEventListener('click', () => {
+        if (cropper) {
+            scaleX = -scaleX;
+            cropper.scaleX(scaleX);
+        }
+    });
+
+    flipVerticalBtn.addEventListener('click', () => {
+        if (cropper) {
+            scaleY = -scaleY;
+            cropper.scaleY(scaleY);
+        }
+    });
+
+    cropCancelBtn.addEventListener('click', () => {
+        cropperModal.style.display = 'none';
+        if (cropper) cropper.destroy();
+        photoFileInput.value = ''; // Limpa a seleção para o utilizador poder escolher outra
+    });
+
+    cropSaveBtn.addEventListener('click', () => {
+        if (cropper) {
+            const canvas = cropper.getCroppedCanvas({
+                width: 512, // Define uma resolução padrão para a imagem final
+                height: 512,
+                imageSmoothingQuality: 'high',
+            });
+
+            // Converte a imagem editada para Base64 e atualiza a pré-visualização
+            photoBase64 = canvas.toDataURL('image/jpeg');
+            photoPreview.src = photoBase64;
+
+            // Fecha e limpa tudo
+            cropperModal.style.display = 'none';
+            cropper.destroy();
+            photoFileInput.value = '';
+        }
+    });
+
+    // --- FLUXO DE SUBMISSÃO DO FORMULÁRIO (sem alterações na lógica principal) ---
     
-    // --- LÓGICA PRINCIPAL ALTERADA ---
     profileForm.addEventListener('submit', function(e) {
         e.preventDefault();
         if (!currentUser || savingProfile) return;
-        
-        // Passo 1: Mostra o modal de confirmação dos dados
         showConfirmationModal();
     });
     
@@ -88,40 +156,40 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmationModal.style.display = 'none';
     });
 
-    // Passo 2: Após revisar os dados, o usuário clica em "Confirmar"
     confirmBtn.addEventListener('click', () => {
-        confirmationModal.style.display = 'none'; // Esconde o modal de revisão
-        termsModal.style.display = 'flex';        // Mostra o modal de termos
+        confirmationModal.style.display = 'none';
+        termsModal.style.display = 'flex';
     });
 
-    // Passo 3 (Opção A): O usuário recusa os termos
     declineTermsBtn.addEventListener('click', () => {
-        termsModal.style.display = 'none'; // Apenas fecha o modal de termos
+        termsModal.style.display = 'none';
     });
 
-    // Passo 3 (Opção B): O usuário aceita os termos e o perfil é salvo
     acceptTermsBtn.addEventListener('click', () => {
-        termsModal.style.display = 'none';      // Esconde o modal de termos
-        loadingOverlay.style.display = 'flex';  // Mostra o carregamento
-        saveProfileData(currentUser.uid);       // Finalmente, salva os dados
+        termsModal.style.display = 'none';
+        loadingOverlay.style.display = 'flex';
+        saveProfileData(currentUser.uid);
     });
 
     function showConfirmationModal() {
-        // Coleta todos os dados do formulário
         const nickname = document.getElementById('nickname').value.trim();
-        const bio = document.getElementById('bio').value.trim();
         const school = document.getElementById('school').value;
         const grade = document.getElementById('grade').value;
-        const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
-        const customHobbies = getCustomHobbies();
-        const allHobbies = [...selectedHobbies, ...customHobbies];
 
         if (!nickname || !school || !grade) {
             alert("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.");
             return;
         }
-
+        
+        // A pré-visualização do modal de confirmação agora usa a variável `photoBase64` se ela existir
         document.getElementById('confirmPhoto').src = photoBase64 || photoPreview.src;
+        // O resto da função continua igual...
+        
+        const bio = document.getElementById('bio').value.trim();
+        const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
+        const customHobbies = getCustomHobbies();
+        const allHobbies = [...selectedHobbies, ...customHobbies];
+
         document.getElementById('confirmNickname').textContent = nickname;
         document.getElementById('confirmSchool').textContent = school;
         document.getElementById('confirmGrade').textContent = grade;
@@ -144,6 +212,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function saveProfileData(userId) {
+        // A sua função `saveProfileData` existente funcionará sem alterações,
+        // pois ela já usa a variável `photoBase64`.
         savingProfile = true;
 
         try {
@@ -153,7 +223,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const grade = document.getElementById('grade').value;
             const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
             const customHobbies = getCustomHobbies();
-            const visibility = document.querySelector('input[name="visibility"]:checked').value;
 
             const nicknameQuery = await db.collection('users').where('nickname', '==', nickname).get();
             if (!nicknameQuery.empty) {
@@ -167,11 +236,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 grade,
                 hobbies: selectedHobbies,
                 customHobbies: customHobbies,
-                visibility,
                 photoURL: photoBase64 || '../img/Design sem nome2.png',
+                 settings: { profilePublic: true },
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                termsAccepted: true // Adicionamos um campo para registrar a aceitação
+                termsAccepted: true
             };
             
             await db.collection('users').doc(userId).set(profileData);
@@ -187,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- Funções de Hobby (sem alterações) ---
+    // --- Funções de Hobby ---
     function addCustomHobby() {
         const hobbyText = customHobbyInput.value.trim();
         if (hobbyText) {
@@ -203,6 +272,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return Array.from(customHobbiesList.querySelectorAll('.hobby-tag'))
             .map(tag => tag.textContent.trim());
     }
+
+    // ADICIONE ESTE BLOCO DE CÓDIGO
+    if (addCustomHobbyBtn) {
+        addCustomHobbyBtn.addEventListener('click', addCustomHobby);
+    }
+    // FIM DO BLOCO A SER ADICIONADO
     
     customHobbiesList.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-hobby') || e.target.parentElement.classList.contains('remove-hobby')) {

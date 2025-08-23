@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentUserProfile = null; // Perfil de quem está logado
     let profileUser = null;          // Perfil de quem estamos visitando
     let profileUserId = null;        // ID de quem estamos visitando
-    let isFollowing = false;
+    let isFriend = false;
     let likeInProgress = {};
     let commentLikeInProgress = {};
      let postsListener = null;
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 if (followBtn) followBtn.style.display = 'flex';
                 if (messageBtn) messageBtn.style.display = 'flex';
-                checkFollowStatus();
+                checkFriendStatus();
             }
 
             await loadProfileUser(profileUserId);
@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadUserFriends();
             // Adicionar o listener de scroll para o feed do utilizador
             window.addEventListener('scroll', () => {
+                
                 // Se o utilizador estiver perto do fundo da página E não estiver a carregar mais posts
                 if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200 && !isLoadingMorePosts) {
                     loadMoreUserPosts();
@@ -121,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     if (followBtn) {
-        followBtn.addEventListener('click', toggleFollow);
+        followBtn.addEventListener('click', toggleFriendship);
     }
     if (messageBtn) {
         messageBtn.addEventListener('click', () => { window.location.href = `../mensagen/mensagens.html?uid=${profileUserId}`; });
@@ -184,89 +185,100 @@ async function loadProfileUser(userId) {
             profileHobbies.innerHTML = '<span class="hobby-tag">Nenhum hobby informado</span>';
         }
     }
+    function updateFriendButton() {
+    if (isFriend) {
+        followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+        followBtn.classList.add('following');
+    } else {
+        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+        followBtn.classList.remove('following');
+    }
+}
 
-    async function checkFollowStatus() {
-        const followDoc = await db.collection('users').doc(currentUser.uid).collection('following').doc(profileUserId).get();
-        isFollowing = followDoc.exists;
-        updateFollowButton();
+    async function checkFriendStatus() {
+    // Verifica se já são amigos
+    const friendDoc = await db.collection('users').doc(currentUser.uid).collection('friends').doc(profileUserId).get();
+    if (friendDoc.exists) {
+        isFriend = true;
+        updateFriendButton();
+        return;
     }
 
-    async function toggleFollow() {
-        // Desativa o botão para prevenir múltiplos cliques
+    // Se não são amigos, verifica se uma solicitação foi enviada
+    const requestSnapshot = await db.collection('users').doc(profileUserId).collection('friendRequests')
+        .where('fromUserId', '==', currentUser.uid)
+        .where('status', '==', 'pending')
+        .get();
+
+    if (!requestSnapshot.empty) {
+        // Marca como "pendente" para o botão mudar o texto
+        isFriend = 'pending'; 
+    } else {
+        isFriend = false;
+    }
+    updateFriendButton();
+}
+ async function toggleFriendship() {
+    if (isFriend === true) {
+        // Lógica para DEIXAR DE SEGUIR (desfazer amizade)
+        if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) return;
+        
         followBtn.disabled = true;
-
         try {
-            // **A CORREÇÃO ESTÁ AQUI**
-            // Garante que o seu perfil (currentUserProfile) e o perfil que você está a ver (profileUser)
-            // estejam completamente carregados antes de continuar.
-            if (!currentUser || !currentUserProfile || !profileUser) {
-                alert("Não foi possível seguir o usuário. Verifique se ambos os perfis foram carregados corretamente.");
-                followBtn.disabled = false; // Reativa o botão se a verificação falhar
-                return; 
-            }
-
-            // Referências diretas para os documentos no Firestore
-            const followingRef = db.collection('users').doc(currentUser.uid).collection('following').doc(profileUserId);
-            const followerRef = db.collection('users').doc(profileUserId).collection('followers').doc(currentUser.uid);
-
-            if (isFollowing) {
-                // --- AÇÃO: DEIXAR DE SEGUIR ---
-                await followingRef.delete();
-                await followerRef.delete();
-                
-                console.log("Deixou de seguir com sucesso.");
-
-            } else {
-                // --- AÇÃO: SEGUIR ---
-                await followingRef.set({
-                    nickname: profileUser.nickname || 'Usuário',
-                    photoURL: profileUser.photoURL || null,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                await followerRef.set({
-                    nickname: currentUserProfile.nickname || 'Usuário',
-                    photoURL: currentUserProfile.photoURL || null,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Envia uma notificação
-                await db.collection('users').doc(profileUserId).collection('notifications').add({
-                    type: 'follow',
-                    fromUserId: currentUser.uid,
-                    fromUserName: currentUserProfile.nickname || 'Usuário',
-                    fromUserPhoto: currentUserProfile.photoURL || null,
-                    content: 'começou a seguir você',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    read: false
-                });
-                
-                console.log("Começou a seguir com sucesso.");
-            }
-
-            // Atualiza o estado e o botão
-            isFollowing = !isFollowing;
-            updateFollowButton();
-
+            const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(profileUserId);
+            const profileUserFriendRef = db.collection('users').doc(profileUserId).collection('friends').doc(currentUser.uid);
+            await currentUserFriendRef.delete();
+            await profileUserFriendRef.delete();
+            isFriend = false;
+            updateFriendButton();
         } catch (error) {
-            console.error("Erro ao seguir/deixar de seguir:", error);
-            alert("Ocorreu um erro. Por favor, tente novamente.");
+            console.error("Erro ao deixar de seguir:", error);
         } finally {
-            // Reativa o botão no final, quer a operação tenha sucesso ou falhe
+            followBtn.disabled = false;
+        }
+
+    } else if (isFriend === false) {
+        // Lógica para ENVIAR SOLICITAÇÃO DE AMIZADE
+        followBtn.disabled = true;
+        try {
+            // Reutiliza a lógica de enviar solicitação que já existe em `friends/scripts.js`
+            await db.collection('users').doc(profileUserId).collection('friendRequests').add({
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserProfile.nickname || 'Usuário',
+                fromUserPhoto: currentUserProfile.photoURL || null,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await db.collection('users').doc(profileUserId).collection('notifications').add({
+                type: 'friend_request',
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserProfile.nickname || 'Usuário',
+                content: 'enviou uma solicitação de amizade',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+            isFriend = 'pending';
+            updateFriendButton();
+        } catch (error) {
+            console.error("Erro ao enviar solicitação:", error);
+        } finally {
             followBtn.disabled = false;
         }
     }
-
-    function updateFollowButton() {
-        if (isFollowing) {
-            followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
-            followBtn.classList.add('following');
-        } else {
-            followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
-            followBtn.classList.remove('following');
-        }
+    // Se isFriend for 'pending', não faz nada ao clicar
+}
+function updateFriendButton() {
+    if (isFriend === true) {
+        followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+        followBtn.classList.add('following');
+    } else if (isFriend === 'pending') {
+        followBtn.innerHTML = '<i class="fas fa-clock"></i> Pendente';
+        followBtn.classList.add('following'); // Reutiliza o estilo para o botão parecer "desativado"
+    } else {
+        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+        followBtn.classList.remove('following');
     }
-
+}
     function loadUserPosts() {
     postsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
     isLoadingMorePosts = true; // Previne carregamentos duplicados
