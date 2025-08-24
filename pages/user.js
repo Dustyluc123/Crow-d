@@ -138,6 +138,57 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // EM pages/user.js
+    function updateProfileUI() {
+    if (profileUser.photoURL) profilePhoto.src = profileUser.photoURL;
+    profileName.textContent = profileUser.nickname || 'Usuário';
+
+    const userBioElement = document.getElementById('user-bio');
+    const toggleBioBtn = document.getElementById('toggle-bio-btn');
+    const userBioText = profileUser.bio || 'Nenhuma biografia informada.';
+
+    userBioElement.textContent = userBioText;
+
+    // Lógica para verificar se o texto transborda (overflow)
+    // Compara a altura total do conteúdo com a altura visível do elemento
+    const isOverflowing = userBioElement.scrollHeight > userBioElement.clientHeight;
+
+    if (isOverflowing) {
+        // Se o texto transborda, mostra o botão "Ver mais"
+        toggleBioBtn.style.display = 'inline-block';
+        toggleBioBtn.textContent = 'Ver mais';
+        userBioElement.classList.remove('expanded'); // Garante que começa fechado
+
+        // Recria o botão para evitar múltiplos eventos de clique
+        const newBtn = toggleBioBtn.cloneNode(true);
+        toggleBioBtn.parentNode.replaceChild(newBtn, toggleBioBtn);
+        
+        newBtn.addEventListener('click', () => {
+            userBioElement.classList.toggle('expanded');
+            const isExpanded = userBioElement.classList.contains('expanded');
+            newBtn.textContent = isExpanded ? 'Ver menos' : 'Ver mais';
+        });
+
+    } else {
+        // Se o texto não transborda, esconde o botão
+        toggleBioBtn.style.display = 'none';
+        userBioElement.classList.add('expanded'); // Garante que a bio completa é mostrada
+    }
+    
+    // O resto da sua função continua igual...
+    profileSchool.textContent = profileUser.school || 'Escola não informada';
+    profileHobbies.innerHTML = '';
+    const hobbies = [...(profileUser.hobbies || []), ...(profileUser.customHobbies || [])];
+    if (hobbies.length > 0) {
+        hobbies.forEach(hobby => {
+            const hobbyTag = document.createElement('span');
+            hobbyTag.className = 'hobby-tag';
+            hobbyTag.textContent = hobby;
+            profileHobbies.appendChild(hobbyTag);
+        });
+    } else {
+        profileHobbies.innerHTML = '<span class="hobby-tag">Nenhum hobby informado</span>';
+    }
+}
 
 async function loadProfileUser(userId) {
     const doc = await db.collection('users').doc(userId).get();
@@ -168,23 +219,7 @@ async function loadProfileUser(userId) {
         window.location.href = '../home/home.html';
     }
 }
-    function updateProfileUI() {
-        if (profileUser.photoURL) profilePhoto.src = profileUser.photoURL;
-        profileName.textContent = profileUser.nickname || 'Usuário';
-        profileSchool.textContent = profileUser.school || 'Escola não informada';
-        profileHobbies.innerHTML = '';
-        const hobbies = [...(profileUser.hobbies || []), ...(profileUser.customHobbies || [])];
-        if (hobbies.length > 0) {
-            hobbies.forEach(hobby => {
-                const hobbyTag = document.createElement('span');
-                hobbyTag.className = 'hobby-tag';
-                hobbyTag.textContent = hobby;
-                profileHobbies.appendChild(hobbyTag);
-            });
-        } else {
-            profileHobbies.innerHTML = '<span class="hobby-tag">Nenhum hobby informado</span>';
-        }
-    }
+
     function updateFriendButton() {
     if (isFriend) {
         followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';

@@ -1519,3 +1519,36 @@ body.dark-mode .notification-badge {
 .danger-btn:hover {
     background-color: #c82333;
 }
+
+/* --- ESTILOS PARA A BIO COM "VER MAIS" (VERSÃO DEFINITIVA) --- */
+.user-bio {
+    line-height: 1.6;
+    /* ESTA É A CORREÇÃO PRINCIPAL: Força a quebra de palavras longas */
+    overflow-wrap: break-word;
+    word-wrap: break-word; /* Suporte para navegadores mais antigos */
+
+    /* Lógica de colapsar/expandir */
+    max-height: 4.8em; /* Limita a altura para aprox. 3 linhas (3 * 1.6) */
+    overflow: hidden;
+    transition: max-height 0.35s ease-out;
+}
+
+/* Classe que expande a biografia para mostrar tudo */
+.user-bio.expanded {
+    max-height: 1000px; /* Um valor alto para garantir que todo o texto apareça */
+}
+
+#toggle-bio-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: bold;
+    padding: 4px 0;
+    margin-top: 5px;
+    display: none; /* O JS irá mostrar se for necessário */
+}
+
+body.dark-mode #toggle-bio-btn {
+    color: var(--primary-hover);
+}

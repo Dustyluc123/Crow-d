@@ -56,6 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
             schoolInput.value = originalProfileData.school || '';
             profileImagePreview.src = originalProfileData.photoURL || '../img/Design sem nome2.png';
             
+            // ATUALIZA O CONTADOR QUANDO A PÁGINA CARREGA
+            const nicknameCounter = document.getElementById('nickname-char-counter');
+            if (nicknameCounter) {
+                nicknameCounter.textContent = `${nicknameInput.value.length}/40`;
+            }
+            
             const userHobbies = originalProfileData.hobbies || [];
             document.querySelectorAll('input[name="hobbies"]').forEach(checkbox => checkbox.checked = false);
             userHobbies.forEach(hobby => {
@@ -64,8 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-
-    // Lógica do Cropper (sem alterações)
+    // Lógica do Cropper
     photoInput.addEventListener('change', (event) => {
         const files = event.target.files;
         if (files && files.length > 0) {
@@ -79,6 +84,19 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(files[0]);
         }
     });
+    // LÓGICA DO CONTADOR DE CARACTERES
+    const nicknameCounter = document.getElementById('nickname-char-counter');
+    if (nicknameInput && nicknameCounter) {
+        nicknameInput.addEventListener('input', () => {
+            const currentLength = nicknameInput.value.length;
+            nicknameCounter.textContent = `${currentLength}/40`;
+            if (currentLength > 40) {
+                nicknameCounter.style.color = '#ff6b6b';
+            } else {
+                nicknameCounter.style.color = '';
+            }
+        });
+    }
     confirmCropBtn.addEventListener('click', () => {
         const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
         croppedImageBase64 = canvas.toDataURL('image/jpeg');
@@ -92,10 +110,16 @@ document.addEventListener('DOMContentLoaded', function() {
         photoInput.value = '';
     });
 
-    // LÓGICA DE SALVAR O PERFIL (COM A FUNÇÃO DE ATUALIZAÇÃO CORRIGIDA)
+    // LÓGICA DE SALVAR O PERFIL
     profileEditForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         if (!currentUser) return;
+
+           const nicknameValue = nicknameInput.value.trim();
+        if (nicknameValue.length > 40) {
+            alert("O nome de usuário não pode ter mais de 40 caracteres.");
+            return;
+        }
 
         saveProfileBtn.disabled = true;
         saveProfileBtn.textContent = 'Salvando...';
@@ -138,25 +162,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- FUNÇÃO CORRIGIDA E MAIS ROBUSTA PARA ATUALIZAR CONTEÚDO ANTIGO ---
+    // --- FUNÇÃO PARA ATUALIZAR CONTEÚDO ANTIGO ---
     async function updateUserContent(userId, newProfileData) {
-        console.log("Iniciando atualização de conteúdo antigo...");
+        console.log("Iniciando atualização de conteúdo antigo (posts, reposts e lista de amigos)...");
         const batch = db.batch();
 
-        // 1. Encontra TODO conteúdo onde o usuário é o AUTOR DIRETO (posts e reposts)
+        // 1. Encontra e atualiza todos os POSTS onde o usuário é o AUTOR DIRETO
         const authorQuery = db.collection('posts').where('authorId', '==', userId);
         const authorSnapshot = await authorQuery.get();
         
         authorSnapshot.forEach(doc => {
-            const postRef = doc.ref; // Usa a referência direta do documento encontrado
+            const postRef = doc.ref;
             batch.update(postRef, {
                 authorName: newProfileData.nickname,
                 authorPhoto: newProfileData.photoURL
             });
         });
 
-        // 2. Encontra todos os REPOSTS onde o usuário é o AUTOR ORIGINAL
-        // (Isso atualiza a sua foto/nome nos reposts feitos por OUTRAS pessoas)
+        // 2. Encontra e atualiza todos os REPOSTS onde o usuário é o AUTOR ORIGINAL
         const originalAuthorQuery = db.collection('posts').where('originalPost.authorId', '==', userId);
         const originalAuthorSnapshot = await originalAuthorQuery.get();
 
@@ -167,12 +190,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 'originalPost.authorPhoto': newProfileData.photoURL
             });
         });
+        
+        // 3. Encontra todos os amigos do usuário atual e atualiza a sua própria informação na lista deles
+        const friendsSnapshot = await db.collection('users').doc(userId).collection('friends').get();
+    
+        friendsSnapshot.forEach(friendDoc => {
+            const friendRef = db.collection('users').doc(friendDoc.id).collection('friends').doc(userId);
+            batch.update(friendRef, {
+                nickname: newProfileData.nickname,
+                photoURL: newProfileData.photoURL
+            });
+        });
 
-        // Executa todas as atualizações de uma só vez
         await batch.commit();
-        console.log(`Conteúdo antigo atualizado. ${authorSnapshot.size + originalAuthorSnapshot.size} documentos verificados.`);
+        console.log(`Conteúdo antigo atualizado. ${authorSnapshot.size + originalAuthorSnapshot.size} posts e ${friendsSnapshot.size} amigos verificados.`);
     }
 
+    
     // Lógica dos Hobbies "Ver mais"
     document.querySelectorAll('.see-more-btn').forEach(button => {
         button.addEventListener('click', function() {

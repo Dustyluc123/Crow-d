@@ -2,19 +2,10 @@ Geral
 3- mudar as cores dos Alert
 4-aparecer o notificao em todas as paginas 
 
-
-///salvos e user
-1-quando eu repiblico uma mensagem com foto pelos salvos.html  ou user.html a mensagem repuplicada nao vem com a foto como deveria
-
 ///grupos
 1-testar tudo
 2-css melhor
 3-as mensagem nao estao aparecendo no grupo
-
-///mensagem
-
-//User --- Barreto
-5- erro ao carregar amigos Erro ao carregar amigos: FirebaseError: Missing or insufficient permissions, antes funcionava
 
 ///edit-Profile
 1-colocar o negocio de editar a imagem depois de selecionar igual a do Home 

@@ -430,3 +430,12 @@ body.dark-mode .profile-section {
     justify-content: flex-end;
     gap: 10px;
 }
+/* Adicione no final do ficheiro */
+.input-group small {
+    display: block;
+    text-align: right;
+    font-size: 0.8rem;
+    color: #777;
+    margin-top: 5px;
+    transition: color 0.3s;
+}

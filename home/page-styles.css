@@ -15,6 +15,21 @@ body.dark-mode .messages-container {
     background-color: var(--dark-bg-secondary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
+/* --- ESTILO PARA A BIO NA PÁGINA DE PERFIL --- */
+
+.user-bio {
+    font-size: 0.95rem; /* Tamanho da fonte */
+    color: #555;        /* Cor do texto um pouco mais clara */
+    margin-top: 4px;    /* Espaçamento acima */
+    margin-bottom: 12px;/* Espaçamento abaixo */
+    line-height: 1.5;   /* Altura da linha para melhor legibilidade */
+    max-width: 600px;   /* Largura máxima para não ficar muito extenso */
+}
+
+/* Estilo para o modo escuro */
+body.dark-mode .user-bio {
+    color: #bbb; /* Cor do texto no modo escuro */
+}
 
 .conversations-list {
     flex: 0 0 300px;
@@ -25,6 +40,35 @@ body.dark-mode .messages-container {
 
 body.dark-mode .conversations-list {
     border-right-color: var(--dark-border);
+}
+.user-bio {
+line-height: 1.5;
+transition: max-height 0.4s ease-out; / Adiciona uma transição suave /
+overflow: hidden; / Esconde o texto que transborda /
+max-height: 4.5em; / Aproximadamente 3 linhas (3 * 1.5em) - Ajuste se necessário */
+}
+
+/* Esta classe remove o limite de altura, mostrando o texto completo */
+.user-bio.collapsed {
+max-height: none;
+}
+
+
+#toggle-bio-btn {
+background: none;
+border: none;
+color: var(--primary-color);
+cursor: pointer;
+font-weight: bold;
+padding: 4px 0;
+margin-top: 5px;
+display: none; / Escondido por padrão, o JS irá mostrá-lo se necessário /
+width: 100%; / Faz o botão ocupar a largura total para fácil clique /
+text-align: left; / Alinha o texto à esquerda para consistência */
+}
+
+body.dark-mode #toggle-bio-btn {
+color: var(--primary-hover);
 }
 
 .conversation-item {

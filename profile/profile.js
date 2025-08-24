@@ -60,7 +60,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+// --- LÓGICA DO CONTADOR DE CARACTERES PARA O APELIDO ---
+    const nicknameInput = document.getElementById('nickname');
+    const nicknameCounter = document.getElementById('nickname-char-counter');
 
+    if (nicknameInput && nicknameCounter) {
+        nicknameInput.addEventListener('input', () => {
+            const currentLength = nicknameInput.value.length;
+            nicknameCounter.textContent = `${currentLength}/40`;
+            
+            // Muda a cor para vermelho se o limite for ultrapassado
+            if (currentLength > 40) {
+                nicknameCounter.style.color = '#ff6b6b';
+            } else {
+                nicknameCounter.style.color = ''; // Volta à cor padrão
+            }
+        });
+    }
     // --- Autenticação (sem alterações) ---
     auth.onAuthStateChanged(function(user) {
         if (user) {
@@ -175,6 +191,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const nickname = document.getElementById('nickname').value.trim();
         const school = document.getElementById('school').value;
         const grade = document.getElementById('grade').value;
+ 
+        if (nickname.length > 40) {
+            alert("O apelido não pode ter mais de 40 caracteres.");
+            return;
+        }
+
 
         if (!nickname || !school || !grade) {
             alert("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.");

@@ -17,10 +17,36 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     
     <style>
-        /* --- ESTILOS MELHORADOS PARA A GRELHA DE AMIGOS --- */
+        /* --- ESTILOS PARA A BIO COM "VER MAIS" (VERSÃO CORRIGIDA) --- */
 
-/* Transforma a grelha num layout mais espaçado */
-/* Transforma a grelha num layout mais espaçado */
+.user-bio {
+    /* Estilos base da sua biografia */
+    line-height: 1.5;
+    transition: max-height 0.3s ease-out; /* Animação suave */
+    overflow: hidden; /* Esconde o texto que transborda */
+}
+
+/* A classe 'collapsed' é que vai limitar a altura */
+.user-bio.collapsed {
+    max-height: 4.5em; /* Limita a altura para aprox. 3 linhas (3 * 1.5em) */
+}
+
+/* Estilo do botão "Ver mais" */
+#toggle-bio-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: bold;
+    padding: 4px 0;
+    margin-top: 5px;
+    display: none; /* O JS irá mostrar se for necessário */
+}
+
+body.dark-mode #toggle-bio-btn {
+    color: var(--primary-hover);
+}
+      
 .friends-grid {
     display: grid;
     /* Cria colunas de tamanho flexível, mas com um mínimo de 200px */
@@ -355,6 +381,8 @@ body.dark-mode .friend-card .friend-name {
                 
                 <div class="profile-info">
                     <h1 class="profile-name" id="profileName">Carregando...</h1>
+                      <p class="user-bio" id="user-bio"></p> 
+                      <button id="toggle-bio-btn">Ver mais</button>
                     <div class="profile-school" id="profileSchool">
                         <i class="fas fa-school"></i>
                         <span>Carregando...</span>
