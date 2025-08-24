@@ -41,35 +41,7 @@ body.dark-mode .user-bio {
 body.dark-mode .conversations-list {
     border-right-color: var(--dark-border);
 }
-.user-bio {
-line-height: 1.5;
-transition: max-height 0.4s ease-out; / Adiciona uma transição suave /
-overflow: hidden; / Esconde o texto que transborda /
-max-height: 4.5em; / Aproximadamente 3 linhas (3 * 1.5em) - Ajuste se necessário */
-}
 
-/* Esta classe remove o limite de altura, mostrando o texto completo */
-.user-bio.collapsed {
-max-height: none;
-}
-
-
-#toggle-bio-btn {
-background: none;
-border: none;
-color: var(--primary-color);
-cursor: pointer;
-font-weight: bold;
-padding: 4px 0;
-margin-top: 5px;
-display: none; / Escondido por padrão, o JS irá mostrá-lo se necessário /
-width: 100%; / Faz o botão ocupar a largura total para fácil clique /
-text-align: left; / Alinha o texto à esquerda para consistência */
-}
-
-body.dark-mode #toggle-bio-btn {
-color: var(--primary-hover);
-}
 
 .conversation-item {
     display: flex;

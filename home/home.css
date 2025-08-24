@@ -1520,35 +1520,40 @@ body.dark-mode .notification-badge {
     background-color: #c82333;
 }
 
-/* --- ESTILOS PARA A BIO COM "VER MAIS" (VERSÃO DEFINITIVA) --- */
-.user-bio {
-    line-height: 1.6;
-    /* ESTA É A CORREÇÃO PRINCIPAL: Força a quebra de palavras longas */
-    overflow-wrap: break-word;
-    word-wrap: break-word; /* Suporte para navegadores mais antigos */
+/* ================================== */
+    /* ADICIONE ESTE BLOCO NO FINAL DO SEU CSS */
+    /* ================================== */
 
-    /* Lógica de colapsar/expandir */
-    max-height: 4.8em; /* Limita a altura para aprox. 3 linhas (3 * 1.6) */
-    overflow: hidden;
-    transition: max-height 0.35s ease-out;
-}
+    /* --- ESTILOS PARA A BIO (VERSÃO DEFINITIVA) --- */
+    .user-bio {
+        line-height: 1.6;
+        /* Força a quebra de palavras muito longas */
+        overflow-wrap: break-word;
+        word-wrap: break-word; 
 
-/* Classe que expande a biografia para mostrar tudo */
-.user-bio.expanded {
-    max-height: 1000px; /* Um valor alto para garantir que todo o texto apareça */
-}
+        /* Lógica para esconder o texto que transborda */
+        max-height: 4.8em; /* Limita a altura para aprox. 3 linhas */
+        overflow: hidden;
+        transition: max-height 0.35s ease-out;
+    }
 
-#toggle-bio-btn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    cursor: pointer;
-    font-weight: bold;
-    padding: 4px 0;
-    margin-top: 5px;
-    display: none; /* O JS irá mostrar se for necessário */
-}
+    /* Classe que o JavaScript adiciona para expandir a biografia */
+    .user-bio.expanded {
+        max-height: 1000px; /* Um valor alto para garantir que todo o texto apareça */
+    }
 
-body.dark-mode #toggle-bio-btn {
-    color: var(--primary-hover);
-}
+    #toggle-bio-btn {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-weight: bold;
+        padding: 4px 0;
+        margin-top: 5px;
+        display: none; /* O JavaScript irá mostrar o botão se for necessário */
+    }
+
+    body.dark-mode #toggle-bio-btn {
+        color: var(--primary-hover);
+    }
+    

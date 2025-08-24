@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isPrivate) {
             const enteredPassword = prompt("Este grupo é privado. Por favor, digite a senha:");
             if (enteredPassword !== password) {
-                alert("Senha incorreta.");
+                showCustomAlert("Senha incorreta.");
                 return;
             }
         }

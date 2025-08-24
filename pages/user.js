@@ -137,8 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (doc.exists) currentUserProfile = doc.data();
     }
 
-    // EM pages/user.js
-    function updateProfileUI() {
+ function updateProfileUI() {
     if (profileUser.photoURL) profilePhoto.src = profileUser.photoURL;
     profileName.textContent = profileUser.nickname || 'Usuário';
 
@@ -148,17 +147,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     userBioElement.textContent = userBioText;
 
-    // Lógica para verificar se o texto transborda (overflow)
-    // Compara a altura total do conteúdo com a altura visível do elemento
+    // Remove classes antigas para recalcular o tamanho real do texto
+    userBioElement.classList.remove('expanded');
+
+    // Compara a altura total do conteúdo com a altura visível
     const isOverflowing = userBioElement.scrollHeight > userBioElement.clientHeight;
 
-    if (isOverflowing) {
-        // Se o texto transborda, mostra o botão "Ver mais"
+    if (isOverflowing && userBioText.length > 0) { // Garante que não mostra para bio vazia
         toggleBioBtn.style.display = 'inline-block';
         toggleBioBtn.textContent = 'Ver mais';
-        userBioElement.classList.remove('expanded'); // Garante que começa fechado
 
-        // Recria o botão para evitar múltiplos eventos de clique
         const newBtn = toggleBioBtn.cloneNode(true);
         toggleBioBtn.parentNode.replaceChild(newBtn, toggleBioBtn);
         
@@ -169,12 +167,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     } else {
-        // Se o texto não transborda, esconde o botão
         toggleBioBtn.style.display = 'none';
         userBioElement.classList.add('expanded'); // Garante que a bio completa é mostrada
     }
     
-    // O resto da sua função continua igual...
+    // O resto da sua função...
     profileSchool.textContent = profileUser.school || 'Escola não informada';
     profileHobbies.innerHTML = '';
     const hobbies = [...(profileUser.hobbies || []), ...(profileUser.customHobbies || [])];
@@ -189,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
         profileHobbies.innerHTML = '<span class="hobby-tag">Nenhum hobby informado</span>';
     }
 }
-
 async function loadProfileUser(userId) {
     const doc = await db.collection('users').doc(userId).get();
     if (doc.exists) {
@@ -1087,45 +1083,7 @@ async function toggleRepost(postId, buttonElement) {
         }
     }
 
-    function showCustomAlert(message, title = "Aviso") {
-        const modal = document.getElementById('customAlertModal');
-        const modalTitle = document.getElementById('customAlertTitle');
-        const modalMessage = document.getElementById('customAlertMessage');
-        const closeBtn = document.getElementById('customAlertCloseBtn');
-        const okBtn = document.getElementById('customAlertOkBtn');
-
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
-
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        closeBtn.onclick = closeModal;
-        okBtn.onclick = closeModal;
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        };
-    }
-
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container') || document.createElement('div');
-        if (!document.getElementById('toast-container')) {
-            container.id = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<span>${message}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
+  
     async function toggleCommentLike(postId, commentId) {
     try {
       const commentKey = `${postId}_${commentId}`;
@@ -1206,19 +1164,16 @@ async function toggleRepost(postId, buttonElement) {
      * @param {string} postId O ID da publicação a ser excluída.
      */
     async function deletePost(postId) {
-        if (!confirm("Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.")) {
-            return;
-        }
-        try {
-            await db.collection('posts').doc(postId).delete();
-            showToast("Publicação excluída com sucesso.", "success");
-            // A página recarregará os posts para refletir a mudança
-            loadUserPosts(); 
-        } catch (error) {
-            console.error("Erro ao excluir publicação:", error);
-            showCustomAlert("Ocorreu um erro ao excluir a publicação.");
+        if (confirm("Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.")) {
+            try {
+                await db.collection('posts').doc(postId).delete();
+                showToast("Publicação excluída com sucesso.", "success");
+                loadUserPosts(); 
+            } catch (error) {
+                console.error("Erro ao excluir publicação:", error);
+                showCustomAlert("Ocorreu um erro ao excluir a publicação.");
+            }
         }
     }
-
 
 });

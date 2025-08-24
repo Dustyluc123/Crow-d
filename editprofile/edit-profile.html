@@ -6,6 +6,7 @@
     <title>Editar Perfil - Crow-d</title>
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="profile.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
@@ -17,6 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js" defer></script>
     <script src="../config/darkmode.js" defer></script>
     <script src="edit-profile.js" defer></script>
+    <script src="../config/global-notifications.js" defer></script>
 </head>
 <body>
     <header>
@@ -57,8 +59,8 @@
 
                         <div class="input-group">
                             <label for="nickname">Nome de usuário</label>
-                            <input type="text" id="nickname" name="nickname" placeholder="Seu nome de usuário" required maxlength="40"> 
-                            <small id="nickname-char-counter">0/40</small> 
+                            <input type="text" id="nickname" name="nickname" placeholder="Seu nome de usuário" required maxlength="30"> 
+                            <small id="nickname-char-counter">0/30</small> 
                         </div>
 
                         <div class="input-group">

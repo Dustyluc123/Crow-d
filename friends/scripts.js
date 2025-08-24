@@ -11,52 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
         appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
     };
 
-    function showCustomAlert(message, title = "Aviso") {
-        const modal = document.getElementById('customAlertModal');
-        const modalTitle = document.getElementById('customAlertTitle');
-        const modalMessage = document.getElementById('customAlertMessage');
-        const closeBtn = document.getElementById('customAlertCloseBtn');
-        const okBtn = document.getElementById('customAlertOkBtn');
+    
 
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'flex';
-
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        closeBtn.onclick = closeModal;
-        okBtn.onclick = closeModal;
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        };
-    }
-
-    function showToast(message, type = 'info') { // type pode ser 'success', 'error', ou 'info'
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-
-        let iconClass = 'fas fa-info-circle';
-        if (type === 'success') {
-            iconClass = 'fas fa-check-circle';
-        } else if (type === 'error') {
-            iconClass = 'fas fa-exclamation-circle';
-        }
-
-        toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 5000);
-    }
+    
 
     // Inicializar Firebase
     if (!firebase.apps.length) {

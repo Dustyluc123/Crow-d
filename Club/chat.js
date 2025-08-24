@@ -199,7 +199,7 @@ function addMessageToDOM(messageId, message) {
             // A mensagem será removida da tela automaticamente pelo onSnapshot do loadMessages
         } catch (error) {
             console.error("Erro ao excluir mensagem:", error);
-            alert("Não foi possível excluir a mensagem.");
+            showCustomAlert("Não foi possível excluir a mensagem.");
         }
     }
     // --- FIM DA NOVA FUNÇÃO ---

@@ -9,62 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
    messagingSenderId: "1066633833169",
    appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0",
  };
- function showCustomAlert(message, title = "Aviso") {
-   const modal = document.getElementById('customAlertModal');
-   const modalTitle = document.getElementById('customAlertTitle');
-   const modalMessage = document.getElementById('customAlertMessage');
-   const closeBtn = document.getElementById('customAlertCloseBtn');
-   const okBtn = document.getElementById('customAlertOkBtn');
-
-
-   modalTitle.textContent = title;
-   modalMessage.textContent = message;
-   modal.style.display = 'flex';
-
-
-   function closeModal() {
-       modal.style.display = 'none';
-   }
-
-
-   closeBtn.onclick = closeModal;
-   okBtn.onclick = closeModal;
-
-
-   window.onclick = function(event) {
-       if (event.target == modal) {
-           closeModal();
-       }
-   };
- }
- function showToast(message, type = 'info') {
-   const container = document.getElementById('toast-container');
-   if (!container) return;
-
-
-   const toast = document.createElement('div');
-   toast.className = `toast ${type}`;
-
-
-   let iconClass = 'fas fa-info-circle';
-   if (type === 'success') {
-       iconClass = 'fas fa-check-circle';
-   } else if (type === 'error') {
-       iconClass = 'fas fa-exclamation-circle';
-   }
-
-
-   toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
-
-
-   container.appendChild(toast);
-
-
-   // Remove a notificação da tela após 5 segundos
-   setTimeout(() => {
-       toast.remove();
-   }, 5000);
- }
+ 
+ 
 
 
  if (!firebase.apps.length) {
@@ -246,8 +192,7 @@ auth.onAuthStateChanged(async function (user) {
  if (user) {
    currentUser = user;
    await loadUserProfile(user.uid);
-   setupNotificationListener(user.uid);
-
+   
 
    // ==========================================================
    //      INÍCIO DA LÓGICA ADICIONADA
@@ -673,22 +618,7 @@ async function showSinglePostView(postId) {
    }
 }
 // Função que fica "escutando" por notificações não lidas em tempo real
-function setupNotificationListener(userId) {
-   const notificationsRef = db.collection('users').doc(userId).collection('notifications');
 
-
-   // Escuta por qualquer alteração em notificações onde 'read' é 'false'
-   notificationsRef.where('read', '==', false).onSnapshot(snapshot => {
-       const unreadCount = snapshot.size; // Pega a quantidade de docs não lidos
-       const badge = document.getElementById('notification-badge');
-
-
-       if (badge) {
-           // Se houver mais de 0 notificações não lidas, mostra a bolinha. Senão, esconde.
-           badge.style.display = unreadCount > 0 ? 'block' : 'none';
-       }
-   });
-}
 function hideSinglePostView() {
    // 1. Faz o processo inverso: esconde a área do post e mostra o feed
   

@@ -287,18 +287,4 @@ async function rejectFriendRequest(requestId, notificationId, element) {
         if (diff < 86400000) return `${Math.floor(diff/3600000)}h atrás`;
         return `${Math.floor(diff/86400000)}d atrás`;
     }
-
-    // Função auxiliar para mostrar alertas rápidos
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container') || document.body;
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`; // Adicione classes CSS para 'success', 'error', 'info'
-        toast.textContent = message;
-        
-        // Adiciona o toast ao container e remove após 3 segundos
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
 });

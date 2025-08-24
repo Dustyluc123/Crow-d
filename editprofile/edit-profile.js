@@ -56,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
             schoolInput.value = originalProfileData.school || '';
             profileImagePreview.src = originalProfileData.photoURL || '../img/Design sem nome2.png';
             
-            // ATUALIZA O CONTADOR QUANDO A PÁGINA CARREGA
             const nicknameCounter = document.getElementById('nickname-char-counter');
             if (nicknameCounter) {
                 nicknameCounter.textContent = `${nicknameInput.value.length}/40`;
@@ -70,6 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
     // Lógica do Cropper
     photoInput.addEventListener('change', (event) => {
         const files = event.target.files;
@@ -84,7 +84,22 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(files[0]);
         }
     });
-    // LÓGICA DO CONTADOR DE CARACTERES
+
+    confirmCropBtn.addEventListener('click', () => {
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        croppedImageBase64 = canvas.toDataURL('image/jpeg');
+        profileImagePreview.src = croppedImageBase64;
+        cropperModal.style.display = 'none';
+        cropper.destroy();
+    });
+
+    cancelCropBtn.addEventListener('click', () => {
+        cropperModal.style.display = 'none';
+        cropper.destroy();
+        photoInput.value = '';
+    });
+
+    // Lógica do contador de caracteres
     const nicknameCounter = document.getElementById('nickname-char-counter');
     if (nicknameInput && nicknameCounter) {
         nicknameInput.addEventListener('input', () => {
@@ -97,27 +112,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    confirmCropBtn.addEventListener('click', () => {
-        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-        croppedImageBase64 = canvas.toDataURL('image/jpeg');
-        profileImagePreview.src = croppedImageBase64;
-        cropperModal.style.display = 'none';
-        cropper.destroy();
-    });
-    cancelCropBtn.addEventListener('click', () => {
-        cropperModal.style.display = 'none';
-        cropper.destroy();
-        photoInput.value = '';
-    });
 
-    // LÓGICA DE SALVAR O PERFIL
+    // LÓGICA DE SALVAR O PERFIL (COM A VERIFICAÇÃO DE NOME DUPLICADO)
     profileEditForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         if (!currentUser) return;
 
-           const nicknameValue = nicknameInput.value.trim();
+        const nicknameValue = nicknameInput.value.trim();
         if (nicknameValue.length > 40) {
-            alert("O nome de usuário não pode ter mais de 40 caracteres.");
+            showToast("O nome de usuário não pode ter mais de 40 caracteres.", "error");
             return;
         }
 
@@ -125,12 +128,25 @@ document.addEventListener('DOMContentLoaded', function() {
         saveProfileBtn.textContent = 'Salvando...';
 
         try {
-            const nicknameChanged = nicknameInput.value !== originalProfileData.nickname;
+            const nicknameChanged = nicknameValue !== originalProfileData.nickname;
+            
+            // --- INÍCIO DA CORREÇÃO ---
+            if (nicknameChanged) {
+                const nicknameQuery = await db.collection('users').where('nickname', '==', nicknameValue).get();
+                if (!nicknameQuery.empty) {
+                    showToast("Este nome de usuário já está em uso. Por favor, escolha outro.", "error");
+                    saveProfileBtn.disabled = false;
+                    saveProfileBtn.textContent = 'Salvar Alterações';
+                    return;
+                }
+            }
+            // --- FIM DA CORREÇÃO ---
+
             const photoChanged = !!croppedImageBase64;
             const needsPostUpdate = nicknameChanged || photoChanged;
 
             const updatedData = {};
-            if (nicknameChanged) updatedData.nickname = nicknameInput.value;
+            if (nicknameChanged) updatedData.nickname = nicknameValue;
             if (photoChanged) updatedData.photoURL = croppedImageBase64;
             if (bioInput.value !== originalProfileData.bio) updatedData.bio = bioInput.value;
             if (schoolInput.value !== originalProfileData.school) updatedData.school = schoolInput.value;
@@ -143,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (needsPostUpdate) {
                 const finalUserData = {
-                    nickname: nicknameInput.value,
+                    nickname: nicknameValue,
                     photoURL: croppedImageBase64 || originalProfileData.photoURL
                 };
                 await updateUserContent(currentUser.uid, finalUserData);
@@ -162,38 +178,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- FUNÇÃO PARA ATUALIZAR CONTEÚDO ANTIGO ---
     async function updateUserContent(userId, newProfileData) {
         console.log("Iniciando atualização de conteúdo antigo (posts, reposts e lista de amigos)...");
         const batch = db.batch();
 
-        // 1. Encontra e atualiza todos os POSTS onde o usuário é o AUTOR DIRETO
         const authorQuery = db.collection('posts').where('authorId', '==', userId);
         const authorSnapshot = await authorQuery.get();
-        
         authorSnapshot.forEach(doc => {
-            const postRef = doc.ref;
-            batch.update(postRef, {
+            batch.update(doc.ref, {
                 authorName: newProfileData.nickname,
                 authorPhoto: newProfileData.photoURL
             });
         });
 
-        // 2. Encontra e atualiza todos os REPOSTS onde o usuário é o AUTOR ORIGINAL
         const originalAuthorQuery = db.collection('posts').where('originalPost.authorId', '==', userId);
         const originalAuthorSnapshot = await originalAuthorQuery.get();
-
         originalAuthorSnapshot.forEach(doc => {
-            const postRef = doc.ref;
-            batch.update(postRef, {
+            batch.update(doc.ref, {
                 'originalPost.authorName': newProfileData.nickname,
                 'originalPost.authorPhoto': newProfileData.photoURL
             });
         });
         
-        // 3. Encontra todos os amigos do usuário atual e atualiza a sua própria informação na lista deles
         const friendsSnapshot = await db.collection('users').doc(userId).collection('friends').get();
-    
         friendsSnapshot.forEach(friendDoc => {
             const friendRef = db.collection('users').doc(friendDoc.id).collection('friends').doc(userId);
             batch.update(friendRef, {
@@ -203,11 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         await batch.commit();
-        console.log(`Conteúdo antigo atualizado. ${authorSnapshot.size + originalAuthorSnapshot.size} posts e ${friendsSnapshot.size} amigos verificados.`);
+        console.log(`Conteúdo antigo atualizado.`);
     }
 
-    
-    // Lógica dos Hobbies "Ver mais"
     document.querySelectorAll('.see-more-btn').forEach(button => {
         button.addEventListener('click', function() {
             const targetId = this.getAttribute('data-target');
@@ -219,22 +224,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
-// Função de Toast
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
-                }
-            }, 500);
-        }, 3000);
-    }, 100);
-}

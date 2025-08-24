@@ -13,7 +13,7 @@
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body>
-   <div id="toast-container"></div>
+   <div id="toast-container"></div> 
    <header>
        <div class="logo">
            <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -39,12 +39,11 @@
                <h3>Atalhos Rápidos</h3>
                <ul>
                    <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
-                   <li>
-                       <a href="../pages/notificacao.html" class="notification-link-wrapper">
-                           <span><i class="fas fa-bell"></i> Notificação</span>
-                           <span class="notification-badge" id="notification-badge" style="display: none;"></span>
-                       </a>
-                   </li>
+                  <li><a href="../pages/notificacao.html" class="notification-nav-link">
+    <i class="fas fa-bell"></i>
+    <span>Notificação</span>
+    <span class="notification-badge" id="header-notification-badge" style="display: none;"></span>
+</a></li> 
                    <li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
                    <li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
                    <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
@@ -213,6 +212,8 @@
 
    <script src="scripts.js"></script>
    <script src="../config/darkmode.js"></script>
+   <script src="../config/global.js" defer></script>
+   <script src="../config/global-notifications.js" defer></script>
 </body>
 </html>
 

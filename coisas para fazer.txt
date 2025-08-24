@@ -1,11 +1,19 @@
 Geral
 3- mudar as cores dos Alert
-4-aparecer o notificao em todas as paginas 
+onde tem Alert
+chat.html - aletar ao deletar as mensagem
+grupos.html ao pedir a senha do grupo
+eventos.html - ao deletar o proprio evento 
 
 ///grupos
 1-testar tudo
 2-css melhor
 3-as mensagem nao estao aparecendo no grupo
 
-///edit-Profile
-1-colocar o negocio de editar a imagem depois de selecionar igual a do Home 
+///eventos
+1- nome de eventos com no maximo 20 caracter
+e descricao com o mesmo negocio da bio de ver mais se for muito grnade mas ao clicar em ver mais eu ira para o ver evento sozinho 
+
+///mensagem
+1-sugestoes de quem conversar 
+

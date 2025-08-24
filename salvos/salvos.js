@@ -100,23 +100,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // FUNÇÕES DE SUPORTE COMPLETAS
     // ==========================================================
 
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container') || document.createElement('div');
-        if (!document.getElementById('toast-container')) {
-            container.id = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<span>${message}</span>`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
     
-    function showCustomAlert(message) {
-        alert(message); // Usando alert padrão como fallback
-    }
+    
+   
     async function toggleSavePost(postId, buttonElement) {
         if (!currentUser) return;
         const postRef = db.collection("posts").doc(postId);

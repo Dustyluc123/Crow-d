@@ -15,13 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // --- Referências ao DOM (com adições para o editor) ---
+    // --- Referências ao DOM ---
     const profileForm = document.getElementById('profileForm');
     const photoPreview = document.getElementById('photoPreview');
     const photoFileInput = document.getElementById('photoFile');
-    const customHobbyInput = document.getElementById('customHobby');
-    const addCustomHobbyBtn = document.getElementById('addCustomHobby');
-    const customHobbiesList = document.getElementById('customHobbiesList');
 
     // Elementos dos Modais
     const confirmationModal = document.getElementById('confirmationModal');
@@ -32,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const acceptTermsBtn = document.getElementById('acceptTermsBtn');
     const declineTermsBtn = document.getElementById('declineTermsBtn');
 
-    // NOVO: Elementos do Modal do Cropper
+    // Elementos do Modal do Cropper
     const cropperModal = document.getElementById('cropperModal');
     const imageToCrop = document.getElementById('imageToCrop');
     const cropSaveBtn = document.getElementById('cropSaveBtn');
@@ -43,13 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentUser = null;
     let savingProfile = false;
-    let photoBase64 = null; // Guarda o resultado final da imagem editada
-    let cropper = null;     // Guarda a instância do editor
+    let photoBase64 = null;
+    let cropper = null;
     let scaleX = 1;
     let scaleY = 1;
 
-
-    // --- Lógica do "Ver Mais" (sem alterações) ---
+    // --- Lógica do "Ver Mais" ---
     document.querySelectorAll('.see-more-btn').forEach(button => {
         button.addEventListener('click', function() {
             const targetId = this.dataset.target;
@@ -60,24 +56,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-// --- LÓGICA DO CONTADOR DE CARACTERES PARA O APELIDO ---
+
+    // --- Lógica do Contador de Caracteres ---
     const nicknameInput = document.getElementById('nickname');
     const nicknameCounter = document.getElementById('nickname-char-counter');
-
     if (nicknameInput && nicknameCounter) {
         nicknameInput.addEventListener('input', () => {
             const currentLength = nicknameInput.value.length;
-            nicknameCounter.textContent = `${currentLength}/40`;
-            
-            // Muda a cor para vermelho se o limite for ultrapassado
-            if (currentLength > 40) {
-                nicknameCounter.style.color = '#ff6b6b';
-            } else {
-                nicknameCounter.style.color = ''; // Volta à cor padrão
-            }
+            nicknameCounter.textContent = `${currentLength}/30`;
+            nicknameCounter.style.color = currentLength > 30 ? '#ff6b6b' : '';
         });
     }
-    // --- Autenticação (sem alterações) ---
+
+    // --- Autenticação ---
     auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
@@ -91,8 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- LÓGICA DO EDITOR DE IMAGEM (CROPPER.JS) ---
-
+    // --- Lógica do Editor de Imagem (Cropper.js) ---
     photoFileInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file && file.type.startsWith('image/')) {
@@ -100,13 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.onload = function(e) {
                 imageToCrop.src = e.target.result;
                 cropperModal.style.display = 'flex';
-                
-                if (cropper) {
-                    cropper.destroy();
-                }
-
+                if (cropper) cropper.destroy();
                 cropper = new Cropper(imageToCrop, {
-                    aspectRatio: 1, // Força um corte quadrado, ideal para perfis
+                    aspectRatio: 1,
                     viewMode: 1,
                     background: false,
                     autoCropArea: 0.8,
@@ -116,71 +102,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Ações dos botões do editor
-    rotateBtn.addEventListener('click', () => {
-        if (cropper) cropper.rotate(90);
-    });
-
+    rotateBtn.addEventListener('click', () => cropper?.rotate(90));
     flipHorizontalBtn.addEventListener('click', () => {
         if (cropper) {
             scaleX = -scaleX;
             cropper.scaleX(scaleX);
         }
     });
-
     flipVerticalBtn.addEventListener('click', () => {
         if (cropper) {
             scaleY = -scaleY;
             cropper.scaleY(scaleY);
         }
     });
-
     cropCancelBtn.addEventListener('click', () => {
         cropperModal.style.display = 'none';
-        if (cropper) cropper.destroy();
-        photoFileInput.value = ''; // Limpa a seleção para o utilizador poder escolher outra
+        cropper?.destroy();
+        photoFileInput.value = '';
     });
-
     cropSaveBtn.addEventListener('click', () => {
         if (cropper) {
             const canvas = cropper.getCroppedCanvas({
-                width: 512, // Define uma resolução padrão para a imagem final
-                height: 512,
-                imageSmoothingQuality: 'high',
+                width: 512, height: 512, imageSmoothingQuality: 'high'
             });
-
-            // Converte a imagem editada para Base64 e atualiza a pré-visualização
             photoBase64 = canvas.toDataURL('image/jpeg');
             photoPreview.src = photoBase64;
-
-            // Fecha e limpa tudo
             cropperModal.style.display = 'none';
             cropper.destroy();
-            photoFileInput.value = '';
         }
     });
 
-    // --- FLUXO DE SUBMISSÃO DO FORMULÁRIO (sem alterações na lógica principal) ---
-    
+    // --- Fluxo de Submissão do Formulário ---
     profileForm.addEventListener('submit', function(e) {
         e.preventDefault();
         if (!currentUser || savingProfile) return;
         showConfirmationModal();
     });
-    
-    editBtn.addEventListener('click', () => {
-        confirmationModal.style.display = 'none';
-    });
 
+    editBtn.addEventListener('click', () => confirmationModal.style.display = 'none');
     confirmBtn.addEventListener('click', () => {
         confirmationModal.style.display = 'none';
         termsModal.style.display = 'flex';
     });
-
-    declineTermsBtn.addEventListener('click', () => {
-        termsModal.style.display = 'none';
-    });
-
+    declineTermsBtn.addEventListener('click', () => termsModal.style.display = 'none');
     acceptTermsBtn.addEventListener('click', () => {
         termsModal.style.display = 'none';
         loadingOverlay.style.display = 'flex';
@@ -189,29 +153,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showConfirmationModal() {
         const nickname = document.getElementById('nickname').value.trim();
+        if (nickname.length > 30) {
+            showToast("O apelido não pode ter mais de 30 caracteres.", "error");
+            return;
+        }
+
         const school = document.getElementById('school').value;
         const grade = document.getElementById('grade').value;
- 
-        if (nickname.length > 40) {
-            alert("O apelido não pode ter mais de 40 caracteres.");
-            return;
-        }
-
-
         if (!nickname || !school || !grade) {
-            alert("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.");
+            showToast("Por favor, preencha os campos obrigatórios: Apelido, Escola e Curso/Ano.", "error");
             return;
         }
-        
-        // A pré-visualização do modal de confirmação agora usa a variável `photoBase64` se ela existir
-        document.getElementById('confirmPhoto').src = photoBase64 || photoPreview.src;
-        // O resto da função continua igual...
         
         const bio = document.getElementById('bio').value.trim();
-        const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
-        const customHobbies = getCustomHobbies();
-        const allHobbies = [...selectedHobbies, ...customHobbies];
+        const allHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
 
+        document.getElementById('confirmPhoto').src = photoBase64 || photoPreview.src;
         document.getElementById('confirmNickname').textContent = nickname;
         document.getElementById('confirmSchool').textContent = school;
         document.getElementById('confirmGrade').textContent = grade;
@@ -234,84 +191,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function saveProfileData(userId) {
-        // A sua função `saveProfileData` existente funcionará sem alterações,
-        // pois ela já usa a variável `photoBase64`.
         savingProfile = true;
-
         try {
             const nickname = document.getElementById('nickname').value.trim();
-            const bio = document.getElementById('bio').value.trim();
-            const school = document.getElementById('school').value;
-            const grade = document.getElementById('grade').value;
-            const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
-            const customHobbies = getCustomHobbies();
-
             const nicknameQuery = await db.collection('users').where('nickname', '==', nickname).get();
             if (!nicknameQuery.empty) {
                 throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
             }
             
-            // Em profile/profile.js, dentro da função saveProfileData
-
-const profileData = {
-    nickname,
-    bio,
-    school,
-    grade,
-    hobbies: selectedHobbies,
-    customHobbies: customHobbies,
-    photoURL: photoBase64 || '../img/Design sem nome2.png',
-    // --- INÍCIO DA CORREÇÃO ---
-    // Agora 'darkMode' está DENTRO do objeto 'settings'
-    settings: {
-        profilePublic: true,
-        darkMode: true
-    },
-    // --- FIM DA CORREÇÃO ---
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    termsAccepted: true
-};
+            const profileData = {
+                nickname,
+                bio: document.getElementById('bio').value.trim(),
+                school: document.getElementById('school').value,
+                grade: document.getElementById('grade').value,
+                hobbies: Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value),
+                customHobbies: [], // Removido, mas o campo continua existindo para consistência
+                photoURL: photoBase64 || '../img/Design sem nome2.png',
+                settings: { profilePublic: true, darkMode: true },
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                termsAccepted: true
+            };
             
             await db.collection('users').doc(userId).set(profileData);
-            
             window.location.href = '../home/home.html';
-
         } catch (error) {
             console.error('Erro ao salvar perfil:', error);
-            alert('Erro ao salvar perfil: ' + error.message);
+            showCustomAlert('Erro ao salvar perfil: ' + error.message);
             loadingOverlay.style.display = 'none';
         } finally {
             savingProfile = false;
         }
     }
-
-    // --- Funções de Hobby ---
-    function addCustomHobby() {
-        const hobbyText = customHobbyInput.value.trim();
-        if (hobbyText) {
-            const hobbyTag = document.createElement('span');
-            hobbyTag.className = 'hobby-tag';
-            hobbyTag.innerHTML = `${hobbyText} <i class="fas fa-times remove-hobby"></i>`;
-            customHobbiesList.appendChild(hobbyTag);
-            customHobbyInput.value = '';
-        }
-    }
-    
-    function getCustomHobbies() {
-        return Array.from(customHobbiesList.querySelectorAll('.hobby-tag'))
-            .map(tag => tag.textContent.trim());
-    }
-
-    // ADICIONE ESTE BLOCO DE CÓDIGO
-    if (addCustomHobbyBtn) {
-        addCustomHobbyBtn.addEventListener('click', addCustomHobby);
-    }
-    // FIM DO BLOCO A SER ADICIONADO
-    
-    customHobbiesList.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-hobby') || e.target.parentElement.classList.contains('remove-hobby')) {
-            e.target.closest('.hobby-tag')?.remove();
-        }
-    });
 });
