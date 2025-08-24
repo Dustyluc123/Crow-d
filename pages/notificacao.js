@@ -165,83 +165,86 @@ document.addEventListener('DOMContentLoaded', function() {
         notificationsContainer.appendChild(notificationElement);
     }
 
-    // --- CÓDIGO ATUALIZADO ---
-    // Função para ACEITAR pedido (lógica no cliente)
-    async function acceptFriendRequest(requestId, fromUserId, notificationId, element) {
-        try {
-            if (!currentUser || !currentUserProfile) {
-                throw new Error("Utilizador não autenticado ou perfil não carregado.");
-            }
-    
-            const fromUserDoc = await db.collection('users').doc(fromUserId).get();
-            if (!fromUserDoc.exists) {
-                throw new Error("O utilizador que enviou o pedido não existe mais.");
-            }
-            const fromUserData = fromUserDoc.data();
-    
-            const batch = db.batch();
-    
-            // 1. Adiciona o remetente à lista de amigos do utilizador atual
-            const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
-            batch.set(currentUserFriendRef, {
-                nickname: fromUserData.nickname || 'Usuário',
-                photoURL: fromUserData.photoURL || null
-            });
-    
-            // 2. Adiciona o utilizador atual à lista de amigos do remetente
-            const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
-            batch.set(fromUserFriendRef, {
-                nickname: currentUserProfile.nickname || 'Usuário',
-                photoURL: currentUserProfile.photoURL || null
-            });
-    
-            // 3. APAGA o documento da solicitação de amizade
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            batch.delete(requestRef);
-    
-            // 4. APAGA a notificação sobre este pedido
-            const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
-            batch.delete(notificationRef);
-    
-            await batch.commit();
-            showToast("Amigo adicionado com sucesso!", "success");
-    
-        } catch (error) {
-            console.error("Erro ao aceitar solicitação:", error);
-            alert("Ocorreu um erro ao aceitar a solicitação: " + error.message);
-            if (element) {
-                const acceptBtn = element.querySelector('.accept-btn');
-                if(acceptBtn) { acceptBtn.disabled = false; acceptBtn.textContent = 'Aceitar'; }
-            }
-        }
-    }
+   // Em pages/notificacao.js
 
-    // --- CÓDIGO ATUALIZADO ---
-    // Função para RECUSAR pedido (lógica no cliente)
-    async function rejectFriendRequest(requestId, notificationId, element) {
-        try {
-            const batch = db.batch();
-    
-            // 1. APAGA o documento da solicitação de amizade
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            batch.delete(requestRef);
-    
-            // 2. APAGA a notificação sobre este pedido
-            const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
-            batch.delete(notificationRef);
-            
-            await batch.commit();
-            showToast("Solicitação recusada.", "info");
-    
-        } catch (error) {
-            console.error("Erro ao recusar solicitação:", error);
-            alert("Ocorreu um erro ao recusar a solicitação: " + error.message);
-            if (element) {
-                const declineBtn = element.querySelector('.decline-btn');
-                if(declineBtn) { declineBtn.disabled = false; declineBtn.textContent = 'Recusar'; }
-            }
+async function acceptFriendRequest(requestId, fromUserId, notificationId, element) {
+    try {
+        if (!currentUser || !currentUserProfile) throw new Error("Usuário não autenticado.");
+
+        const fromUserDoc = await db.collection('users').doc(fromUserId).get();
+        if (!fromUserDoc.exists) throw new Error("O usuário que enviou o pedido não existe mais.");
+        const fromUserData = fromUserDoc.data();
+
+        const batch = db.batch();
+
+        // Adiciona amigos mutualmente
+        const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
+        batch.set(currentUserFriendRef, { nickname: fromUserData.nickname || 'Usuário', photoURL: fromUserData.photoURL || null });
+        const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
+        batch.set(fromUserFriendRef, { nickname: currentUserProfile.nickname || 'Usuário', photoURL: currentUserProfile.photoURL || null });
+
+        // --- INÍCIO DA SINCRONIZAÇÃO ---
+        // Cria a notificação de "pedido aceito" para quem enviou
+        const acceptanceNotificationRef = db.collection("users").doc(fromUserId).collection("notifications").doc();
+        batch.set(acceptanceNotificationRef, {
+            type: 'friend_accept',
+            fromUserId: currentUser.uid,
+            fromUserName: currentUserProfile.nickname || 'Usuário',
+            fromUserPhoto: currentUserProfile.photoURL || null,
+            content: 'aceitou sua solicitação de amizade.',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            read: false
+        });
+        
+        // Apaga o documento da solicitação de amizade original
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        batch.delete(requestRef);
+
+        // Apaga a notificação sobre este pedido que está na tela
+        const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
+        batch.delete(notificationRef);
+        // --- FIM DA SINCRONIZAÇÃO ---
+
+        await batch.commit();
+        showToast("Amigo adicionado com sucesso!", "success");
+
+    } catch (error) {
+        console.error("Erro ao aceitar solicitação:", error);
+        alert("Ocorreu um erro: " + error.message);
+        // Reativa o botão em caso de erro
+        if (element) {
+            const acceptBtn = element.querySelector('.accept-btn');
+            if(acceptBtn) { acceptBtn.disabled = false; acceptBtn.textContent = 'Aceitar'; }
         }
     }
+}
+
+async function rejectFriendRequest(requestId, notificationId, element) {
+    try {
+        const batch = db.batch();
+
+        // --- INÍCIO DA SINCRONIZAÇÃO ---
+        // Apaga o documento da solicitação de amizade
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        batch.delete(requestRef);
+
+        // Apaga a notificação sobre este pedido
+        const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
+        batch.delete(notificationRef);
+        // --- FIM DA SINCRONIZAÇÃO ---
+        
+        await batch.commit();
+        showToast("Solicitação recusada.", "info");
+
+    } catch (error) {
+        console.error("Erro ao recusar solicitação:", error);
+        alert("Ocorreu um erro: " + error.message);
+         if (element) {
+            const declineBtn = element.querySelector('.decline-btn');
+            if(declineBtn) { declineBtn.disabled = false; declineBtn.textContent = 'Recusar'; }
+        }
+    }
+}
 
     // Marca as notificações como lidas ao carregar a página
     async function markNotificationsAsRead(userId) {

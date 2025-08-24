@@ -1,5 +1,6 @@
 Geral
 3- mudar as cores dos Alert
+4-aparecer o notificao em todas as paginas 
 
 
 ///salvos e user
@@ -9,14 +10,6 @@ Geral
 1-testar tudo
 2-css melhor
 3-as mensagem nao estao aparecendo no grupo
-
-
-///Confing 
-1-quando eu entro com uma nova conta no crow-d o fundo esta no modo claro mas ao entrar na config vai para o modo dark, mas somente na paginga config.html o resto continua igual, e como se eu entrasse em uma casa e liga um dijundor que ligase todos os outros dijuntores mas o dijjundor do config mesmo ligado nao esta tando a luz
-2-excluir conta (Tem que ter confirmacao, "VC QUER REALMENTE EXCLUIR SUA CONTA?")
-
-///notificacao e amigos
-1-tem como fazer que se a pessoa aceito ou recusou o pedido de amizade pelo amigos.html ent a notificao é excluida do noticacao.html e se se ele aceitou pelo notificacao ent o pedido é  excluido dos amigos sem dar ruim e sem precisar de nada que estaja fora do plano Spark do firebase
 
 ///mensagem
 

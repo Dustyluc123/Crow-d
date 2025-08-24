@@ -243,7 +243,7 @@ const profileData = {
     // Agora 'darkMode' está DENTRO do objeto 'settings'
     settings: {
         profilePublic: true,
-        darkMode: false
+        darkMode: true
     },
     // --- FIM DA CORREÇÃO ---
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),

@@ -46,22 +46,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    async function loadUserSettings(userId) {
-        const userRef = db.collection('users').doc(userId);
-        const doc = await userRef.get();
+   // Em config.js
 
-        if (doc.exists) {
-            const userData = doc.data();
-            const defaultSettings = { darkMode: false, profilePublic: true };
-            userSettings = { ...defaultSettings, ...userData.settings };
-            
-            // Sincroniza as configurações para garantir que estão salvas
-            await userRef.set({ settings: userSettings }, { merge: true });
+async function loadUserSettings(userId) {
+    const userRef = db.collection('users').doc(userId);
+    const doc = await userRef.get();
 
-            updateUIFromSettings();
-        }
+    if (doc.exists) {
+        const userData = doc.data();
+        
+        // Define um objeto de configurações padrão
+        const defaultSettings = {
+            darkMode: false,
+            profilePublic: true
+        };
+
+        // Mescla as configurações salvas com as padrões.
+        // Se alguma configuração não existir no Firestore, ela pega do padrão.
+        userSettings = { ...defaultSettings, ...userData.settings };
+
+        // Salva as configurações mescladas de volta para garantir consistência
+        await saveAllSettings(userSettings);
+        
+        updateUIFromSettings();
     }
+}
 
+// Crie esta nova função para salvar todas as configurações de uma vez
+async function saveAllSettings(settingsToSave) {
+    if (!currentUser) return;
+    const userRef = db.collection('users').doc(currentUser.uid);
+    try {
+        await userRef.set({
+            settings: settingsToSave
+        }, { merge: true });
+    } catch (error) {
+        console.error("Erro ao sincronizar configurações:", error);
+    }
+}
     function updateUIFromSettings() {
         if(darkModeToggle) {
             darkModeToggle.checked = userSettings.darkMode;

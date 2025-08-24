@@ -209,18 +209,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erro ao carregar perfil do usuário:', error);
         }
     }
-// Substitua esta função em:
-// 1. home/scripts.js
-// 2. friends/scripts.js
 
-// Substitua esta função em:
-// 1. home/scripts.js
-// 2. friends/scripts.js
 
 async function sendFriendRequest(userId, userData) {
-    // 1. Trava de segurança: impede o envio se o seu próprio perfil não foi carregado
     if (!currentUserProfile || !currentUserProfile.nickname) {
-        showToast("Seu perfil ainda não foi carregado, tente novamente em um instante.", "error");
+        showToast("Seu perfil ainda não foi carregado, tente novamente.", "error");
         return false;
     }
 
@@ -231,32 +224,35 @@ async function sendFriendRequest(userId, userData) {
     }
 
     try {
-        // 2. Validações Padrão
-        if (userId === currentUser.uid) throw new Error('Você não pode adicionar a si mesmo.');
+        if (userId === currentUser.uid) throw new Error('Você não pode se adicionar.');
+
         const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
         if (friendDoc.exists) throw new Error('Este usuário já é seu amigo.');
+
         const requestId = [currentUser.uid, userId].sort().join('_');
         const requestRef = db.collection('friendRequests').doc(requestId);
         const requestDoc = await requestRef.get();
-        if (requestDoc.exists) throw new Error('Já existe um pedido de amizade pendente.');
+        if (requestDoc.exists) throw new Error('Já existe um pedido pendente.');
 
-        // 3. Criação dos dados para o batch
         const batch = db.batch();
+        
+        // --- INÍCIO DA MUDANÇA ---
+        // 1. Cria a referência da notificação PRIMEIRO para obter seu ID único
         const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
 
-        // Dados para o friendRequest
-        const requestData = {
+        // 2. Prepara os dados do pedido de amizade, INCLUINDO o ID da notificação
+        batch.set(requestRef, {
             from: currentUser.uid,
             to: userId,
             fromUserName: currentUserProfile.nickname,
             fromUserPhoto: currentUserProfile.photoURL || null,
+            notificationId: notificationRef.id, // <-- CAMPO ADICIONADO
             status: "pending",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        };
-        batch.set(requestRef, requestData);
+        });
 
-        // Dados para a notificação
-        const notificationData = {
+        // 3. Prepara os dados da notificação (como antes)
+        batch.set(notificationRef, {
             type: "friend_request",
             fromUserId: currentUser.uid,
             fromUserName: currentUserProfile.nickname,
@@ -265,13 +261,12 @@ async function sendFriendRequest(userId, userData) {
             requestId: requestRef.id,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             read: false
-        };
-        batch.set(notificationRef, notificationData);
+        });
+        // --- FIM DA MUDANÇA ---
         
-        // 4. Envio do batch
         await batch.commit();
         
-        showToast("Solicitação de amizade enviada!", "success");
+        showToast("Solicitação enviada!", "success");
         if (followButton) {
             followButton.textContent = 'Pendente';
         }
@@ -316,83 +311,101 @@ async function sendFriendRequest(userId, userData) {
                 pendingRequestsSection.innerHTML = '<h2><i class="fas fa-user-clock"></i> Solicitações Pendentes</h2><div class="error-message">Erro ao carregar.</div>';
             });
     }
+// Em friends/scripts.js
 
-    async function acceptFriendRequest(requestId, fromUserId) {
-        const acceptButton = document.querySelector(`.request-card[data-request-id="${requestId}"] .accept-btn`);
+async function acceptFriendRequest(requestId, fromUserId) {
+    const acceptButton = document.querySelector(`.request-card[data-request-id="${requestId}"] .accept-btn`);
+    if (acceptButton) {
+        acceptButton.disabled = true;
+        acceptButton.textContent = 'Aguarde...';
+    }
+
+    try {
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        const requestDoc = await requestRef.get();
+        if (!requestDoc.exists) throw new Error("Esta solicitação não existe mais.");
+        
+        const requestData = requestDoc.data();
+        const notificationId = requestData.notificationId; // <-- Pega o ID da notificação
+
+        const fromUserDoc = await db.collection('users').doc(fromUserId).get();
+        if (!fromUserDoc.exists) throw new Error("Usuário não encontrado.");
+        
+        const fromUserData = fromUserDoc.data();
+        const batch = db.batch();
+
+        // Adiciona amigo na lista do usuário atual
+        const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
+        batch.set(currentUserFriendRef, { /* ... seus dados de amigo ... */ });
+
+        // Adiciona o usuário atual na lista do amigo
+        const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
+        batch.set(fromUserFriendRef, { /* ... seus dados de amigo ... */ });
+
+        // Apaga o pedido de amizade
+        batch.delete(requestRef);
+
+        // --- INÍCIO DA SINCRONIZAÇÃO ---
+        // Se a notificação existir, apaga ela também
+        if (notificationId) {
+            const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
+            batch.delete(notificationRef);
+        }
+        // --- FIM DA SINCRONIZAÇÃO ---
+
+        await batch.commit();
+        showToast("Amigo adicionado!", "success");
+
+    } catch (error) {
+        console.error("Erro ao aceitar solicitação:", error);
+        showToast(error.message, "error");
         if (acceptButton) {
-            acceptButton.disabled = true;
-            acceptButton.textContent = 'Aguarde...';
-        }
-
-        try {
-            if (!currentUser || !currentUserProfile) {
-                throw new Error("Utilizador não autenticado.");
-            }
-
-            const fromUserDoc = await db.collection('users').doc(fromUserId).get();
-            if (!fromUserDoc.exists) {
-                throw new Error("O utilizador que enviou o pedido não foi encontrado.");
-            }
-            const fromUserData = fromUserDoc.data();
-
-            const batch = db.batch();
-
-            const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
-            batch.set(currentUserFriendRef, {
-                userId: fromUserId,
-                nickname: fromUserData.nickname || 'Usuário',
-                photoURL: fromUserData.photoURL || null,
-                hobbies: fromUserData.hobbies || []
-            });
-
-            const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
-            batch.set(fromUserFriendRef, {
-                userId: currentUser.uid,
-                nickname: currentUserProfile.nickname || 'Usuário',
-                photoURL: currentUserProfile.photoURL || null,
-                hobbies: currentUserProfile.hobbies || []
-            });
-
-            // A melhor prática é apagar o pedido após ser aceite, para manter a coleção limpa.
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            batch.delete(requestRef);
-
-            await batch.commit();
-            showToast("Amigo adicionado com sucesso!", "success");
-
-        } catch (error) {
-            console.error("Erro ao aceitar solicitação:", error);
-            showToast("Ocorreu um erro ao aceitar a solicitação: " + error.message, "error");
-            if (acceptButton) {
-                acceptButton.disabled = false;
-                acceptButton.textContent = 'Aceitar';
-            }
+            acceptButton.disabled = false;
+            acceptButton.textContent = 'Aceitar';
         }
     }
+}
 
-    async function rejectFriendRequest(requestId) {
-        const rejectButton = document.querySelector(`.request-card[data-request-id="${requestId}"] .reject-btn`);
+async function rejectFriendRequest(requestId) {
+    const rejectButton = document.querySelector(`.request-card[data-request-id="${requestId}"] .reject-btn`);
+    if (rejectButton) {
+        rejectButton.disabled = true;
+        rejectButton.textContent = 'Aguarde...';
+    }
+
+    try {
+        const requestRef = db.collection('friendRequests').doc(requestId);
+        const requestDoc = await requestRef.get();
+        if (!requestDoc.exists) throw new Error("Esta solicitação não existe mais.");
+
+        const requestData = requestDoc.data();
+        const notificationId = requestData.notificationId; // <-- Pega o ID da notificação
+
+        const batch = db.batch();
+
+        // Apaga o pedido de amizade
+        batch.delete(requestRef);
+
+        // --- INÍCIO DA SINCRONIZAÇÃO ---
+        // Se a notificação existir, apaga ela também
+        if (notificationId) {
+            const notificationRef = db.collection('users').doc(currentUser.uid).collection('notifications').doc(notificationId);
+            batch.delete(notificationRef);
+        }
+        // --- FIM DA SINCRONIZAÇÃO ---
+
+        await batch.commit();
+        showToast("Solicitação recusada.", "info");
+
+    } catch (error) {
+        console.error("Erro ao recusar solicitação:", error);
+        showToast(error.message, "error");
         if (rejectButton) {
-            rejectButton.disabled = true;
-            rejectButton.textContent = 'Aguarde...';
-        }
-
-        try {
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            // A melhor prática é apagar o pedido após ser recusado.
-            await requestRef.delete();
-            showToast("Solicitação recusada.", "info");
-
-        } catch (error) {
-            console.error("Erro ao recusar solicitação:", error);
-            showToast("Ocorreu um erro ao recusar a solicitação.", "error");
-            if (rejectButton) {
-                rejectButton.disabled = false;
-                rejectButton.textContent = 'Recusar';
-            }
+            rejectButton.disabled = false;
+            rejectButton.textContent = 'Recusar';
         }
     }
-
+}
     function addRequestToDOM(request) {
         if (!pendingRequestsSection) return;
         

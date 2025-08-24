@@ -262,57 +262,89 @@ function updateFriendButton() {
     // Reativa o botão, exceto se o estado for 'pending'
     followBtn.disabled = (isFriend === 'pending');
 }
-// Em pages/user.js
+// Substitua todo o conteúdo da sua função toggleFriendship em pages/user.js por este código:
 
 async function toggleFriendship() {
-    // --- INÍCIO DA CORREÇÃO DE SEGURANÇA ---
+    // Trava de segurança para garantir que os dados do seu perfil foram carregados.
     if (!currentUserProfile || !currentUserProfile.nickname) {
         showToast("Seu perfil ainda não foi carregado, tente novamente em um instante.", "error");
         return;
     }
-    // --- FIM DA CORREÇÃO DE SEGURANÇA ---
 
     followBtn.disabled = true;
 
-    if (isFriend === true) { // Deixar de seguir
-        // ... seu código de deixar de seguir continua aqui ...
-    } else if (isFriend === false) { // Enviar pedido
+    // --- LÓGICA PARA DEIXAR DE SEGUIR (UNFRIEND) ---
+    if (isFriend === true) {
+        if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) {
+            followBtn.disabled = false;
+            return;
+        }
+        
         try {
+            const batch = db.batch();
+            const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(profileUserId);
+            const profileUserFriendRef = db.collection('users').doc(profileUserId).collection('friends').doc(currentUser.uid);
+            
+            batch.delete(currentUserFriendRef);
+            batch.delete(profileUserFriendRef);
+            
+            await batch.commit();
+            
+            showToast("Você deixou de seguir este usuário.", "info");
+            isFriend = false;
+            updateFriendButton();
+
+        } catch (error) {
+            console.error("Erro ao deixar de seguir:", error);
+            showToast("Erro ao deixar de seguir.", "error");
+            followBtn.disabled = false;
+        }
+
+    // --- LÓGICA PARA ENVIAR PEDIDO DE AMIZADE ---
+    } else if (isFriend === false) {
+        try {
+            // Cria um ID consistente para o pedido e a referência da notificação
             const requestId = [currentUser.uid, profileUserId].sort().join('_');
             const requestRef = db.collection('friendRequests').doc(requestId);
             const notificationRef = db.collection("users").doc(profileUserId).collection("notifications").doc();
+            
+            // Inicia uma operação em lote para garantir que tudo seja salvo junto
             const batch = db.batch();
 
+            // 1. Prepara a escrita do pedido de amizade com todos os campos necessários
             batch.set(requestRef, {
                 from: currentUser.uid,
                 to: profileUserId,
-                fromUserName: currentUserProfile.nickname, // Agora é seguro usar
-                fromUserPhoto: currentUserProfile.photoURL || null, // Agora é seguro usar
+                fromUserName: currentUserProfile.nickname,
+                fromUserPhoto: currentUserProfile.photoURL || null,
+                notificationId: notificationRef.id, // Vincula o pedido à notificação
                 status: 'pending',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
+            // 2. Prepara a escrita da notificação para o outro usuário
             batch.set(notificationRef, {
                 type: 'friend_request',
                 fromUserId: currentUser.uid,
                 fromUserName: currentUserProfile.nickname,
                 fromUserPhoto: currentUserProfile.photoURL || null,
                 content: 'enviou uma solicitação de amizade',
-                requestId: requestRef.id,
+                requestId: requestRef.id, // Vincula a notificação ao pedido
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 read: false
             });
 
+            // 3. Executa as duas operações de uma só vez
             await batch.commit();
             
+            showToast("Solicitação de amizade enviada!", "success");
             isFriend = 'pending';
             updateFriendButton();
-            // REMOVI o showToast daqui para evitar a mensagem duplicada
 
         } catch (error) {
             console.error("Erro ao enviar solicitação:", error);
             showToast("Erro ao enviar solicitação: " + error.message, "error");
-            isFriend = false;
+            isFriend = false; // Reverte o estado em caso de erro
             updateFriendButton();
         }
     }
