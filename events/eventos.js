@@ -28,7 +28,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const createEventForm = document.querySelector('#createEventModal .modal-form');
     const createEventBtn = document.getElementById('createEventBtn');
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
+// --- LÓGICA DOS CONTADORES DE CARACTERES ---
+    const eventNameInput = document.getElementById('eventName');
+    const eventNameCounter = document.getElementById('eventName-char-counter');
+    const eventLocationInput = document.getElementById('eventLocation');
+    const eventLocationCounter = document.getElementById('eventLocation-char-counter');
 
+    if (eventNameInput && eventNameCounter) {
+        eventNameInput.addEventListener('input', () => {
+            const currentLength = eventNameInput.value.length;
+            eventNameCounter.textContent = `${currentLength}/20`;
+        });
+    }
+
+    if (eventLocationInput && eventLocationCounter) {
+        eventLocationInput.addEventListener('input', () => {
+            const currentLength = eventLocationInput.value.length;
+            eventLocationCounter.textContent = `${currentLength}/40`;
+        });
+    }
 
     // ==========================================================
     // LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO
@@ -93,13 +111,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /**
-     * NOVA FUNÇÃO: Exibe os eventos do usuário na barra lateral.
+ /**
+     * Exibe os eventos do usuário na barra lateral.
      * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
      */
     function displayMyEvents(myEvents) {
         if (!myEventsContainer) return;
-        myEventsContainer.innerHTML = ''; // Limpa a lista
+        myEventsContainer.innerHTML = '';
 
         if (myEvents.length === 0) {
             myEventsContainer.innerHTML = '<li><p>Você não participa de nenhum evento.</p></li>';
@@ -108,12 +126,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         myEvents.forEach(event => {
             const eventElement = document.createElement('li');
-            // Usando um ícone diferente para diferenciar
-            eventElement.innerHTML = `<a href="#"><i class="fas fa-calendar-check"></i> ${event.eventName}</a>`;
+            // --- CORREÇÃO AQUI: O link agora aponta para single-event.html ---
+            eventElement.innerHTML = `<a href="single-event.html?id=${event.id}"><i class="fas fa-calendar-check"></i> ${event.eventName}</a>`;
             myEventsContainer.appendChild(eventElement);
         });
     }
-
     /**
      * Cria o HTML para a lista de eventos populares.
      * @param {Array} popularEvents - Uma lista com os eventos mais populares.
@@ -171,73 +188,81 @@ document.addEventListener('DOMContentLoaded', function () {
      * Cria o HTML de um cartão de evento e adiciona-o à página.
      * @param {object} event - O objeto do evento com os seus dados.
      */
-    function addEventToDOM(event) {
-        // Cria um link <a> que envolve todo o card do evento
-        const eventCardWrapper = document.createElement('a');
-        eventCardWrapper.className = 'event-card-link';
-        eventCardWrapper.style.textDecoration = 'none'; // Garante que não haja sublinhado
-        eventCardWrapper.href = `single-event.html?id=${event.id}`;
+    // Em eventos.js
+function addEventToDOM(event) {
+    const eventCardWrapper = document.createElement('a');
+    eventCardWrapper.className = 'event-card-link';
+    eventCardWrapper.href = `single-event.html?id=${event.id}`;
 
-        const eventCard = document.createElement('div');
-        eventCard.className = 'event-card';
+    const eventCard = document.createElement('div');
+    eventCard.className = 'event-card';
 
-        const eventDate = event.eventDateTime.toDate();
-        const formattedDate = eventDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const eventDate = event.eventDateTime.toDate();
+    const formattedDate = eventDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        const isParticipating = event.participants && event.participants.includes(currentUser.uid);
-        const isCreator = event.creatorId === currentUser.uid;
+    const isParticipating = event.participants && event.participants.includes(currentUser.uid);
+    const isCreator = event.creatorId === currentUser.uid;
 
-        // Adiciona o botão de excluir apenas se o usuário for o criador
-        const deleteButtonHTML = isCreator ?
-            `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
+    const deleteButtonHTML = isCreator ?
+        `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
 
-        eventCard.innerHTML = `
-            <div class="event-header">
-                <h3>${event.eventName}</h3>
-                <div class="event-date-display">
-                    <i class="fas fa-calendar"></i> ${formattedDate}
-                </div>
+    // --- LÓGICA DO "VER MAIS" ---
+    const description = event.description;
+    const DESCRIPTION_LIMIT = 100; // Limite de caracteres antes de mostrar "Ver mais"
+    let descriptionHTML = `<p class="event-description">${description}</p>`;
+
+    if (description.length > DESCRIPTION_LIMIT) {
+        descriptionHTML += `<div class="event-see-more-container"><span class="event-see-more">Ver mais...</span></div>`;
+    }
+    // --- FIM DA LÓGICA ---
+
+    eventCard.innerHTML = `
+        <div class="event-header">
+            <h3>${event.eventName}</h3>
+            <div class="event-date-display">
+                <i class="fas fa-calendar"></i> ${formattedDate}
             </div>
-            <div class="event-content">
-                <div class="event-details">
-                    <p><i class="fas fa-clock"></i> ${formattedTime}</p>
-                    <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
-                    <p><i class="fas fa-users"></i> ${event.participants ? event.participants.length : 0} participantes</p>
-                </div>
-                <p class="event-description">${event.description}</p>
-                <div class="event-tags">
-                    ${event.tags.map(tag => `<span class="hobby-tag">${tag}</span>`).join('')}
-                </div>
-                <div class="event-actions">
-                    <button class="event-btn participate-btn ${isParticipating ? 'secondary' : ''}">
-                        ${isParticipating ? 'Sair do Evento' : 'Participar'}
-                    </button>
-                    ${deleteButtonHTML}
-                </div>
+        </div>
+        <div class="event-content">
+            <div class="event-details">
+                <p><i class="fas fa-clock"></i> ${formattedTime}</p>
+                <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
+                <p><i class="fas fa-users"></i> ${event.participants ? event.participants.length : 0} participantes</p>
             </div>
-        `;
+            ${descriptionHTML}
+            <div class="event-tags">
+                ${event.tags.map(tag => `<span class="hobby-tag">${tag}</span>`).join('')}
+            </div>
+            <div class="event-actions">
+                <button class="event-btn participate-btn ${isParticipating ? 'secondary' : ''}">
+                    ${isParticipating ? 'Sair do Evento' : 'Participar'}
+                </button>
+                ${deleteButtonHTML}
+            </div>
+        </div>
+    `;
 
-        // Adiciona listeners aos botões para impedir a navegação ao clicar neles
-        const participateBtn = eventCard.querySelector('.participate-btn');
-        participateBtn.addEventListener('click', (e) => {
+    // Adiciona listeners aos botões
+    const participateBtn = eventCard.querySelector('.participate-btn');
+    participateBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleParticipation(event.id, participateBtn);
+    });
+
+    if (isCreator) {
+        const deleteBtn = eventCard.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            toggleParticipation(event.id, participateBtn);
+            deleteEvent(event.id);
         });
-
-        if (isCreator) {
-            const deleteBtn = eventCard.querySelector('.delete-btn');
-            deleteBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                deleteEvent(event.id);
-            });
-        }
-
-        eventCardWrapper.appendChild(eventCard);
-        eventsContainer.appendChild(eventCardWrapper);
     }
+
+    eventCardWrapper.appendChild(eventCard);
+    eventsContainer.appendChild(eventCardWrapper);
+}
    async function deleteEvent(eventId) {
         const confirmed = await showConfirmationModal("Excluir Evento", "Você tem a certeza que quer excluir este evento? Esta ação não pode ser desfeita.");
         if (confirmed) {
@@ -281,6 +306,17 @@ document.addEventListener('DOMContentLoaded', function () {
     async function createEvent(e) {
         e.preventDefault();
         const eventName = document.getElementById('eventName').value;
+
+          if (eventName.length > 20) {
+        showCustomAlert("O nome do evento não pode ter mais de 20 caracteres.");
+        return;
+    }
+    
+    // --- ADICIONE ESTA NOVA VERIFICAÇÃO ---
+    if (eventLocation.length > 40) {
+        showCustomAlert("A localização do evento não pode ter mais de 40 caracteres.");
+        return;
+    }
         const eventLocation = document.getElementById('eventLocation').value;
         const eventDate = document.getElementById('eventDate').value;
         const eventTime = document.getElementById('eventTime').value;

@@ -121,9 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    if (followBtn) {
-        followBtn.addEventListener('click', toggleFriendship);
-    }
+    
     if (messageBtn) {
         messageBtn.addEventListener('click', () => { window.location.href = `../mensagen/mensagens.html?uid=${profileUserId}`; });
     }
@@ -216,13 +214,32 @@ async function loadProfileUser(userId) {
     }
 }
 
-    function updateFriendButton() {
-    if (isFriend) {
-        followBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
-        followBtn.classList.add('following');
+   // Em pages/user.js
+function updateFriendButton() {
+    const oldBtn = document.getElementById('followBtn');
+    if (!oldBtn) return;
+
+    // Cria um clone do botão para limpar todos os eventos de clique antigos
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+    // Lógica para definir a aparência e o novo evento de clique
+    if (isFriend === true) {
+        newBtn.innerHTML = '<i class="fas fa-user-check"></i> Seguindo';
+        newBtn.classList.add('following');
+        newBtn.addEventListener('click', toggleFriendship); // Adiciona o evento para deixar de seguir
+    } else if (isFriend === 'pending') {
+        newBtn.innerHTML = '<i class="fas fa-clock"></i> Pendente';
+        newBtn.classList.add('following');
+        newBtn.disabled = true; // Botão fica desativado
+    } else if (isFriend === 'respond') {
+        newBtn.innerHTML = '<i class="fas fa-user-plus"></i> Responder Solicitação';
+        newBtn.classList.remove('following');
+        newBtn.addEventListener('click', () => { window.location.href = '../pages/notificacao.html'; });
     } else {
-        followBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
-        followBtn.classList.remove('following');
+        newBtn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir';
+        newBtn.classList.remove('following');
+        newBtn.addEventListener('click', toggleFriendship); // Adiciona o evento para seguir
     }
 }
 

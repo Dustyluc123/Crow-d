@@ -16,7 +16,32 @@ body.dark-mode .messages-container {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 /* --- ESTILO PARA A BIO NA PÁGINA DE PERFIL --- */
+/* --- ESTILOS PARA UNIFORMIZAR O TAMANHO DOS CARTÕES DE EVENTOS --- */
 
+/* Garante que o link que envolve o cartão ocupe todo o espaço da grelha */
+.event-card-link {
+    display: flex;
+    height: 100%;
+}
+
+/* Transforma o cartão num container flexível vertical */
+.event-card {
+    display: flex;
+    flex-direction: column; /* Organiza os itens de cima para baixo */
+    width: 100%; /* Garante que o cartão ocupe todo o espaço do link */
+}
+
+/* Faz a secção de conteúdo crescer para preencher o espaço vazio */
+.event-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Empurra a secção de ações (botões) para o fundo do cartão */
+.event-actions {
+    margin-top: auto;
+}
 .user-bio {
     font-size: 0.95rem; /* Tamanho da fonte */
     color: #555;        /* Cor do texto um pouco mais clara */
@@ -50,7 +75,23 @@ body.dark-mode .conversations-list {
     cursor: pointer;
     transition: background-color 0.3s, border-color 0.3s;
 }
+/* --- ESTILOS PARA A DESCRIÇÃO DO EVENTO COM "VER MAIS" --- */
+.event-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limita o texto a 3 linhas */
+    -webkit-box-orient: vertical;
+    line-height: 1.5em; 
+    max-height: 4.5em; /* Garante a altura máxima (3 * 1.5) */
+    margin-bottom: 5px; /* Adiciona um espaço antes do "Ver mais" */
+}
 
+.event-see-more {
+    font-weight: bold;
+    color: var(--primary-color);
+    cursor: pointer;
+}
 body.dark-mode .conversation-item {
     border-bottom-color: var(--dark-border);
 }

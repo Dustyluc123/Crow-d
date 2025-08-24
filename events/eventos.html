@@ -146,13 +146,15 @@
             </div>
             <form class="modal-form">
                 <div class="input-group">
-                    <label for="eventName">Nome do Evento</label>
-                    <input type="text" id="eventName" placeholder="Digite o nome do evento" required>
-                </div>
-                <div class="input-group">
-                    <label for="eventLocation">Local</label>
-                    <input type="text" id="eventLocation" placeholder="Digite o local do evento" required>
-                </div>
+            <label for="eventName">Nome do Evento</label>
+            <input type="text" id="eventName" placeholder="Digite o nome do evento" required maxlength="20">
+            <small id="eventName-char-counter">0/20</small>
+        </div>
+        <div class="input-group">
+            <label for="eventLocation">Local</label>
+            <input type="text" id="eventLocation" placeholder="Digite o local do evento" required maxlength="40">
+            <small id="eventLocation-char-counter">0/40</small>
+        </div>
                 <div class="input-group">
                     <label>Data e Hora</label>
                     <div class="date-time-inputs">
