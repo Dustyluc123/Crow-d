@@ -1556,4 +1556,27 @@ body.dark-mode .notification-badge {
     body.dark-mode #toggle-bio-btn {
         color: var(--primary-hover);
     }
-    
+    /* --- Estilos para Modais Dinâmicos --- */
+.modal .secondary-btn {
+    background-color: var(--light-bg-secondary);
+    color: var(--dark-text);
+    border: 1px solid var(--light-border);
+}
+body.dark-mode .modal .secondary-btn {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--light-text);
+    border-color: var(--dark-border);
+}
+.modal-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--light-border);
+    background-color: var(--light-bg-secondary);
+}
+body.dark-mode .modal-input {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+    color: var(--light-text);
+}

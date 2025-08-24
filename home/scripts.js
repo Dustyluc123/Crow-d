@@ -462,20 +462,27 @@ function handleScroll() {
 // Em scripts.js, adicione estas duas novas funções
 
 /**
+/**
  * Exclui uma publicação do Firestore.
  * @param {string} postId O ID da publicação a ser excluída.
  */
 async function deletePost(postId) {
-    if (!confirm("Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.")) {
-        return;
-    }
-    try {
-        await db.collection('posts').doc(postId).delete();
-        showToast("Publicação excluída com sucesso.", "success");
-        // O onSnapshot do feed cuidará de remover o post da tela.
-    } catch (error) {
-        console.error("Erro ao excluir publicação:", error);
-        showCustomAlert("Ocorreu um erro ao excluir a publicação.");
+    const confirmed = await showConfirmationModal(
+        "Excluir Publicação", 
+        "Tem a certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.",
+        "Sim, Excluir",
+        "Cancelar"
+    );
+
+    if (confirmed) {
+        try {
+            await db.collection('posts').doc(postId).delete();
+            showToast("Publicação excluída com sucesso.", "success");
+            // O onSnapshot do feed cuidará de remover o post da tela.
+        } catch (error) {
+            console.error("Erro ao excluir publicação:", error);
+            showCustomAlert("Ocorreu um erro ao excluir a publicação.");
+        }
     }
 }
 
@@ -485,24 +492,25 @@ async function deletePost(postId) {
  * @param {string} commentId O ID do comentário a ser excluído.
  */
 async function deleteComment(postId, commentId) {
-    if (!confirm("Tem certeza que deseja excluir este comentário?")) {
-        return;
-    }
-    try {
-        const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
-        await commentRef.delete();
+    const confirmed = await showConfirmationModal("Excluir Comentário", "Tem a certeza que deseja excluir este comentário?");
+    
+    if (confirmed) {
+        try {
+            const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+            await commentRef.delete();
 
-        // Decrementa a contagem de comentários no post
-        const postRef = db.collection('posts').doc(postId);
-        await postRef.update({
-            commentCount: firebase.firestore.FieldValue.increment(-1)
-        });
+            // Decrementa a contagem de comentários no post
+            const postRef = db.collection('posts').doc(postId);
+            await postRef.update({
+                commentCount: firebase.firestore.FieldValue.increment(-1)
+            });
 
-        showToast("Comentário excluído.", "info");
-        // O onSnapshot dos comentários cuidará de remover da tela.
-    } catch (error) {
-        console.error("Erro ao excluir comentário:", error);
-        showCustomAlert("Ocorreu um erro ao excluir o comentário.");
+            showToast("Comentário excluído.", "info");
+            // O onSnapshot dos comentários cuidará de remover da tela.
+        } catch (error) {
+            console.error("Erro ao excluir comentário:", error);
+            showCustomAlert("Ocorreu um erro ao excluir o comentário.");
+        }
     }
 }
 // Em scripts.js, substitua a função createPost

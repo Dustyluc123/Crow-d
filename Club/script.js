@@ -287,16 +287,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Entrar em um Grupo
-    async function joinGroup(groupId, isPrivate, password) {
+   async function joinGroup(groupId, isPrivate, password) {
         if (isPrivate) {
-            const enteredPassword = prompt("Este grupo é privado. Por favor, digite a senha:");
+            const enteredPassword = await showPromptModal("Grupo Privado", "Este grupo é privado. Por favor, digite a senha:", 'password');
+            if (enteredPassword === null) return; // Utilizador cancelou
             if (enteredPassword !== password) {
                 showCustomAlert("Senha incorreta.");
                 return;
             }
         }
-
         try {
             await db.collection('groups').doc(groupId).update({
                 members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
@@ -307,9 +306,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Sair de um Grupo
     async function leaveGroup(groupId) {
-        if (!confirm("Tem certeza que deseja sair deste grupo?")) return;
+        const confirmed = await showConfirmationModal("Sair do Grupo", "Tem a certeza que deseja sair deste grupo?");
+        if (!confirmed) return;
+
         try {
             await db.collection('groups').doc(groupId).update({
                 members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
@@ -320,11 +320,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+
     // Excluir um Grupo
     async function deleteGroup(groupId) {
-        if (!confirm("TEM CERTEZA?\n\nExcluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.")) {
-            return;
-        }
+        
+             const confirmed = await showConfirmationModal(
+            "Excluir Grupo", 
+            "Excluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.",
+            "Sim, Excluir",
+            "Cancelar"
+        );
+        if (!confirmed) return;
 
         try {
             const groupRef = db.collection('groups').doc(groupId);

@@ -238,20 +238,19 @@ document.addEventListener('DOMContentLoaded', function () {
         eventCardWrapper.appendChild(eventCard);
         eventsContainer.appendChild(eventCardWrapper);
     }
-    // NOVA FUNÇÃO PARA DELETAR EVENTOS
-    async function deleteEvent(eventId) {
-        if (confirm("Você tem certeza que quer excluir este evento? Esta ação não pode ser desfeita.")) {
+   async function deleteEvent(eventId) {
+        const confirmed = await showConfirmationModal("Excluir Evento", "Você tem a certeza que quer excluir este evento? Esta ação não pode ser desfeita.");
+        if (confirmed) {
             try {
                 await db.collection('events').doc(eventId).delete();
-                alert("Evento excluído com sucesso!");
-                loadEvents(); // Recarrega a lista de eventos
+                showToast("Evento excluído com sucesso!", "success");
+                loadEvents();
             } catch (error) {
                 console.error("Erro ao excluir evento:", error);
-                alert("Ocorreu um erro ao excluir o evento.");
+                showCustomAlert("Ocorreu um erro ao excluir o evento.");
             }
         }
     }
-
     async function toggleParticipation(eventId, button) {
         const eventRef = db.collection('events').doc(eventId);
 

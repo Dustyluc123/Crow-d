@@ -583,20 +583,19 @@ if (emojiBtn && emojiPicker) {
         }
     }
 
-    async function deleteMessage(messageId) {
+async function deleteMessage(messageId) {
+        const confirmed = await showConfirmationModal("Excluir Mensagem", "Tem a certeza que deseja excluir esta mensagem?");
+        if (!confirmed) return;
+
         try {
-            if (!confirm('Tem certeza que deseja excluir esta mensagem?')) return;
             await db.collection('conversations').doc(currentChatId)
                 .collection('messages').doc(messageId).delete();
-            const messageElement = document.querySelector(`.message[data-message-id="${messageId}"]`);
-            if (messageElement) messageElement.remove();
             console.log('Mensagem excluída com sucesso');
         } catch (error) {
             console.error('Erro ao excluir mensagem:', error);
-            alert('Erro ao excluir mensagem. Tente novamente.');
+            showCustomAlert('Erro ao excluir mensagem. Tente novamente.');
         }
     }
-
     function formatTimestamp(date, includeTime = false) {
         if (!(date instanceof Date) || isNaN(date)) return 'Agora mesmo';
         const now = new Date();

@@ -305,11 +305,12 @@ async function toggleFriendship() {
     followBtn.disabled = true;
 
     // --- LÓGICA PARA DEIXAR DE SEGUIR (UNFRIEND) ---
-    if (isFriend === true) {
-        if (!confirm("Tem certeza que deseja deixar de seguir este usuário? A amizade será desfeita.")) {
-            followBtn.disabled = false;
-            return;
-        }
+     if (isFriend === true) {
+            const confirmed = await showConfirmationModal("Deixar de Seguir", "Tem a certeza que deseja deixar de seguir este utilizador? A amizade será desfeita.");
+            if (!confirmed) {
+                followBtn.disabled = false;
+                return;
+            }
         
         try {
             const batch = db.batch();

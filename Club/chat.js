@@ -189,14 +189,12 @@ function addMessageToDOM(messageId, message) {
     messagesContainer.appendChild(messageWrapper);
 }
     
-    // --- NOVA FUNÇÃO ---
     async function deleteMessage(messageId) {
-        if (!confirm("Tem certeza que deseja excluir esta mensagem?")) {
-            return;
-        }
+        const confirmed = await showConfirmationModal("Excluir Mensagem", "Tem a certeza que deseja excluir esta mensagem?");
+        if (!confirmed) return;
+
         try {
             await db.collection('groups').doc(groupId).collection('messages').doc(messageId).delete();
-            // A mensagem será removida da tela automaticamente pelo onSnapshot do loadMessages
         } catch (error) {
             console.error("Erro ao excluir mensagem:", error);
             showCustomAlert("Não foi possível excluir a mensagem.");
