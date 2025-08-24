@@ -229,20 +229,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
             }
             
-            const profileData = {
-                nickname,
-                bio,
-                school,
-                grade,
-                hobbies: selectedHobbies,
-                customHobbies: customHobbies,
-                photoURL: photoBase64 || '../img/Design sem nome2.png',
-                 settings: { profilePublic: true },
-                 darkMode: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                termsAccepted: true
-            };
+            // Em profile/profile.js, dentro da função saveProfileData
+
+const profileData = {
+    nickname,
+    bio,
+    school,
+    grade,
+    hobbies: selectedHobbies,
+    customHobbies: customHobbies,
+    photoURL: photoBase64 || '../img/Design sem nome2.png',
+    // --- INÍCIO DA CORREÇÃO ---
+    // Agora 'darkMode' está DENTRO do objeto 'settings'
+    settings: {
+        profilePublic: true,
+        darkMode: false
+    },
+    // --- FIM DA CORREÇÃO ---
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    termsAccepted: true
+};
             
             await db.collection('users').doc(userId).set(profileData);
             

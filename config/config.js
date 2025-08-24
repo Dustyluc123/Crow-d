@@ -1,3 +1,5 @@
+// CONTEÚDO COMPLETO PARA O ARQUIVO: config.js
+
 document.addEventListener('DOMContentLoaded', function() {
     // Configuração do Firebase
     const firebaseConfig = {
@@ -18,96 +20,132 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Referências aos elementos do DOM ---
     const darkModeToggle = document.getElementById('darkModeToggle');
     const profilePublicToggle = document.getElementById('profilePublicToggle');
+    
+    // --- Referências para Exclusão de Conta ---
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    // Junta os dois botões de cancelar em uma única lista
+    const cancelDeleteBtns = document.querySelectorAll('.close-modal, .secondary-btn');
+
+
     let currentUser = null;
-    let userSettings = {}; // Objeto para guardar as configurações
+    let userSettings = {}; 
 
     // Lógica de autenticação
     auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
-            // Define o link do perfil no menu
             const profileLink = document.querySelector('.main-nav a.profile-link');
             if (profileLink) {
                 profileLink.href = `../pages/user.html?uid=${user.uid}`;
             }
-            // Carrega as configurações do usuário do Firestore
             loadUserSettings(user.uid);
         } else {
             window.location.href = '../login/login.html';
         }
     });
 
-    /**
-     * Carrega as configurações do usuário do Firestore e atualiza a interface.
-     */
     async function loadUserSettings(userId) {
         const userRef = db.collection('users').doc(userId);
         const doc = await userRef.get();
 
         if (doc.exists) {
             const userData = doc.data();
-            // Pega as configurações salvas ou define um padrão
-            userSettings = userData.settings || {
-                darkMode: false,
-                profilePublic: true
-            };
+            const defaultSettings = { darkMode: false, profilePublic: true };
+            userSettings = { ...defaultSettings, ...userData.settings };
+            
+            // Sincroniza as configurações para garantir que estão salvas
+            await userRef.set({ settings: userSettings }, { merge: true });
+
             updateUIFromSettings();
         }
     }
 
-    /**
-     * Atualiza os interruptores na tela com base nas configurações carregadas.
-     */
     function updateUIFromSettings() {
-        // Atualiza o toggle de Modo Escuro
-        darkModeToggle.checked = userSettings.darkMode;
-        // Aplica a classe dark-mode no body se necessário
-        document.body.classList.toggle('dark-mode', userSettings.darkMode);
-        // ADICIONE ESTA LINHA: Sincroniza o localStorage com a configuração do Firestore
-        localStorage.setItem('darkMode', userSettings.darkMode);
-
-        // Atualiza o toggle de Perfil Público
-        profilePublicToggle.checked = userSettings.profilePublic;
+        if(darkModeToggle) {
+            darkModeToggle.checked = userSettings.darkMode;
+            document.body.classList.toggle('dark-mode', userSettings.darkMode);
+            localStorage.setItem('darkMode', userSettings.darkMode);
+        }
+        if(profilePublicToggle) {
+            profilePublicToggle.checked = userSettings.profilePublic;
+        }
     }
 
-    /**
-     * Salva uma configuração específica no Firestore.
-     * @param {string} key - O nome da configuração (ex: 'darkMode').
-     * @param {boolean} value - O valor da configuração (true ou false).
-     */
     async function saveSetting(key, value) {
         if (!currentUser) return;
-
         const userRef = db.collection('users').doc(currentUser.uid);
         try {
-            // Atualiza o campo específico dentro do objeto 'settings'
             await userRef.set({
-                settings: {
-                    [key]: value
-                }
-            }, { merge: true }); // 'merge: true' garante que outras configurações não sejam apagadas
-
-            console.log(`Configuração '${key}' salva com o valor '${value}'`);
+                settings: { [key]: value }
+            }, { merge: true });
+            console.log(`Configuração '${key}' salva.`);
         } catch (error) {
             console.error("Erro ao salvar configuração:", error);
-            alert("Não foi possível salvar a alteração. Tente novamente.");
+            alert("Não foi possível salvar a alteração.");
         }
     }
 
     // --- Event Listeners para os Toggles ---
+    if(darkModeToggle) {
+        darkModeToggle.addEventListener('change', function() {
+            const isEnabled = this.checked;
+            document.body.classList.toggle('dark-mode', isEnabled);
+            localStorage.setItem('darkMode', isEnabled);
+            saveSetting('darkMode', isEnabled);
+        });
+    }
 
-    // Listener para o Modo Escuro
-    darkModeToggle.addEventListener('change', function() {
-        const isEnabled = this.checked;
-        document.body.classList.toggle('dark-mode', isEnabled);
-        saveSetting('darkMode', isEnabled);
-        // ADICIONE ESTA LINHA: Atualiza o localStorage quando o usuário muda o toggle
-        localStorage.setItem('darkMode', isEnabled);
+    if(profilePublicToggle) {
+        profilePublicToggle.addEventListener('change', function() {
+            const isPublic = this.checked;
+            saveSetting('profilePublic', isPublic);
+        });
+    }
+
+    // --- LÓGICA DE EXCLUSÃO DE CONTA ---
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', () => {
+            if(deleteAccountModal) deleteAccountModal.style.display = 'flex';
+        });
+    }
+
+    cancelDeleteBtns.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if(deleteAccountModal) deleteAccountModal.style.display = 'none';
+            });
+        }
     });
 
-    // Listener para o Perfil Público
-    profilePublicToggle.addEventListener('change', function() {
-        const isPublic = this.checked;
-        saveSetting('profilePublic', isPublic);
-    });
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deleteAccount);
+    }
+
+    async function deleteAccount() {
+        if (!currentUser) {
+            alert("Nenhum usuário logado.");
+            return;
+        }
+
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
+
+        try {
+            await currentUser.delete();
+            alert("Sua conta foi excluída com sucesso. Sentiremos sua falta!");
+            window.location.href = '../login/login.html';
+        } catch (error) {
+            console.error("Erro ao excluir conta:", error);
+            if (error.code === 'auth/requires-recent-login') {
+                alert("Por segurança, esta é uma operação sensível e requer que você tenha feito login recentemente. Por favor, saia e entre novamente na sua conta antes de tentar excluir.");
+            } else {
+                alert("Ocorreu um erro ao excluir sua conta: " + error.message);
+            }
+            confirmDeleteBtn.disabled = false;
+            confirmDeleteBtn.textContent = 'Excluir Conta';
+            if(deleteAccountModal) deleteAccountModal.style.display = 'none';
+        }
+    }
 });

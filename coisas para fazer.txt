@@ -2,17 +2,26 @@ Geral
 3- mudar as cores dos Alert
 
 
-//Profile(criar conta) 
-5- tela de acitar os termos(importante)
+///salvos e user
+1-quando eu repiblico uma mensagem com foto pelos salvos.html  ou user.html a mensagem repuplicada nao vem com a foto como deveria
+
+///grupos
+1-testar tudo
+2-css melhor
+3-as mensagem nao estao aparecendo no grupo
 
 
 ///Confing 
-1 manter as configurado, se a pessoa deixou o usario deixo no modo dark, ou o perfil privado por exemplo, isso ira continuar ate ser mudado( ser feito de preferencia depois que
-o numero 3 e 5 de confing estaja pronto)
+1-quando eu entro com uma nova conta no crow-d o fundo esta no modo claro mas ao entrar na config vai para o modo dark, mas somente na paginga config.html o resto continua igual, e como se eu entrasse em uma casa e liga um dijundor que ligase todos os outros dijuntores mas o dijjundor do config mesmo ligado nao esta tando a luz
 2-excluir conta (Tem que ter confirmacao, "VC QUER REALMENTE EXCLUIR SUA CONTA?")
-3-perfil privado 
 
+///notificacao e amigos
+1-tem como fazer que se a pessoa aceito ou recusou o pedido de amizade pelo amigos.html ent a notificao é excluida do noticacao.html e se se ele aceitou pelo notificacao ent o pedido é  excluido dos amigos sem dar ruim e sem precisar de nada que estaja fora do plano Spark do firebase
+
+///mensagem
 
 //User --- Barreto
-5- erro ao seguir (firebase)
+5- erro ao carregar amigos Erro ao carregar amigos: FirebaseError: Missing or insufficient permissions, antes funcionava
 
+///edit-Profile
+1-colocar o negocio de editar a imagem depois de selecionar igual a do Home 
