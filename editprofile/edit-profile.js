@@ -1,230 +1,206 @@
+// CONTEÚDO COMPLETO E FINAL PARA O ARQUIVO: edit-profile.js
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuração Firebase
+    // Configuração do Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
         authDomain: "tcclogin-7e7b8.firebaseapp.com",
         projectId: "tcclogin-7e7b8",
+        storageBucket: "tcclogin-7e7b8.appspot.com",
         messagingSenderId: "1066633833169",
         appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
     };
+
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
+    
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Elementos DOM
-    const profileForm = document.getElementById('profileEditForm');
-    const photoPreview = document.getElementById('photoPreview');
-    const photoFileInput = document.getElementById('photoFile');
+    // Referências aos elementos do DOM
+    const photoInput = document.getElementById('photoFile');
+    const profileImagePreview = document.getElementById('photoPreview');
     const nicknameInput = document.getElementById('nickname');
     const bioInput = document.getElementById('bio');
-    const schoolSelect = document.getElementById('school');
-    const gradeSelect = document.getElementById('grade');
-    const hobbyCheckboxes = document.querySelectorAll('input[name="hobbies"]');
+    const schoolInput = document.getElementById('school');
     const saveProfileBtn = document.getElementById('saveProfileBtn');
-    const logoutButton = document.getElementById('logout-btn');
+    const profileEditForm = document.getElementById('profileEditForm');
 
-    // Variáveis
+    // Referências do Modal de Corte
+    const cropperModal = document.getElementById('cropperModal');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const confirmCropBtn = document.getElementById('confirmCropBtn');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    
+    let cropper;
+    let croppedImageBase64 = null;
     let currentUser = null;
-    let currentUserProfile = null;
-    let base64Photo = '';
-    let isSubmitting = false;
+    let originalProfileData = {};
 
-    // Autenticação
-    auth.onAuthStateChanged(async function(user) {
+    auth.onAuthStateChanged(function(user) {
         if (user) {
             currentUser = user;
-            await loadUserProfile(user.uid);
+            loadUserProfile(user.uid);
         } else {
             window.location.href = '../login/login.html';
         }
     });
 
-    // Logout
-    if (logoutButton) {
-        logoutButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            auth.signOut().then(() => {
-                window.location.href = '../login/login.html';
-            });
-        });
-    }
-
-    // Upload de arquivo → Base64
-    if (photoFileInput) {
-        photoFileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    base64Photo = e.target.result;
-                    photoPreview.src = base64Photo;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    // Submissão do formulário
-    if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!isSubmitting) saveProfile();
-        });
-    }
-
-    // Carregar dados do Firestore
     async function loadUserProfile(userId) {
-        try {
-            const doc = await db.collection('users').doc(userId).get();
-            if (doc.exists) {
-                currentUserProfile = doc.data();
-                fillProfileForm(currentUserProfile);
-            }
-        } catch (err) {
-            console.error('Erro ao carregar perfil:', err);
-        }
-    }
-
-    function fillProfileForm(profile) {
-        if (profile.photoURL) {
-            photoPreview.src = profile.photoURL;
-        }
-        if (profile.nickname) nicknameInput.value = profile.nickname;
-        if (profile.bio) bioInput.value = profile.bio;
-        if (profile.school) schoolSelect.value = profile.school;
-        if (profile.grade) gradeSelect.value = profile.grade;
-        if (profile.hobbies) {
-            hobbyCheckboxes.forEach(c => {
-                if (profile.hobbies.includes(c.value)) c.checked = true;
+        const doc = await db.collection('users').doc(userId).get();
+        if (doc.exists) {
+            originalProfileData = doc.data();
+            nicknameInput.value = originalProfileData.nickname || '';
+            bioInput.value = originalProfileData.bio || '';
+            schoolInput.value = originalProfileData.school || '';
+            profileImagePreview.src = originalProfileData.photoURL || '../img/Design sem nome2.png';
+            
+            const userHobbies = originalProfileData.hobbies || [];
+            document.querySelectorAll('input[name="hobbies"]').forEach(checkbox => checkbox.checked = false);
+            userHobbies.forEach(hobby => {
+                const checkbox = document.querySelector(`input[name="hobbies"][value="${hobby}"]`);
+                if (checkbox) checkbox.checked = true;
             });
         }
     }
 
-    // Atualizar foto nos posts
-    async function updateUserPhotoInPosts(newPhotoURL) {
-        try {
-            const postsSnapshot = await db.collection('posts')
-                .where('authorId', '==', currentUser.uid)
-                .get();
-
-            if (postsSnapshot.empty) {
-                console.log('Nenhum post encontrado para atualizar.');
-                return;
-            }
-
-            const batch = db.batch();
-            postsSnapshot.forEach(doc => {
-                const postRef = db.collection('posts').doc(doc.id);
-                batch.update(postRef, { authorPhoto: newPhotoURL });
-            });
-
-            await batch.commit();
-            console.log(`Foto atualizada em ${postsSnapshot.size} posts.`);
-        } catch (error) {
-            console.error('Erro ao atualizar foto nos posts:', error);
-        }
-    }
-
-    async function saveProfile() {
-        try {
-            isSubmitting = true;
-            saveProfileBtn.disabled = true;
-            saveProfileBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-
-            if (!currentUser) return alert('Você precisa estar logado.');
-
-            const nickname = nicknameInput.value.trim();
-            const bio = bioInput.value.trim();
-            const school = schoolSelect.value;
-            const grade = gradeSelect.value;
-            const selectedHobbies = [...hobbyCheckboxes].filter(c => c.checked).map(c => c.value);
-
-            // --- INÍCIO DA VERIFICAÇÃO DE NICKNAME ---
-            if (!nickname) {
-                throw new Error("O apelido é obrigatório.");
-            }
-
-            // Verifica se o nickname foi alterado
-            if (nickname !== currentUserProfile.nickname) {
-                const querySnapshot = await db.collection('users').where('nickname', '==', nickname).get();
-                if (!querySnapshot.empty) {
-                    // Nickname já existe, lança um erro
-                    throw new Error("Este apelido já está em uso. Por favor, escolha outro.");
-                }
-            }
-            // --- FIM DA VERIFICAÇÃO DE NICKNAME ---
-
-            if (!school) {
-                alert('Preencha a escola.');
-                saveProfileBtn.disabled = false;
-                saveProfileBtn.innerHTML = 'Salvar alterações';
-                isSubmitting = false;
-                return;
-            }
-
-            const photoData = base64Photo || currentUserProfile?.photoURL || '../img/Design sem nome2.png';
-
-            const profileData = {
-                photoURL: photoData,
-                nickname,
-                bio,
-                school,
-                grade,
-                hobbies: selectedHobbies,
-                visibility: 'public',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    // Lógica do Cropper (sem alterações)
+    photoInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                cropperModal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageToCrop, { aspectRatio: 1, viewMode: 1, background: false });
             };
-            if (!currentUserProfile) {
-                profileData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            }
-
-            await db.collection('users').doc(currentUser.uid).set(profileData, { merge: true });
-
-            // Se a foto mudou, atualizar nos posts
-            if (photoData !== currentUserProfile?.photoURL) {
-                await updateUserPhotoInPosts(photoData);
-            }
-
-            alert('Perfil salvo com sucesso!');
-            window.location.href = '../home/home.html';
-
-        } catch (err) {
-            console.error('Erro ao salvar perfil:', err);
-            alert('Erro ao salvar perfil: ' + err.message);
-            saveProfileBtn.disabled = false;
-            saveProfileBtn.innerHTML = 'Salvar alterações';
-            isSubmitting = false;
+            reader.readAsDataURL(files[0]);
         }
+    });
+    confirmCropBtn.addEventListener('click', () => {
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        croppedImageBase64 = canvas.toDataURL('image/jpeg');
+        profileImagePreview.src = croppedImageBase64;
+        cropperModal.style.display = 'none';
+        cropper.destroy();
+    });
+    cancelCropBtn.addEventListener('click', () => {
+        cropperModal.style.display = 'none';
+        cropper.destroy();
+        photoInput.value = '';
+    });
+
+    // LÓGICA DE SALVAR O PERFIL (COM A FUNÇÃO DE ATUALIZAÇÃO CORRIGIDA)
+    profileEditForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        if (!currentUser) return;
+
+        saveProfileBtn.disabled = true;
+        saveProfileBtn.textContent = 'Salvando...';
+
+        try {
+            const nicknameChanged = nicknameInput.value !== originalProfileData.nickname;
+            const photoChanged = !!croppedImageBase64;
+            const needsPostUpdate = nicknameChanged || photoChanged;
+
+            const updatedData = {};
+            if (nicknameChanged) updatedData.nickname = nicknameInput.value;
+            if (photoChanged) updatedData.photoURL = croppedImageBase64;
+            if (bioInput.value !== originalProfileData.bio) updatedData.bio = bioInput.value;
+            if (schoolInput.value !== originalProfileData.school) updatedData.school = schoolInput.value;
+
+            const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
+            updatedData.hobbies = selectedHobbies;
+            updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+            await db.collection('users').doc(currentUser.uid).update(updatedData);
+
+            if (needsPostUpdate) {
+                const finalUserData = {
+                    nickname: nicknameInput.value,
+                    photoURL: croppedImageBase64 || originalProfileData.photoURL
+                };
+                await updateUserContent(currentUser.uid, finalUserData);
+            }
+
+            showToast("Perfil atualizado com sucesso!", "success");
+            setTimeout(() => {
+                window.location.href = `../pages/user.html?uid=${currentUser.uid}`;
+            }, 1500);
+
+        } catch (error) {
+            console.error("Erro ao salvar o perfil:", error);
+            showToast("Ocorreu um erro ao salvar. Tente novamente.", "error");
+            saveProfileBtn.disabled = false;
+            saveProfileBtn.textContent = 'Salvar Alterações';
+        }
+    });
+
+    // --- FUNÇÃO CORRIGIDA E MAIS ROBUSTA PARA ATUALIZAR CONTEÚDO ANTIGO ---
+    async function updateUserContent(userId, newProfileData) {
+        console.log("Iniciando atualização de conteúdo antigo...");
+        const batch = db.batch();
+
+        // 1. Encontra TODO conteúdo onde o usuário é o AUTOR DIRETO (posts e reposts)
+        const authorQuery = db.collection('posts').where('authorId', '==', userId);
+        const authorSnapshot = await authorQuery.get();
+        
+        authorSnapshot.forEach(doc => {
+            const postRef = doc.ref; // Usa a referência direta do documento encontrado
+            batch.update(postRef, {
+                authorName: newProfileData.nickname,
+                authorPhoto: newProfileData.photoURL
+            });
+        });
+
+        // 2. Encontra todos os REPOSTS onde o usuário é o AUTOR ORIGINAL
+        // (Isso atualiza a sua foto/nome nos reposts feitos por OUTRAS pessoas)
+        const originalAuthorQuery = db.collection('posts').where('originalPost.authorId', '==', userId);
+        const originalAuthorSnapshot = await originalAuthorQuery.get();
+
+        originalAuthorSnapshot.forEach(doc => {
+            const postRef = doc.ref;
+            batch.update(postRef, {
+                'originalPost.authorName': newProfileData.nickname,
+                'originalPost.authorPhoto': newProfileData.photoURL
+            });
+        });
+
+        // Executa todas as atualizações de uma só vez
+        await batch.commit();
+        console.log(`Conteúdo antigo atualizado. ${authorSnapshot.size + originalAuthorSnapshot.size} documentos verificados.`);
     }
-});
-// Em edit-profile.js, adicione este bloco
 
-document.addEventListener('DOMContentLoaded', function() {
-    // ... seu código existente (config Firebase, auth, db, elementos DOM) ...
-
-    let currentUser = null;
-    let currentUserProfile = null;
-    // ... etc ...
-
-    // --- LÓGICA PARA O BOTÃO "VER MAIS" DOS HOBBIES ---
+    // Lógica dos Hobbies "Ver mais"
     document.querySelectorAll('.see-more-btn').forEach(button => {
         button.addEventListener('click', function() {
-            const targetId = this.dataset.target;
+            const targetId = this.getAttribute('data-target');
             const targetElement = document.querySelector(targetId);
-
             if (targetElement) {
                 targetElement.classList.toggle('visible');
-                if (targetElement.classList.contains('visible')) {
-                    this.textContent = 'Ver menos';
-                } else {
-                    this.textContent = 'Ver mais';
-                }
+                this.textContent = targetElement.classList.contains('visible') ? 'Ver menos' : 'Ver mais';
             }
         });
     });
-    // --- FIM DA LÓGICA DO BOTÃO ---
-
-    // ... resto do seu código (auth.onAuthStateChanged, logoutButton, etc) ...
 });
+
+// Função de Toast
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 500);
+        }, 3000);
+    }, 100);
+}

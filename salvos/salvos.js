@@ -423,8 +423,10 @@ function formatTimestamp(date) { // Verificar se date é um objeto Date válido
       console.error("Erro ao curtir post:", error);
       likeInProgress[postId] = false;
     } }
-    async function toggleRepost(postId, buttonElement) {  try {
-        // 1. VERIFICAÇÕES INICIAIS DE SEGURANÇA
+    // Em salvos/salvos.js
+
+async function toggleRepost(postId, buttonElement) {
+    try {
         if (!currentUser || !currentUserProfile) {
             showCustomAlert("Você precisa estar logado para republicar.");
             return;
@@ -432,31 +434,23 @@ function formatTimestamp(date) { // Verificar se date é um objeto Date válido
 
         const postRef = db.collection("posts").doc(postId);
         const postDoc = await postRef.get();
-
         if (!postDoc.exists) {
             showCustomAlert("Esta publicação não existe mais.");
             return;
         }
         
         const originalPostData = postDoc.data();
-
-        // Impede que alguém republique uma republicação
         if (originalPostData.isRepost) {
             showCustomAlert("Não é possível republicar uma republicação.");
             return;
         }
 
-        // 2. DETERMINA A AÇÃO (REPUBLICAR OU DESFAZER)
         const repostedBy = originalPostData.repostedBy || [];
         const hasReposted = repostedBy.includes(currentUser.uid);
-        
-        // Pega a referência do botão na tela para poder atualizá-lo
         const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
 
         if (hasReposted) {
-            // --- AÇÃO: DESFAZER REPUBLICAÇÃO ---
-
-            // Encontra e deleta a republicação do banco de dados
+            // Lógica para DESFAZER a republicação
             const repostQuery = db.collection("posts")
                 .where("originalPostId", "==", postId)
                 .where("authorId", "==", currentUser.uid);
@@ -468,23 +462,10 @@ function formatTimestamp(date) { // Verificar se date é um objeto Date válido
                 await Promise.all(deletePromises);
             }
 
-            // Remove o usuário da lista de 'repostedBy' no post original
             await postRef.update({
                 repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
 
-            // ATUALIZAÇÃO DA INTERFACE EM TEMPO REAL:
-            // Encontra o elemento da republicação que está visível na tela para removê-lo
-            const repostElementToRemove = document.querySelector(
-                `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
-            );
-
-            // Se o elemento for encontrado, remove-o imediatamente
-            if (repostElementToRemove) {
-                repostElementToRemove.remove();
-            }
-
-            // Atualiza o botão e mostra a notificação
             if (repostButtonUI) {
                 repostButtonUI.classList.remove('reposted');
                 repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
@@ -492,14 +473,15 @@ function formatTimestamp(date) { // Verificar se date é um objeto Date válido
             showToast("Republicação removida.", "info");
 
         } else {
-            // --- AÇÃO: CRIAR REPUBLICAÇÃO ---
-
-            // Cria o objeto da nova publicação
+            // Lógica para CRIAR a republicação
             const repostData = {
                 isRepost: true,
                 originalPostId: postId,
                 originalPost: {
                     content: originalPostData.content,
+                    // --- INÍCIO DA CORREÇÃO ---
+                    imageUrl: originalPostData.imageUrl || null, // <-- ESTA LINHA FOI ADICIONADA
+                    // --- FIM DA CORREÇÃO ---
                     authorName: originalPostData.authorName,
                     authorPhoto: originalPostData.authorPhoto,
                     authorId: originalPostData.authorId,
@@ -514,40 +496,34 @@ function formatTimestamp(date) { // Verificar se date é um objeto Date válido
                 commentCount: 0,
             };
 
-            // Adiciona o novo documento de republicação ao banco de dados
             await db.collection("posts").add(repostData);
-
-            // Adiciona o usuário na lista 'repostedBy' do post original
             await postRef.update({
                 repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
             });
             
-            // Envia uma notificação para o autor do post original
             if (originalPostData.authorId !== currentUser.uid) {
                 await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
                     type: "repost",
                     postId: postId,
                     fromUserId: currentUser.uid,
                     fromUserName: currentUserProfile.nickname || "Usuário",
-                    fromUserPhoto: currentUserProfile.photoURL || null,
                     content: "republicou sua publicação.",
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     read: false,
                 });
             }
             
-            // Atualiza a interface: adiciona a classe e troca o texto do botão
             if (repostButtonUI) {
                 repostButtonUI.classList.add('reposted');
                 repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
             }
             showToast("Publicação republicada!", "success");
         }
-
     } catch (error) {
-        console.error("Erro ao republicar/desrepublicar:", error);
-        showCustomAlert("Ocorreu um erro. Tente novamente.");
-    }}
+        console.error("Erro ao republicar:", error);
+        showCustomAlert("Ocorreu um erro ao republicar. Tente novamente.");
+    }
+}
     async function toggleSavePost(postId, buttonElement) { if (!currentUser) {
         showCustomAlert("Você precisa estar logado para salvar publicações.");
         return;

@@ -727,114 +727,115 @@ async function loadMoreUserPosts() {
         } 
     }
 
-    async function toggleRepost(postId, buttonElement) {  
-        try {
-            if (!currentUser || !currentUserProfile) {
-                showCustomAlert("Você precisa estar logado para republicar.");
-                return;
-            }
+    // Em pages/user.js
 
-            const postRef = db.collection("posts").doc(postId);
-            const postDoc = await postRef.get();
-
-            if (!postDoc.exists) {
-                showCustomAlert("Esta publicação não existe mais.");
-                return;
-            }
-            
-            const originalPostData = postDoc.data();
-
-            if (originalPostData.isRepost) {
-                showCustomAlert("Não é possível republicar uma republicação.");
-                return;
-            }
-
-            const repostedBy = originalPostData.repostedBy || [];
-            const hasReposted = repostedBy.includes(currentUser.uid);
-            
-            const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
-
-            if (hasReposted) {
-                const repostQuery = db.collection("posts")
-                    .where("originalPostId", "==", postId)
-                    .where("authorId", "==", currentUser.uid);
-                
-                const repostSnapshot = await repostQuery.get();
-                if (!repostSnapshot.empty) {
-                    const deletePromises = [];
-                    repostSnapshot.forEach(doc => deletePromises.push(doc.ref.delete()));
-                    await Promise.all(deletePromises);
-                }
-
-                await postRef.update({
-                    repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                });
-
-                const repostElementToRemove = document.querySelector(
-                    `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
-                );
-
-                if (repostElementToRemove) {
-                    repostElementToRemove.remove();
-                }
-
-                if (repostButtonUI) {
-                    repostButtonUI.classList.remove('reposted');
-                    repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
-                }
-                showToast("Republicação removida.", "info");
-
-            } else {
-                const repostData = {
-                    isRepost: true,
-                    originalPostId: postId,
-                    originalPost: {
-                        content: originalPostData.content,
-                        authorName: originalPostData.authorName,
-                        authorPhoto: originalPostData.authorPhoto,
-                        authorId: originalPostData.authorId,
-                        timestamp: originalPostData.timestamp,
-                    },
-                    authorId: currentUser.uid,
-                    authorName: currentUserProfile.nickname || "Usuário",
-                    authorPhoto: currentUserProfile.photoURL || null,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    likes: 0,
-                    likedBy: [],
-                    commentCount: 0,
-                };
-
-                await db.collection("posts").add(repostData);
-
-                await postRef.update({
-                    repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                });
-                
-                if (originalPostData.authorId !== currentUser.uid) {
-                    await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
-                        type: "repost",
-                        postId: postId,
-                        fromUserId: currentUser.uid,
-                        fromUserName: currentUserProfile.nickname || "Usuário",
-                        fromUserPhoto: currentUserProfile.photoURL || null,
-                        content: "republicou sua publicação.",
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        read: false,
-                    });
-                }
-                
-                if (repostButtonUI) {
-                    repostButtonUI.classList.add('reposted');
-                    repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
-                }
-                showToast("Publicação republicada!", "success");
-            }
-
-        } catch (error) {
-            console.error("Erro ao republicar/desrepublicar:", error);
-            showCustomAlert("Ocorreu um erro. Tente novamente.");
+async function toggleRepost(postId, buttonElement) {
+    try {
+        if (!currentUser || !currentUserProfile) {
+            showCustomAlert("Você precisa estar logado para republicar.");
+            return;
         }
+
+        const postRef = db.collection("posts").doc(postId);
+        const postDoc = await postRef.get();
+        if (!postDoc.exists) {
+            showCustomAlert("Esta publicação não existe mais.");
+            return;
+        }
+        
+        const originalPostData = postDoc.data();
+        if (originalPostData.isRepost) {
+            showCustomAlert("Não é possível republicar uma republicação.");
+            return;
+        }
+
+        const repostedBy = originalPostData.repostedBy || [];
+        const hasReposted = repostedBy.includes(currentUser.uid);
+        const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
+
+        if (hasReposted) {
+            // Lógica para DESFAZER a republicação
+            const repostQuery = db.collection("posts")
+                .where("originalPostId", "==", postId)
+                .where("authorId", "==", currentUser.uid);
+            
+            const repostSnapshot = await repostQuery.get();
+            if (!repostSnapshot.empty) {
+                const deletePromises = [];
+                repostSnapshot.forEach(doc => deletePromises.push(doc.ref.delete()));
+                await Promise.all(deletePromises);
+            }
+
+            await postRef.update({
+                repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+
+            const repostElementToRemove = document.querySelector(
+                `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
+            );
+            if (repostElementToRemove) {
+                repostElementToRemove.remove();
+            }
+
+            if (repostButtonUI) {
+                repostButtonUI.classList.remove('reposted');
+                repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
+            }
+            showToast("Republicação removida.", "info");
+
+        } else {
+            // Lógica para CRIAR a republicação
+            const repostData = {
+                isRepost: true,
+                originalPostId: postId,
+                originalPost: {
+                    content: originalPostData.content,
+                    // --- INÍCIO DA CORREÇÃO ---
+                    imageUrl: originalPostData.imageUrl || null, // <-- ESTA LINHA FOI ADICIONADA
+                    // --- FIM DA CORREÇÃO ---
+                    authorName: originalPostData.authorName,
+                    authorPhoto: originalPostData.authorPhoto,
+                    authorId: originalPostData.authorId,
+                    timestamp: originalPostData.timestamp,
+                },
+                authorId: currentUser.uid,
+                authorName: currentUserProfile.nickname || "Usuário",
+                authorPhoto: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                likes: 0,
+                likedBy: [],
+                commentCount: 0,
+            };
+
+            await db.collection("posts").add(repostData);
+            await postRef.update({
+                repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            
+            if (originalPostData.authorId !== currentUser.uid) {
+                await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
+                    type: "repost",
+                    postId: postId,
+                    fromUserId: currentUser.uid,
+                    fromUserName: currentUserProfile.nickname || "Usuário",
+                    fromUserPhoto: currentUserProfile.photoURL || null,
+                    content: "republicou sua publicação.",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                });
+            }
+            
+            if (repostButtonUI) {
+                repostButtonUI.classList.add('reposted');
+                repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+            }
+            showToast("Publicação republicada!", "success");
+        }
+    } catch (error) {
+        console.error("Erro ao republicar/desrepublicar:", error);
+        showCustomAlert("Ocorreu um erro. Tente novamente.");
     }
+}
 
     async function toggleSavePost(postId, buttonElement) { 
         if (!currentUser) {
