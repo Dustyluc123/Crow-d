@@ -18,7 +18,72 @@ body {
   padding: 20px;
   box-sizing: border-box; /* Garante que padding não afete a largura total */
 }
+/* --- ESTILOS PARA AS NOTIFICAÇÕES TOAST --- */
 
+/* Container que segura os toasts no canto da tela */
+#toast-container {
+    position: fixed;
+    top: 80px; /* Posição abaixo do header */
+    right: 20px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Estilo base para cada notificação */
+.toast {
+    background-color: var(--dark-bg-secondary);
+    color: var(--light-text);
+    padding: 15px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(100%);
+    /* A notificação entra em 0.5s, fica por 4.5s, e sai em 0.5s */
+    animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards;
+}
+
+/* Cores para os diferentes tipos de Toast */
+.toast.success {
+    background-color: #28a745; /* Verde para sucesso */
+    color: white;
+}
+
+.toast.error {
+    background-color: #dc3545; /* Vermelho para erro */
+    color: white;
+}
+
+.toast.info {
+    background-color: #17a2b8; /* Azul para informação */
+    color: white;
+}
+
+.toast i {
+    font-size: 1.2rem;
+}
+
+/* Animações de entrada e saída */
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+}
 .cadastro-container {
   background-color: #141359;
   /* Certifique-se que o caminho para a imagem está correto */

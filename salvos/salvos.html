@@ -100,6 +100,24 @@
             </div>
         </div>
     </template>
+    <template id="comment-template">
+        <div class="comment">
+            <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic small comment-author-photo">
+            <div class="comment-content">
+                <div class="comment-header">
+                    <h4 class="comment-author-name">Nome do Usuário</h4>
+                    <button class="delete-btn comment-delete-btn" style="display: none;" title="Excluir comentário">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <p class="comment-text">Conteúdo do comentário...</p>
+                <div class="comment-footer">
+                    <span class="comment-timestamp">há 2 minutos</span>
+                    <button class="comment-like-btn"><i class="far fa-heart"></i> <span class="comment-like-count">0</span></button>
+                </div>
+            </div>
+        </div>
+    </template>
     <script src="salvos.js"></script>
     <script src="../config/global.js"></script>
     <script src="../config/darkmode.js"></script>

@@ -21,3 +21,19 @@
 #saved-posts-container {
     width: 100%;
 }
+/* Adicione este código ao salvos.css */
+
+.post-comments {
+    display: none; /* Escondido por padrão */
+    margin-top: 15px;
+    border-top: 1px solid var(--light-border);
+    padding-top: 15px;
+}
+
+body.dark-mode .post-comments {
+    border-top-color: var(--dark-border);
+}
+
+.post-comments.active {
+    display: block; /* Mostra a secção quando o botão é clicado */
+}

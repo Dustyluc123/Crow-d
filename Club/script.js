@@ -211,7 +211,8 @@ document.addEventListener('DOMContentLoaded', function() {
     async function sendShareInvites() {
         const selectedFriends = document.querySelectorAll('.friend-share-checkbox:checked');
         if (selectedFriends.length === 0) {
-            alert("Selecione pelo menos um amigo para compartilhar.");
+            // Alerta substituído por Toast
+            showToast("Selecione pelo menos um amigo para compartilhar.", "error");
             return;
         }
 
@@ -235,14 +236,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             await batch.commit();
-            alert('Convites enviados com sucesso!');
+            // Alerta substituído por Toast
+            showToast('Convites enviados com sucesso!', 'success');
             shareGroupModal.style.display = 'none';
         } catch (error) {
             console.error("Erro ao enviar convites de grupo:", error);
-            alert('Ocorreu um erro ao enviar os convites.');
+            // Alerta substituído por Toast
+            showToast('Ocorreu um erro ao enviar os convites.', 'error');
         }
     }
-
 
     // --- FUNÇÕES EXISTENTES (sem alteração) ---
 

@@ -1,7 +1,4 @@
 ///mensagem
 1-sugestoes de quem conversar 
-2-dar espaco para o botao de exclior mensagem 
 
-profile
-a mensagemque aparece de que ja tem um usario com o nome deve ser excluida, e enquando a pessoa estar digindando o nome tem que se mostra ja se o nome é valido ou nao 
-
+convite na noticacao do grupo

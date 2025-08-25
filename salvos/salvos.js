@@ -26,6 +26,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let commentLikeInProgress = {};
 
    
+    // ACRESCENTE ESTAS VARIÁVEIS
+    
+    let activeCommentListeners = {}; // Guarda os listeners de comentários ativos
+  
 
     const savedPostsContainer = document.getElementById("saved-posts-container");
     const postTemplate = document.getElementById("post-template");
@@ -50,6 +54,171 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = "../login/login.html";
         }
     });
+
+    // ==========================================================
+    // COLE TODAS ESTAS FUNÇÕES DE COMENTÁRIOS NO SEU SCRIPT
+    // ==========================================================
+    
+    function toggleComments(postId) {
+        const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+        if (!postElement) return;
+
+        const commentsSection = postElement.querySelector('.post-comments');
+        const isActive = commentsSection.classList.toggle('active');
+
+        if (isActive && !activeCommentListeners[postId]) {
+            loadComments(postId);
+        }
+    }
+
+    function loadComments(postId) {
+        const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+        const commentsList = postElement.querySelector('.comments-list');
+        commentsList.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i></div>';
+
+        const commentsRef = db.collection('posts').doc(postId).collection('comments').orderBy('timestamp', 'asc');
+        
+        activeCommentListeners[postId] = commentsRef.onSnapshot(snapshot => {
+            commentsList.innerHTML = '';
+            if (snapshot.empty) {
+                commentsList.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const commentData = { id: doc.id, ...doc.data() };
+                addCommentToDOM(postId, commentData);
+            });
+        }, error => {
+            console.error("Erro ao carregar comentários:", error);
+            commentsList.innerHTML = '<div class="error-message">Erro ao carregar.</div>';
+        });
+    }
+
+    function addCommentToDOM(postId, comment) {
+        if (!commentTemplate) return;
+        const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+        const commentsList = postElement.querySelector('.comments-list');
+        
+        const commentClone = document.importNode(commentTemplate.content, true);
+        const commentElement = commentClone.querySelector('.comment');
+        
+        const authorPhoto = commentClone.querySelector('.comment-author-photo');
+        const authorName = commentClone.querySelector('.comment-author-name');
+        const text = commentClone.querySelector('.comment-text');
+        const timestamp = commentClone.querySelector('.comment-timestamp');
+        const likeBtn = commentClone.querySelector('.comment-like-btn');
+        const likeCount = commentClone.querySelector('.comment-like-count');
+        const deleteBtn = commentClone.querySelector('.comment-delete-btn');
+
+        authorPhoto.src = comment.authorPhoto || '../img/Design sem nome2.png';
+        authorName.textContent = comment.authorName;
+        text.textContent = comment.content;
+        timestamp.textContent = comment.timestamp ? formatTimestamp(comment.timestamp.toDate()) : 'agora';
+        likeCount.textContent = comment.likes || 0;
+
+        if (comment.likedBy?.includes(currentUser.uid)) {
+            likeBtn.classList.add('liked');
+        }
+
+        if (comment.authorId === currentUser.uid) {
+            deleteBtn.style.display = 'block';
+        }
+
+        likeBtn.addEventListener('click', () => toggleCommentLike(postId, comment.id, comment));
+        deleteBtn.addEventListener('click', () => deleteComment(postId, comment.id));
+
+        commentsList.appendChild(commentClone);
+    }
+
+    // Em salvos.js
+async function sendComment(postId) {
+    const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+    const input = postElement.querySelector('.comment-text');
+    const content = input.value.trim();
+
+    if (!content) return;
+    input.value = '';
+
+    try {
+        const commentRef = db.collection('posts').doc(postId).collection('comments');
+        await commentRef.add({
+            content,
+            authorId: currentUser.uid,
+            authorName: currentUserProfile.nickname,
+            authorPhoto: currentUserProfile.photoURL,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: 0,
+            likedBy: []
+        });
+
+        const postRef = db.collection('posts').doc(postId);
+        await postRef.update({
+            commentCount: firebase.firestore.FieldValue.increment(1)
+        });
+
+        // --- ADICIONE ESTE BLOCO PARA ATUALIZAR A CONTAGEM NA TELA ---
+        const commentCountElement = postElement.querySelector('.comment-count');
+        if (commentCountElement) {
+            const currentCount = parseInt(commentCountElement.textContent) || 0;
+            commentCountElement.textContent = currentCount + 1;
+        }
+        // --- FIM DO BLOCO A SER ADICIONADO ---
+ const commentsSection = postElement.querySelector('.post-comments');
+    // Se a secção de comentários estiver fechada, abre-a para mostrar o novo comentário
+    if (!commentsSection.classList.contains('active')) {
+        toggleComments(postId);
+    }
+    //
+    } catch (error) {
+        console.error("Erro ao enviar comentário:", error);
+        showCustomAlert("Não foi possível enviar o seu comentário.");
+    }
+}
+    async function deleteComment(postId, commentId) {
+        const confirmed = await showConfirmationModal("Excluir Comentário", "Tem a certeza que deseja excluir este comentário?");
+        if (confirmed) {
+            try {
+                await db.collection('posts').doc(postId).collection('comments').doc(commentId).delete();
+                await db.collection('posts').doc(postId).update({
+                    commentCount: firebase.firestore.FieldValue.increment(-1)
+                });
+                showToast("Comentário excluído.", "info");
+            } catch (error) {
+                console.error("Erro ao excluir comentário:", error);
+                showCustomAlert("Ocorreu um erro ao excluir o comentário.");
+            }
+        }
+    }
+
+    async function toggleCommentLike(postId, commentId, commentData) {
+        const commentKey = `${postId}_${commentId}`;
+        if (commentLikeInProgress[commentKey]) return;
+        commentLikeInProgress[commentKey] = true;
+
+        const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+        const isLiked = (commentData.likedBy || []).includes(currentUser.uid);
+        
+        try {
+            if (isLiked) {
+                await commentRef.update({
+                    likes: firebase.firestore.FieldValue.increment(-1),
+                    likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                });
+            } else {
+                await commentRef.update({
+                    likes: firebase.firestore.FieldValue.increment(1),
+                    likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                });
+                if (commentData.authorId !== currentUser.uid) {
+                    // Lógica de notificação (opcional)
+                }
+            }
+            commentLikeInProgress[commentKey] = false;
+        } catch (error) {
+            console.error("Erro ao curtir comentário:", error);
+            commentLikeInProgress[commentKey] = false;
+        }
+    }
     
     async function loadUserProfile(userId) {
         const doc = await db.collection("users").doc(userId).get();
@@ -142,114 +311,56 @@ document.addEventListener("DOMContentLoaded", function () {
         return date.toLocaleDateString('pt-BR');
     }
 
-    function addPostToDOM(post) {
-      if (!savedPostsContainer || !postTemplate) return null;
-  
-      const postClone = document.importNode(postTemplate.content, true);
-      const postElement = postClone.querySelector(".post");
-      
-      postElement.addEventListener('click', (e) => {
-          if (e.target.closest('button, a, .post-actions, .post-comments, .original-post-container, .post-image')) {
-              return;
-          }
-          window.location.href = `../home/home.html?post=${post.id}`;
-      });
-  
-      // --- Seleciona todos os elementos do post ---
-      const authorPhotoElement = postClone.querySelector(".post-author-photo");
-      const authorNameElement = postClone.querySelector(".post-author-name");
-      const timestampElement = postClone.querySelector(".post-timestamp");
-      const contentElement = postClone.querySelector(".post-text");
-      const likeButton = postClone.querySelector(".like-btn");
-      const likeCount = postClone.querySelector(".like-count");
-      const commentButton = postClone.querySelector(".comment-btn");
-      const commentCount = postClone.querySelector(".comment-count");
-      const repostButton = postClone.querySelector(".repost-btn");
-      const saveButton = postClone.querySelector(".save-btn");
-      const shareButton = postClone.querySelector(".share-btn");
-      const commentsSection = postClone.querySelector(".post-comments");
-      const commentInput = postClone.querySelector(".comment-text");
-      const sendCommentButton = postClone.querySelector(".send-comment-btn");
-      const commentUserPhoto = postClone.querySelector(".comment-user-photo");
-      const postMediaContainer = postClone.querySelector(".post-media");
-      const postImageElement = postClone.querySelector(".post-image");
-      const deletePostBtn = postClone.querySelector('.post-delete-btn');
-  
-      // --- Preenche os dados do post ---
-      postElement.dataset.postId = post.id;
-      postElement.dataset.authorId = post.authorId;
-      
-      if (post.imageUrl) {
-          postImageElement.src = post.imageUrl;
-          postMediaContainer.style.display = 'block';
-      } else {
-          postMediaContainer.style.display = 'none';
-      }
-  
-      if (post.authorId === currentUser.uid) {
-          deletePostBtn.style.display = 'block';
-          deletePostBtn.addEventListener('click', (e) => {
-              e.stopPropagation(); 
-              deletePost(post.id);
-          });
-      }
-  
-      if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
-      authorNameElement.textContent = post.authorName;
-      if (post.timestamp) {
-          timestampElement.textContent = formatTimestamp(post.timestamp.toDate());
-      }
-      contentElement.textContent = post.content;
-      likeCount.textContent = post.likes || 0;
-      commentCount.textContent = post.commentCount || 0;
-  
-      if (post.likedBy && post.likedBy.includes(currentUser.uid)) likeButton.classList.add("liked");
-      if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
-          repostButton.classList.add("reposted");
-      }
-      if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
-          saveButton.classList.add("saved");
-      }
-      if(currentUserProfile && currentUserProfile.photoURL) commentUserPhoto.src = currentUserProfile.photoURL;
-  
-      // --- Adiciona os Event Listeners ---
-      authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-      authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-      likeButton.addEventListener("click", () => toggleLike(post.id));
-      repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
-      saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
-      shareButton.addEventListener("click", () => sharePost(post.id));
-  
-      commentButton.addEventListener("click", () => {
-          commentsSection.classList.toggle("active");
-          if (commentsSection.classList.contains("active")) {
-              const commentsList = commentsSection.querySelector('.comments-list');
-              loadComments(post.id, commentsList);
-          }
-      });
-  
-      sendCommentButton.addEventListener("click", () => {
-          const content = commentInput.value.trim();
-          if(content) {
-              addComment(post.id, content);
-              commentInput.value = '';
-          }
-      });
-  
-      // **CORREÇÃO ADICIONADA AQUI**
-      commentInput.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") {
-              e.preventDefault(); // Impede a quebra de linha no input
-              const content = commentInput.value.trim();
-              if(content) {
-                  addComment(post.id, content);
-                  commentInput.value = '';
-              }
-          }
-      });
-  
-      return postElement;
-  }
+    // Em salvos.js
+function addPostToDOM(post) {
+    if (!savedPostsContainer || !postTemplate) return null;
+
+    const postClone = document.importNode(postTemplate.content, true);
+    const postElement = postClone.querySelector(".post");
+    
+    // --- Seleciona todos os elementos do post ---
+    const authorPhotoElement = postClone.querySelector(".post-author-photo");
+    const authorNameElement = postClone.querySelector(".post-author-name");
+    const timestampElement = postClone.querySelector(".post-timestamp");
+    const contentElement = postClone.querySelector(".post-text");
+    const likeButton = postClone.querySelector(".like-btn");
+    const likeCount = postClone.querySelector(".like-count");
+    const commentButton = postClone.querySelector(".comment-btn");
+    const commentCount = postClone.querySelector(".comment-count");
+    const saveButton = postClone.querySelector(".save-btn");
+    const commentInput = postClone.querySelector(".comment-text");
+    const sendCommentButton = postClone.querySelector(".send-comment-btn");
+
+    // --- Preenche os dados do post ---
+    postElement.dataset.postId = post.id;
+    postElement.dataset.authorId = post.authorId;
+    
+    if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
+    authorNameElement.textContent = post.authorName;
+    if (post.timestamp) timestampElement.textContent = formatTimestamp(post.timestamp.toDate());
+    contentElement.textContent = post.content;
+    likeCount.textContent = post.likes || 0;
+    commentCount.textContent = post.commentCount || 0;
+
+    if (post.likedBy?.includes(currentUser.uid)) likeButton.classList.add("liked");
+    if (post.savedBy?.includes(currentUser.uid)) saveButton.classList.add("saved");
+
+    // --- Adiciona os Event Listeners (VERSÃO CORRIGIDA E SEM DUPLICATAS) ---
+    likeButton.addEventListener("click", () => toggleLike(post.id));
+    saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
+    
+    // Listener ÚNICO e CORRETO para os comentários
+    commentButton.addEventListener("click", () => toggleComments(post.id));
+    sendCommentButton.addEventListener("click", () => sendComment(post.id));
+    commentInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendComment(post.id);
+        }
+    });
+
+    return postElement;
+}
 
     
     function addCommentToDOM(postId, comment, commentsList) {
@@ -604,136 +715,8 @@ async function sharePost(postId) {
 
 // Lembre-se de ter as funções showToast e showCustomAlert no seu salvos.js
 // para que as notificações e alertas funcionem corretamente.
-    function loadComments(postId, commentsListElement) { if (!commentsListElement) {
-      console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
-      return;
-  }
-
-  // Mostra o "Carregando..." apenas se a lista estiver vazia
-  if (commentsListElement.innerHTML === '') {
-      commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
-  }
-
-  return db
-    .collection("posts")
-    .doc(postId)
-    .collection("comments")
-    .orderBy("timestamp", "asc") // Usar 'asc' para adicionar novos comentários no final
-    .onSnapshot((snapshot) => {
-      // Remove o indicador de "carregando" ou "nenhum comentário" se existirem
-      const initialMessage = commentsListElement.querySelector('.loading-comments, .no-comments');
-      if (initialMessage) {
-          initialMessage.remove();
-      }
-
-      // ESTA É A MUDANÇA PRINCIPAL:
-      // Em vez de apagar tudo, vamos processar apenas as alterações.
-      snapshot.docChanges().forEach((change) => {
-          const commentData = { id: change.doc.id, ...change.doc.data() };
-          
-          if (change.type === "added") {
-              // Se um novo comentário foi ADICIONADO, nós o criamos e o adicionamos ao final da lista
-              // Isso não afeta o que outros usuários estão digitando
-              addCommentToDOM(postId, commentData, commentsListElement);
-          }
-          if (change.type === "modified") {
-              // Se um comentário foi MODIFICADO (ex: curtida), encontramos o elemento e o atualizamos
-              const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-              if (commentElement) {
-                  // Exemplo: atualizar a contagem de curtidas
-                  const likeCount = commentElement.querySelector('.comment-like-count');
-                  const likeButton = commentElement.querySelector('.comment-like-btn');
-                  if(likeCount) likeCount.textContent = commentData.likes || 0;
-                  if(likeButton) {
-                      if(commentData.likedBy && commentData.likedBy.includes(currentUser.uid)) {
-                          likeButton.classList.add('liked');
-                      } else {
-                          likeButton.classList.remove('liked');
-                      }
-                  }
-              }
-          }
-          if (change.type === "removed") {
-              // Se um comentário foi REMOVIDO, nós o encontramos e o removemos da tela
-              const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-              if (commentElement) {
-                  commentElement.remove();
-              }
-          }
-      });
-
-      // Se após processar as mudanças a lista estiver vazia, mostramos a mensagem
-      if (commentsListElement.children.length === 0) {
-          commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
-      }
-
-    }, (error) => {
-      console.error("Erro ao escutar comentários:", error);
-      commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
-    });}
-    function addCommentToDOM(postId, comment, commentsList) { if (!commentTemplate || !commentsList) return;
-
-    // Clonar template
-    const commentClone = document.importNode(commentTemplate.content, true);
-    const commentElement = commentClone.querySelector(".comment");
-
-    // Referências aos elementos do comentário
-    const authorPhotoElement = commentClone.querySelector(".comment-author-photo");
-    const authorNameElement = commentClone.querySelector(".comment-author-name");
-    const timestampElement = commentClone.querySelector(".comment-timestamp");
-    const contentElement = commentClone.querySelector(".comment-text");
-    const likeButton = commentClone.querySelector(".comment-like-btn");
-    const likeCount = commentClone.querySelector(".comment-like-count");
-
-    // ==========================================================
-    // ESTA É A PARTE IMPORTANTE QUE ESTAVA FALTANDO
-    // Adiciona a ação de clique ao botão de curtir
-    likeButton.addEventListener("click", function () {
-      toggleCommentLike(postId, comment.id);
-    });
-    // ==========================================================
-
-    // Definir IDs
-    commentElement.dataset.commentId = comment.id;
-    commentElement.dataset.authorId = comment.authorId;
-
-    // Definir foto do autor
-    if (comment.authorPhoto) {
-      authorPhotoElement.src = comment.authorPhoto;
-    }
-
-    // Adicionar evento de clique para redirecionar ao perfil do autor
-    authorPhotoElement.addEventListener("click", function() {
-      redirectToUserProfile(comment.authorId);
-    });
-
-    // Definir nome do autor
-    authorNameElement.textContent = comment.authorName;
-    authorNameElement.addEventListener("click", function() {
-      redirectToUserProfile(comment.authorId);
-    });
-
-    // Definir timestamp
-    if (comment.timestamp) {
-      const date = comment.timestamp instanceof Date ? comment.timestamp : comment.timestamp.toDate();
-      timestampElement.textContent = formatTimestamp(date);
-    } else {
-      timestampElement.textContent = "Agora mesmo";
-    }
-
-    // Definir conteúdo do comentário
-    contentElement.textContent = comment.content;
-
-    // Definir contagem de likes
-    likeCount.textContent = comment.likes || 0;
-
-    // Verificar se o usuário atual já curtiu o comentário
-    if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {
-      likeButton.classList.add("liked");
-    }
-
-    // Adicionar comentário à lista
-    commentsList.appendChild(commentClone);}
+    
+  
     async function addComment(postId, content) {
       try {
           if (!currentUser || !currentUserProfile) {
@@ -790,98 +773,5 @@ async function sharePost(postId) {
 
   // Função para alternar curtida em um comentário
   
-    async function toggleCommentLike(postId, commentId) {  try {
-      // Verificar se já há uma operação de like em andamento para este comentário
-      const commentKey = `${postId}_${commentId}`;
-      if (commentLikeInProgress[commentKey]) {
-        return;
-      }
-
-      // Marcar como em andamento
-      commentLikeInProgress[commentKey] = true;
-
-      // Verificar se o usuário está autenticado
-      if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para curtir.");
-        commentLikeInProgress[commentKey] = false;
-        return;
-      }
-
-      // Obter referência ao comentário
-      const commentRef = db
-        .collection("posts")
-        .doc(postId)
-        .collection("comments")
-        .doc(commentId);
-      const commentDoc = await commentRef.get();
-
-      if (!commentDoc.exists) {
-        console.error("Comentário não encontrado.");
-        commentLikeInProgress[commentKey] = false;
-        return;
-      }
-
-      const commentData = commentDoc.data();
-      const likedBy = commentData.likedBy || [];
-      const isLiked = likedBy.includes(currentUser.uid);
-
-      // Atualizar UI imediatamente para feedback rápido
-      const likeButton = document.querySelector(
-        `.comment[data-comment-id="${commentId}"] .comment-like-btn`
-      );
-      const likeCountElement = document.querySelector(
-        `.comment[data-comment-id="${commentId}"] .comment-like-count`
-      );
-
-      if (isLiked) {
-        // Remover curtida
-        await commentRef.update({
-          likes: firebase.firestore.FieldValue.increment(-1),
-          likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
-        });
-
-        // Atualizar UI
-        likeButton.classList.remove("liked");
-        likeCountElement.textContent = Math.max(
-          0,
-          parseInt(likeCountElement.textContent) - 1
-        );
-      } else {
-        // Adicionar curtida
-        await commentRef.update({
-          likes: firebase.firestore.FieldValue.increment(1),
-          likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-        });
-
-        // Atualizar UI
-        likeButton.classList.add("liked");
-        likeCountElement.textContent =
-          parseInt(likeCountElement.textContent) + 1;
-
-        // Criar notificação para o autor do comentário (se não for o próprio usuário)
-        if (commentData.authorId !== currentUser.uid) {
-          await db
-            .collection("users")
-            .doc(commentData.authorId)
-            .collection("notifications")
-            .add({
-              type: "comment_like",
-              postId,
-              commentId,
-              fromUserId: currentUser.uid,
-              fromUserName: currentUserProfile.nickname || "Usuário",
-              fromUserPhoto: currentUserProfile.photoURL || null,
-              content: "curtiu seu comentário",
-              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              read: false,
-            });
-        }
-      }
-
-      // Marcar como concluído
-      commentLikeInProgress[commentKey] = false;
-    } catch (error) {
-      console.error("Erro ao curtir comentário:", error);
-      commentLikeInProgress[`${postId}_${commentId}`] = false;
-    } }
+   
 });

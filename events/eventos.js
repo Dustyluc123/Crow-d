@@ -303,53 +303,58 @@ function addEventToDOM(event) {
         }
     }
 
-    async function createEvent(e) {
-        e.preventDefault();
-        const eventName = document.getElementById('eventName').value;
+    // Em eventos.js
 
-          if (eventName.length > 20) {
+async function createEvent(e) {
+    e.preventDefault();
+
+    // 1. Pega todos os valores dos campos primeiro
+    const eventName = document.getElementById('eventName').value;
+    const eventLocation = document.getElementById('eventLocation').value;
+    const eventDate = document.getElementById('eventDate').value;
+    const eventTime = document.getElementById('eventTime').value;
+    const description = document.getElementById('eventDescription').value;
+    const tags = document.getElementById('eventTags').value.split(',').map(tag => tag.trim());
+
+    // 2. Faz todas as verificações
+    if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
+        showCustomAlert("Por favor, preencha todos os campos obrigatórios.");
+        return;
+    }
+    if (eventName.length > 20) {
         showCustomAlert("O nome do evento não pode ter mais de 20 caracteres.");
         return;
     }
-    
-    // --- ADICIONE ESTA NOVA VERIFICAÇÃO ---
     if (eventLocation.length > 40) {
         showCustomAlert("A localização do evento não pode ter mais de 40 caracteres.");
         return;
     }
-        const eventLocation = document.getElementById('eventLocation').value;
-        const eventDate = document.getElementById('eventDate').value;
-        const eventTime = document.getElementById('eventTime').value;
-        const description = document.getElementById('eventDescription').value;
-        const tags = document.getElementById('eventTags').value.split(',').map(tag => tag.trim());
 
-        if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
-            alert("Por favor, preencha todos os campos obrigatórios.");
-            return;
-        }
+    // 3. Continua com a criação do evento se tudo estiver correto
+    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
 
-        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+    try {
+        await db.collection('events').add({
+            eventName,
+            eventLocation,
+            eventDateTime,
+            description,
+            tags,
+            creatorId: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            participants: [currentUser.uid] // Criador já entra participando
+        });
 
-        try {
-            await db.collection('events').add({
-                eventName,
-                eventLocation,
-                eventDateTime,
-                description,
-                tags,
-                creatorId: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                participants: [currentUser.uid] // Criador já entra participando
-            });
-
-            createEventModal.style.display = 'none';
-            createEventForm.reset();
-            loadEvents();
-        } catch (error) {
-            console.error("Erro ao criar evento: ", error);
-            alert("Ocorreu um erro ao criar o evento.");
-        }
+        createEventModal.style.display = 'none';
+        createEventForm.reset();
+        showToast("Evento criado com sucesso!", "success"); // Notificação de sucesso
+        loadEvents();
+        
+    } catch (error) {
+        console.error("Erro ao criar evento: ", error);
+        showCustomAlert("Ocorreu um erro ao criar o evento.");
     }
+}
 
     if (createEventBtn) {
         createEventBtn.addEventListener('click', () => { createEventModal.style.display = 'flex'; });

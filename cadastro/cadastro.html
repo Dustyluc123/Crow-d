@@ -130,7 +130,7 @@
           window.location.href = '../home/home.html';
         }
       } catch (error) {
-        alert('Erro ao fazer login com Google: ' + error.message);
+      showToast('Erro ao fazer login com Google: ');
       }
     });
 
@@ -140,7 +140,7 @@
 
       // --- INÍCIO DA VERIFICAÇÃO FINAL ANTES DE ENVIAR ---
       if (!validatePassword()) {
-        alert('Sua senha não atende a todos os requisitos de segurança.');
+        showToast('Sua senha não atende a todos os requisitos de segurança.');
         return;
       }
       // --- FIM DA VERIFICAÇÃO ---
@@ -150,7 +150,7 @@
       const confirmarSenha = document.getElementById('confirmarSenha').value;
 
       if (senha !== confirmarSenha) {
-        alert('As senhas não coincidem. Por favor, verifique.');
+        showToast('As senhas não coincidem. Por favor, verifique.');
         return;
       }
 
@@ -163,12 +163,12 @@
               window.location.href = '../verificaEmail/verificandoEmail.html';
             })
             .catch((error) => {
-              alert('Erro ao enviar e-mail de verificação: ' + error.message);
+              showToast('Erro ao enviar e-mail de verificação: ');
             });
         })
         .catch((error) => {
           if (error.code === 'auth/email-already-in-use') {
-            alert('Este email já está cadastrado. Tente fazer login ou use outro email.');
+            showToast('Este email já está cadastrado. Tente fazer login ou use outro email.');
           } else {
             alert('Erro ao cadastrar: ' + error.message);
           }

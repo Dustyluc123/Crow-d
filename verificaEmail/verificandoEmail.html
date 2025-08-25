@@ -35,7 +35,7 @@
           user.reload().then(() => {
             if (user.emailVerified) {
               clearInterval(interval);
-              alert("E-mail verificado com sucesso!");
+          
               window.location.href = "../profile/profile.html";
             }
           });
