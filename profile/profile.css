@@ -502,3 +502,33 @@ textarea {
     margin-top: 1rem;
     font-size: 1.2rem;
 }
+/* --- ESTILOS PARA VALIDAÇÃO DE APELIDO EM TEMPO REAL --- */
+.nickname-validation-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#nickname 
+    padding-right: 120px; /* Abre espaço para a mensagem de status */
+}
+
+#nickname-validation-status {
+    position: absolute;
+    right: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+#nickname-validation-status.checking {
+    color: #888; /* Cinzento para "Verificando..." */
+}
+
+#nickname-validation-status.invalid {
+    color: #e74c3c; /* Vermelho para "Em uso" */
+}
+
+#nickname-validation-status.valid {
+    color: #2ecc71; /* Verde para "Disponível" */
+}

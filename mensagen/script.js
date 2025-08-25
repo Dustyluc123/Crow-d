@@ -138,27 +138,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    /**
-     * Adiciona uma sugestão de amigo na tela.
-     * @param {string} userId - O ID do usuário amigo.
-     * @param {object} userData - Os dados do perfil do amigo.
-     */
-    function addSuggestionToDOM(userId, userData) {
-        const suggestionClone = document.importNode(suggestionTemplate.content, true);
-        const linkElement = suggestionClone.querySelector('.suggestion-item-link');
-        const photoElement = suggestionClone.querySelector('.suggestion-photo');
-        const nameElement = suggestionClone.querySelector('.suggestion-name');
-        const courseElement = suggestionClone.querySelector('.suggestion-course');
+    // Em mensagen/script.js
+/**
+ * Adiciona uma sugestão de amigo na tela.
+ * @param {string} userId - O ID do usuário amigo.
+ * @param {object} userData - Os dados do perfil do amigo.
+ */
+function addSuggestionToDOM(userId, userData) {
+    const suggestionTemplate = document.getElementById('suggestion-template');
+    if (!suggestionTemplate) return;
 
-        // Cria o link para iniciar a conversa
-        linkElement.href = `../chat/chat.html?userId=${userId}`; // Ajuste o caminho se necessário
+    const suggestionClone = document.importNode(suggestionTemplate.content, true);
+    const linkElement = suggestionClone.querySelector('.suggestion-item-link');
+    const photoElement = suggestionClone.querySelector('.suggestion-photo');
+    const nameElement = suggestionClone.querySelector('.suggestion-name');
+    const courseElement = suggestionClone.querySelector('.suggestion-course');
 
-        photoElement.src = userData.photoURL || '../img/Design sem nome2.png';
-        nameElement.textContent = `${userData.nickname}#${userData.tag}`;
-        courseElement.textContent = userData.grade || 'Curso não informado';
+    photoElement.src = userData.photoURL || '../img/Design sem nome2.png';
+    nameElement.textContent = userData.nickname || 'Usuário';
+    courseElement.textContent = userData.grade || 'Curso não informado';
 
+    // --- AQUI ESTÁ A CORREÇÃO ---
+    // Remove o link antigo e adiciona um evento de clique
+    linkElement.href = '#'; // Define um href placeholder
+    linkElement.addEventListener('click', (e) => {
+        e.preventDefault(); // Impede a navegação
+        
+        // Esconde as sugestões e mostra a área de conversas
+        const suggestionsContainer = document.getElementById('suggestions-container');
+        const conversationsContainer = document.querySelector('.messages-container');
+        if(suggestionsContainer) suggestionsContainer.style.display = 'none';
+        if(conversationsContainer) conversationsContainer.style.display = 'flex';
+        
+        // Inicia a conversa com o usuário clicado
+        startConversation(userId);
+    });
+    // --- FIM DA CORREÇÃO ---
+
+    const suggestionsList = document.getElementById('suggestions-list');
+    if (suggestionsList) {
         suggestionsList.appendChild(suggestionClone);
     }
+}
     
     /**
      * Função placeholder para carregar e exibir as conversas.

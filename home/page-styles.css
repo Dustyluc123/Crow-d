@@ -87,6 +87,86 @@ body.dark-mode .conversations-list {
     margin-bottom: 5px; /* Adiciona um espaço antes do "Ver mais" */
 }
 
+/* --- Estilos para Sugestões de Conversa (mensagens.html) --- */
+#suggestions-container {
+    padding: 20px;
+    text-align: center;
+}
+
+#suggestions-list {
+    margin-top: 20px;
+    display: grid;
+    /* Cria colunas flexíveis para os cartões */
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.suggestion-item-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: var(--light-bg);
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: 1px solid var(--light-border);
+}
+
+.suggestion-item:hover {
+    box-shadow: var(--box-shadow);
+    background-color: var(--light-bg-secondary);
+}
+
+.suggestion-item .profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.suggestion-info {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.suggestion-info h4 {
+    margin: 0 0 5px;
+}
+
+.suggestion-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--light-text-secondary);
+}
+
+.start-chat-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+
+/* --- Modo Escuro para Sugestões --- */
+body.dark-mode .suggestion-item {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .suggestion-item:hover {
+    background-color: #4a4b50;
+}
+
+body.dark-mode .suggestion-info p {
+    color: var(--dark-text-secondary);
+}
+
 .event-see-more {
     font-weight: bold;
     color: var(--primary-color);

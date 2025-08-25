@@ -83,10 +83,13 @@
 </div>
 
                 <div class="input-group">
-                    <label for="nickname">Apelido</label>
-                    <input type="text" id="nickname" name="nickname" placeholder="Como quer ser chamado?" required maxlength="30">
-                    <small id="nickname-char-counter">0/30</small> 
-                </div>
+    <label for="nickname">Apelido</label>
+    <div class="nickname-validation-wrapper">
+        <input type="text" id="nickname" name="nickname" placeholder="Como quer ser chamado?" required maxlength="40">
+        <span id="nickname-validation-status"></span>
+    </div>
+    <small id="nickname-char-counter">0/40</small>
+</div>
 
                 <div class="input-group">
                     <label for="bio">Biografia</label>
