@@ -188,32 +188,34 @@ function detachPostsListener() {
 // Em scripts.js
 
 
+// Em Crow-d/home/scripts.js
+
+// Dentro da função auth.onAuthStateChanged, substitua o bloco que atualiza o link de perfil por este:
+
 auth.onAuthStateChanged(async function (user) {
  if (user) {
    currentUser = user;
    await loadUserProfile(user.uid);
    
-
    // ==========================================================
-   //      INÍCIO DA LÓGICA ADICIONADA
+   //      INÍCIO DA CORREÇÃO
    // ==========================================================
   
-   // Encontra o botão/link de perfil no header pela sua classe
-   const profileLink = document.querySelector('.main-nav a.profile-link');
-   if (profileLink) {
-       // Define o link para a página do usuário logado (user.html) com o UID correto
-       profileLink.href = `pages/user.html?uid=${user.uid}`;
+   // Encontra TODOS os links de perfil (desktop e mobile)
+   const profileLinks = document.querySelectorAll('.profile-link');
+   if (profileLinks.length > 0) {
+       profileLinks.forEach(link => {
+           // Define o link para a página do usuário logado com o UID correto
+           link.href = `pages/user.html?uid=${user.uid}`;
+       });
    }
 
-
    // ==========================================================
-   //      FIM DA LÓGICA ADICIONADA
+   //      FIM DA CORREÇÃO
    // ==========================================================
-
 
    const urlParams = new URLSearchParams(window.location.search);
    const postIdFromUrl = urlParams.get('post');
-
 
    if (postIdFromUrl) {
        showSinglePostView(postIdFromUrl);
@@ -221,12 +223,10 @@ auth.onAuthStateChanged(async function (user) {
        loadInitialPosts();
    }
 
-
    loadSuggestions();
    loadUpcomingEvents();
    checkUpcomingEventNotifications();
    window.addEventListener('scroll', handleScroll);
-
 
  } else {
    window.removeEventListener('scroll', handleScroll);
@@ -1299,53 +1299,40 @@ async function toggleCommentLike(postId, commentId) {
 
 // Em scripts.js, substitua a sua função loadSuggestions por esta versão:
 
-async function loadSuggestions() {
-    if (!suggestionsContainer) return;
-    suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
 
-    try {
-        // 1. Obter todos os IDs que devem ser excluídos das sugestões
-        const exclusionIds = new Set();
-        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
 
-        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
-        const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-        friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+// Adicione este script para controlar os menus laterais no celular
+ const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
+ const rightSidebarToggle = document.getElementById('right-sidebar-toggle');
+ const leftSidebar = document.querySelector('.left-sidebar');
+ const rightSidebar = document.querySelector('.right-sidebar');
+ 
 
-        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
-        const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
-        sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+ if (leftSidebarToggle && leftSidebar) {
+       leftSidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            leftSidebar.classList.toggle('open');
+       });
+ }
 
-        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
-        const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
-        receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
-        // 5. Buscar todos os usuários (aqui limitamos para performance, pode ajustar)
-        const allUsersSnapshot = await db.collection('users').limit(20).get();
+ if (rightSidebarToggle && rightSidebar) {
+       rightSidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            rightSidebar.classList.toggle('open');
+       });
+ }
 
-        suggestionsContainer.innerHTML = '';
-        let suggestionsAdded = 0;
 
-        allUsersSnapshot.forEach(doc => {
-            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, mostra como sugestão
-            if (!exclusionIds.has(doc.id)) {
-                const user = { id: doc.id, ...doc.data() };
-                addSuggestionToDOM(user, 0); // Contagem de hobbies em comum simplificada por agora
-                suggestionsAdded++;
-            }
-        });
-
-        if (suggestionsAdded === 0) {
-            suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
-        }
-
-    } catch (error) {
-        console.error('Erro ao carregar sugestões:', error);
-        if (suggestionsContainer) {
-            suggestionsContainer.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
-        }
-    }
-}
+ // Fecha os menus se clicar fora deles
+ document.addEventListener('click', (e) => {
+       if (leftSidebar && leftSidebar.classList.contains('open') && !leftSidebar.contains(e.target) && !leftSidebarToggle.contains(e.target)) {
+            leftSidebar.classList.remove('open');
+       }
+       if (rightSidebar && rightSidebar.classList.contains('open') && !rightSidebar.contains(e.target) && !rightSidebarToggle.contains(e.target)) {
+            rightSidebar.classList.remove('open');
+       }
+ });
 function addSuggestionToDOM(user, commonHobbiesCount) {
     if (!suggestionsContainer || !suggestionTemplate) return;
 
@@ -1703,5 +1690,75 @@ async function checkUpcomingEventNotifications() {
        console.error("Erro ao verificar notificações de eventos:", error);
    }
 }
+// Em scripts.js, substitua a sua função loadSuggestions por esta versão:
+async function loadSuggestions() {
+    if (!suggestionsContainer || !currentUserProfile) return;
+    suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
+
+    try {
+        // 1. Obter todos os IDs que devem ser excluídos das sugestões
+        const exclusionIds = new Set();
+        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
+
+        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
+        const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+        friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+
+        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
+        const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
+        sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+
+        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
+        const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
+        receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
+
+        // 5. Criar um Set com os hobbies do usuário atual para busca rápida
+        const currentUserHobbies = new Set([
+            ...(currentUserProfile.hobbies || []),
+            ...(currentUserProfile.customHobbies || [])
+        ]);
+
+        // 6. Buscar todos os usuários (limitado para performance)
+        const allUsersSnapshot = await db.collection('users').limit(50).get();
+
+        suggestionsContainer.innerHTML = '';
+        let suggestionsAdded = 0;
+
+        allUsersSnapshot.forEach(doc => {
+            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, processa
+            if (!exclusionIds.has(doc.id)) {
+                const user = { id: doc.id, ...doc.data() };
+
+                // 7. Calcula os hobbies em comum
+                const suggestionUserHobbies = [
+                    ...(user.hobbies || []),
+                    ...(user.customHobbies || [])
+                ];
+                
+                let commonHobbiesCount = 0;
+                for (const hobby of suggestionUserHobbies) {
+                    if (currentUserHobbies.has(hobby)) {
+                        commonHobbiesCount++;
+                    }
+                }
+
+                // Adiciona ao DOM com a contagem correta
+                addSuggestionToDOM(user, commonHobbiesCount);
+                suggestionsAdded++;
+            }
+        });
+
+        if (suggestionsAdded === 0) {
+            suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
+        }
+
+    } catch (error) {
+        console.error('Erro ao carregar sugestões:', error);
+        if (suggestionsContainer) {
+            suggestionsContainer.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
+        }
+    }
+}
+
 });
 

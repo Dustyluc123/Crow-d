@@ -1667,5 +1667,116 @@ body.dark-mode .modal-input {
         margin-left: 15px; /* Adiciona um espaço à esquerda do botão */
     }
 }
+/* ====================================================== */
+/* ESTILOS PARA NAVEGAÇÃO MOBILE INFERIOR                 */
+/* ====================================================== */
+
+/* Esconde a barra de navegação em telas maiores */
+#mobile-bottom-nav {
+    display: none;
+}
+
+/* Estilos aplicados em telas de até 768px (celulares) */
+@media (max-width: 768px) {
+    /* Esconde a navegação principal do header em telas pequenas */
+    .main-nav {
+        display: none;
+    }
+
+    /* Torna a barra de navegação mobile visível e a fixa no rodapé */
+    #mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: var(--light-text);
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    /* Estilos da barra para o modo escuro */
+    body.dark-mode #mobile-bottom-nav {
+        background-color: var(--dark-bg-secondary);
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* Estilo dos ícones/botões da barra */
+    .mobile-nav-item {
+        background: none;
+        border: none;
+        color: var(--dark-text);
+        font-size: 1.5rem; /* Tamanho maior para fácil clique */
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%;
+        transition: color 0.3s;
+    }
+
+    /* Estilos dos ícones para o modo escuro */
+    body.dark-mode .mobile-nav-item {
+        color: var(--light-text);
+    }
+
+    /* Cor do ícone ativo ou ao passar o mouse */
+    .mobile-nav-item.active,
+    .mobile-nav-item:hover {
+        color: var(--primary-color);
+    }
+
+    body.dark-mode .mobile-nav-item.active,
+    body.dark-mode .mobile-nav-item:hover {
+        color: var(--primary-hover);
+    }
+
+    /* Transforma as sidebars em menus laterais que surgem na tela */
+    .left-sidebar, .right-sidebar {
+        display: flex; /* Garante que o JS possa encontrá-las */
+        position: fixed;
+        top: 0;
+        height: 100%;
+        width: 280px; /* Largura do menu lateral */
+        z-index: 1001;
+        background-color: var(--light-text);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        overflow-y: auto;
+        transition: transform 0.3s ease-in-out;
+        padding-top: 20px;
+    }
     
+    body.dark-mode .left-sidebar,
+    body.dark-mode .right-sidebar {
+        background-color: var(--dark-bg-secondary);
+    }
+
+    /* Posiciona e esconde os menus fora da tela por padrão */
+    .left-sidebar {
+        left: 0;
+        transform: translateX(-100%);
+    }
+
+    .right-sidebar {
+        right: 0;
+        transform: translateX(100%);
+    }
+
+    /* Classes 'open' que o JavaScript vai usar para mostrar os menus */
+    .left-sidebar.open {
+        transform: translateX(0);
+    }
+
+    .right-sidebar.open {
+        transform: translateX(0);
+    }
+}
+    @media (min-width: 769px) {
+          #mobile-bottom-nav {
+                display: none;
+          }
+     }
+
+
 }

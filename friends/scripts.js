@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const friendEmail = document.getElementById('friendEmail').value.trim();
             if (!friendEmail) {
-                showToast('Por favor, digite um e-mail ou nome de usuário válido.', 'error');
+                showToast('Por favor, digite o nome de usuário válido.', 'error');
                 return;
             }
             
@@ -293,11 +293,19 @@ async function acceptFriendRequest(requestId, fromUserId) {
 
         // Adiciona amigo na lista do usuário atual
         const currentUserFriendRef = db.collection('users').doc(currentUser.uid).collection('friends').doc(fromUserId);
-        batch.set(currentUserFriendRef, { /* ... seus dados de amigo ... */ });
+        batch.set(currentUserFriendRef, { 
+            nickname: fromUserData.nickname,
+            photoURL: fromUserData.photoURL,
+            hobbies: fromUserData.hobbies || []
+         });
 
         // Adiciona o usuário atual na lista do amigo
         const fromUserFriendRef = db.collection('users').doc(fromUserId).collection('friends').doc(currentUser.uid);
-        batch.set(fromUserFriendRef, { /* ... seus dados de amigo ... */ });
+        batch.set(fromUserFriendRef, { 
+            nickname: currentUserProfile.nickname,
+            photoURL: currentUserProfile.photoURL,
+            hobbies: currentUserProfile.hobbies || []
+        });
 
         // Apaga o pedido de amizade
         batch.delete(requestRef);
@@ -398,6 +406,10 @@ async function rejectFriendRequest(requestId) {
         if (allFriendsGrid) {
             allFriendsGrid.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>';
         }
+        // Remove o botão "Mostrar mais" antigo se existir
+        const oldLoadMoreBtn = document.querySelector('.friends-section .load-more-btn');
+        if (oldLoadMoreBtn) oldLoadMoreBtn.remove();
+
         if (friendsListener) friendsListener();
         loadAllFriends();
     }
@@ -426,12 +438,14 @@ async function rejectFriendRequest(requestId) {
             if (snapshot.docs.length < FRIENDS_PER_PAGE) {
                 noMoreFriends = true;
             } else {
-                if (!allFriendsGrid.querySelector('.load-more-btn')) {
+                // Adiciona o botão "Mostrar mais" dentro da seção correta
+                const friendsSection = document.querySelector('.friends-section');
+                if (friendsSection && !friendsSection.querySelector('.load-more-btn')) {
                     const loadMoreBtn = document.createElement('button');
                     loadMoreBtn.className = 'action-btn load-more-btn';
                     loadMoreBtn.innerHTML = '<i class="fas fa-plus"></i> Mostrar mais';
                     loadMoreBtn.addEventListener('click', loadMoreFriends);
-                    allFriendsGrid.parentElement.appendChild(loadMoreBtn); // Adiciona o botão depois da grid
+                    friendsSection.appendChild(loadMoreBtn);
                 }
             }
         } catch (error) {
@@ -443,11 +457,11 @@ async function rejectFriendRequest(requestId) {
     }
 
     async function loadMoreFriends() {
+        const loadMoreBtn = document.querySelector('.friends-section .load-more-btn');
         try {
             if (!allFriendsGrid || isLoadingMoreFriends || noMoreFriends) return;
             isLoadingMoreFriends = true;
             
-            const loadMoreBtn = document.querySelector('.load-more-btn');
             if (loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
             
             const query = db.collection('users').doc(currentUser.uid).collection('friends').orderBy('nickname').startAfter(lastVisibleFriend).limit(FRIENDS_PER_PAGE);
@@ -455,7 +469,13 @@ async function rejectFriendRequest(requestId) {
             
             if (snapshot.empty) {
                 noMoreFriends = true;
-                if (loadMoreBtn) loadMoreBtn.remove();
+                if (loadMoreBtn) {
+                    loadMoreBtn.remove();
+                    const noMoreMessage = document.createElement('p');
+                    noMoreMessage.className = 'no-more-results';
+                    noMoreMessage.textContent = 'Não há mais amigos para mostrar.';
+                    allFriendsGrid.parentElement.appendChild(noMoreMessage);
+                }
                 isLoadingMoreFriends = false;
                 return;
             }
@@ -477,18 +497,16 @@ async function rejectFriendRequest(requestId) {
         } catch (error) {
             console.error('Erro ao carregar mais amigos:', error);
             isLoadingMoreFriends = false;
-            const loadMoreBtn = document.querySelector('.load-more-btn');
             if (loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-plus"></i> Mostrar mais';
         }
     }
     
-    // --- FUNÇÃO CORRIGIDA ---
     function addFriendToDOM(friend, container) {
         if (!container) return;
         
         const friendElement = document.createElement('div');
         friendElement.className = 'friend-card';
-        friendElement.dataset.userId = friend.id; // Correção: Usa friend.id
+        friendElement.dataset.userId = friend.id;
         
         const hobbiesHTML = friend.hobbies && friend.hobbies.length > 0 
             ? friend.hobbies.slice(0, 3).map(hobby => `<span class="hobby-tag">${hobby}</span>`).join('')
@@ -513,7 +531,6 @@ async function rejectFriendRequest(requestId) {
         const friendAvatar = friendElement.querySelector('.friend-avatar');
         const friendName = friendElement.querySelector('.friend-name');
         
-        // Correção: Todas as chamadas usam friend.id
         viewProfileBtn.addEventListener('click', () => redirectToUserProfile(friend.id));
         friendAvatar.addEventListener('click', () => redirectToUserProfile(friend.id));
         friendName.addEventListener('click', () => redirectToUserProfile(friend.id));
@@ -537,40 +554,44 @@ async function rejectFriendRequest(requestId) {
         });
     }
 
-   // Em scripts.js, substitua a sua função loadSuggestions por esta versão:
-
 async function loadSuggestions() {
-    if (!suggestionsContainer) return;
+    if (!suggestionsContainer || !currentUserProfile) return;
     suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
 
     try {
-        // 1. Obter todos os IDs que devem ser excluídos das sugestões
         const exclusionIds = new Set();
-        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
+        exclusionIds.add(currentUser.uid);
 
-        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
         const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
         friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
 
-        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
         const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
         sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
 
-        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
         const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
         receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
-        // 5. Buscar todos os usuários (aqui limitamos para performance, pode ajustar)
         const allUsersSnapshot = await db.collection('users').limit(20).get();
 
         suggestionsContainer.innerHTML = '';
         let suggestionsAdded = 0;
 
+        const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
+
         allUsersSnapshot.forEach(doc => {
-            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, mostra como sugestão
             if (!exclusionIds.has(doc.id)) {
-                const user = { id: doc.id, ...doc.data() };
-                addSuggestionToDOM(user, 0); // Contagem de hobbies em comum simplificada por agora
+                const userData = doc.data();
+                const suggestionUserHobbies = new Set(userData.hobbies || []);
+                
+                let commonHobbiesCount = 0;
+                for (const hobby of suggestionUserHobbies) {
+                    if (currentUserHobbies.has(hobby)) {
+                        commonHobbiesCount++;
+                    }
+                }
+
+                const user = { id: doc.id, ...userData };
+                addSuggestionToDOM(user, commonHobbiesCount);
                 suggestionsAdded++;
             }
         });
@@ -588,7 +609,84 @@ async function loadSuggestions() {
 }
 
     async function loadMoreSuggestions() {
-        showToast("Funcionalidade 'Ver mais' para sugestões ainda em desenvolvimento.", "info");
+        const loadMoreBtn = document.querySelector('.suggestions-section .see-more');
+        try {
+            if (isLoadingMoreSuggestions || noMoreSuggestions) return;
+            isLoadingMoreSuggestions = true;
+
+            if (loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+
+            // Reconstruir a lista de exclusão para garantir que está atualizada
+            const exclusionIds = new Set();
+            exclusionIds.add(currentUser.uid);
+
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+
+            const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
+            sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+
+            const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
+            receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
+
+            // Criar a query para a próxima página
+            let query = db.collection('users').orderBy(firebase.firestore.FieldPath.documentId()).limit(10); // Limite maior para ter chance de encontrar alguém
+            if (lastVisibleSuggestion) {
+                query = query.startAfter(lastVisibleSuggestion);
+            }
+
+            const snapshot = await query.get();
+
+            if (snapshot.empty) {
+                noMoreSuggestions = true;
+                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+                isLoadingMoreSuggestions = false;
+                return;
+            }
+
+            const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
+            let suggestionsAdded = 0;
+
+            snapshot.forEach(doc => {
+                if (!exclusionIds.has(doc.id)) {
+                    const userData = doc.data();
+                    const suggestionUserHobbies = new Set(userData.hobbies || []);
+                    
+                    let commonHobbiesCount = 0;
+                    for (const hobby of suggestionUserHobbies) {
+                        if (currentUserHobbies.has(hobby)) {
+                            commonHobbiesCount++;
+                        }
+                    }
+
+                    const user = { id: doc.id, ...userData };
+                    addSuggestionToDOM(user, commonHobbiesCount);
+                    suggestionsAdded++;
+                }
+            });
+
+            lastVisibleSuggestion = snapshot.docs[snapshot.docs.length - 1];
+
+            if (snapshot.docs.length < 10) {
+                noMoreSuggestions = true;
+                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            } else {
+                 if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
+            }
+            
+            // Se nenhum usuário válido foi encontrado nesta página, tenta carregar a próxima
+            if (suggestionsAdded === 0 && !noMoreSuggestions) {
+                loadMoreSuggestions();
+            } else {
+                isLoadingMoreSuggestions = false;
+            }
+
+        } catch (error) {
+            console.error('Erro ao carregar mais sugestões:', error);
+            showToast('Erro ao carregar mais sugestões.', 'error');
+            isLoadingMoreSuggestions = false;
+            if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
+        }
     }
 
     function addSuggestionToDOM(user, commonHobbiesCount) {
@@ -602,7 +700,7 @@ async function loadSuggestions() {
             <img src="${user.photoURL || '../img/Design sem nome2.png'}" alt="Avatar" class="profile-pic small suggestion-photo">
             <div class="suggestion-info">
                 <h4>${user.nickname || 'Usuário'}</h4>
-                <p>${commonHobbiesCount} hobbies em comum</p>
+                <p>${commonHobbiesCount} ${commonHobbiesCount === 1 ? 'hobby em comum' : 'hobbies em comum'}</p>
             </div>
             <button class="follow-btn">Seguir</button>
         `;
@@ -622,4 +720,6 @@ async function loadSuggestions() {
         
         suggestionsContainer.appendChild(suggestionElement);
     }
+
+    
 });

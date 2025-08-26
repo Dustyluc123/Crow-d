@@ -1,8 +1,3 @@
-// ... outras referências
-const logoutButton = document.querySelector('.logout-btn');
-// Adicione as linhas abaixo
-const emojiBtn = document.getElementById('emoji-btn');
-const emojiPicker = document.querySelector('emoji-picker');
 
 // Sistema de mensagens em tempo real para o Crow-d com Firebase
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,6 +30,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatUserStatus = document.querySelector('.chat-user-status');
     const chatAvatar = document.querySelector('.chat-avatar');
     const logoutButton = document.querySelector('.logout-btn');
+    const emojiBtn = document.getElementById('emoji-btn');
+    const emojiPicker = document.querySelector('emoji-picker');
+    const suggestionsContainer = document.getElementById('suggestions-container');
+    const suggestionsList = document.getElementById('suggestions-list');
 
     // Variáveis globais
     let currentUser = null;
@@ -43,179 +42,139 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentChatId = null;
     let messagesListener = null;
     let conversationsListener = null;
-    let hasMessages = false; 
-    let processedConversations = new Map(); 
-    let messagesSent = new Set(); 
-
-    document.addEventListener('DOMContentLoaded', function() {
-    // Configuração do Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
-        authDomain: "tcclogin-7e7b8.firebaseapp.com",
-        projectId: "tcclogin-7e7b8",
-        storageBucket: "tcclogin-7e7b8.appspot.com",
-        messagingSenderId: "1066633833169",
-        appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0"
-    };
-
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // Referências aos elementos do DOM
-    const conversationsContainer = document.getElementById('conversations-list-container');
-    const suggestionsContainer = document.getElementById('suggestions-container');
-    const suggestionsList = document.getElementById('suggestions-list');
-    const suggestionTemplate = document.getElementById('suggestion-template');
-    
-    let currentUser = null;
-
-    auth.onAuthStateChanged(function(user) {
-        if (user) {
-            currentUser = user;
-            checkConversations();
-        } else {
-            window.location.href = '../login/login.html';
-        }
-    });
-
-    /**
-     * Verifica se o usuário tem conversas existentes.
-     * Se tiver, carrega as conversas. Senão, carrega as sugestões.
-     */
-    async function checkConversations() {
-        if (!currentUser) return;
-
-        // Procura por conversas onde o ID do usuário atual está no array 'participants'
-        const conversationsRef = db.collection('conversations')
-            .where('participants', 'array-contains', currentUser.uid);
-
-        const snapshot = await conversationsRef.get();
-
-        if (snapshot.empty) {
-            // Nenhuma conversa encontrada, mostra as sugestões
-            conversationsContainer.style.display = 'none';
-            suggestionsContainer.style.display = 'block';
-            loadFriendSuggestions();
-        } else {
-            // Conversas encontradas, esconde as sugestões e carrega as conversas
-            suggestionsContainer.style.display = 'none';
-            conversationsContainer.style.display = 'block';
-            loadConversations(snapshot); // Chama a função que você usa para listar as conversas
-        }
-    }
-
-    /**
-     * Carrega os amigos do usuário para exibi-los como sugestões.
-     */
-    async function loadFriendSuggestions() {
-        try {
-            // 1. Pega a lista de IDs de amigos
-            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-            
-            if (friendsSnapshot.empty) {
-                suggestionsList.innerHTML = '<p>Você ainda não tem amigos para sugerir. Adicione amigos primeiro!</p>';
-                return;
-            }
-
-            suggestionsList.innerHTML = ''; // Limpa o "Carregando..."
-
-            // 2. Para cada amigo, busca os detalhes do perfil
-            friendsSnapshot.forEach(async (friendDoc) => {
-                const friendId = friendDoc.id;
-                const userDoc = await db.collection('users').doc(friendId).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    addSuggestionToDOM(userDoc.id, userData);
-                }
-            });
-
-        } catch (error) {
-            console.error("Erro ao carregar sugestões de amigos:", error);
-            suggestionsList.innerHTML = '<p>Ocorreu um erro ao carregar as sugestões.</p>';
-        }
-    }
-
-    // Em mensagen/script.js
-/**
- * Adiciona uma sugestão de amigo na tela.
- * @param {string} userId - O ID do usuário amigo.
- * @param {object} userData - Os dados do perfil do amigo.
- */
-function addSuggestionToDOM(userId, userData) {
-    const suggestionTemplate = document.getElementById('suggestion-template');
-    if (!suggestionTemplate) return;
-
-    const suggestionClone = document.importNode(suggestionTemplate.content, true);
-    const linkElement = suggestionClone.querySelector('.suggestion-item-link');
-    const photoElement = suggestionClone.querySelector('.suggestion-photo');
-    const nameElement = suggestionClone.querySelector('.suggestion-name');
-    const courseElement = suggestionClone.querySelector('.suggestion-course');
-
-    photoElement.src = userData.photoURL || '../img/Design sem nome2.png';
-    nameElement.textContent = userData.nickname || 'Usuário';
-    courseElement.textContent = userData.grade || 'Curso não informado';
-
-    // --- AQUI ESTÁ A CORREÇÃO ---
-    // Remove o link antigo e adiciona um evento de clique
-    linkElement.href = '#'; // Define um href placeholder
-    linkElement.addEventListener('click', (e) => {
-        e.preventDefault(); // Impede a navegação
-        
-        // Esconde as sugestões e mostra a área de conversas
-        const suggestionsContainer = document.getElementById('suggestions-container');
-        const conversationsContainer = document.querySelector('.messages-container');
-        if(suggestionsContainer) suggestionsContainer.style.display = 'none';
-        if(conversationsContainer) conversationsContainer.style.display = 'flex';
-        
-        // Inicia a conversa com o usuário clicado
-        startConversation(userId);
-    });
-    // --- FIM DA CORREÇÃO ---
-
-    const suggestionsList = document.getElementById('suggestions-list');
-    if (suggestionsList) {
-        suggestionsList.appendChild(suggestionClone);
-    }
-}
-    
-    /**
-     * Função placeholder para carregar e exibir as conversas.
-     * Você deve substituir isso pela sua lógica real.
-     */
-    function loadConversations(snapshot) {
-        // Exemplo:
-        conversationsContainer.innerHTML = ''; // Limpa o container
-        snapshot.forEach(doc => {
-            const conversationData = doc.data();
-            const conversationElement = document.createElement('div');
-            conversationElement.className = 'conversation-preview';
-            // Lógica para encontrar o nome do outro participante, a última mensagem, etc.
-            conversationElement.textContent = `Conversa com ${conversationData.participants.find(p => p !== currentUser.uid)}`;
-            conversationsContainer.appendChild(conversationElement);
-        });
-        console.log(`${snapshot.size} conversas carregadas.`);
-    }
-});
+    let hasMessages = false;
+    let processedConversations = new Map();
+    let messagesSent = new Set();
 
     // Verificar autenticação do usuário
     auth.onAuthStateChanged(async function(user) {
-          const profileLink = document.querySelector('.main-nav a.profile-link');
-        if (profileLink) {
-            // Define o link para a página do utilizador logado (user.html) com o UID correto
-            profileLink.href = `../pages/user.html?uid=${user.uid}`;
-        }
+        const profileLink = document.querySelector('.main-nav a.profile-link');
         if (user) {
+            if (profileLink) {
+                profileLink.href = `../pages/user.html?uid=${user.uid}`;
+            }
             currentUser = user;
             await loadUserProfile(user.uid);
-            loadConversations();
+            await checkConversations();
             checkUrlParams();
         } else {
             window.location.href = '../login/login.html';
         }
     });
+
+    // --- SUGESTÃO DE USUÁRIOS PARA INICIAR CONVERSA ---
+    async function showUserSuggestions() {
+        if (!suggestionsContainer || !suggestionsList || !currentUserProfile) {
+            console.log("Não foi possível mostrar sugestões: um dos elementos necessários (suggestionsContainer, suggestionsList, currentUserProfile) não foi encontrado.");
+            return;
+        }
+
+        try {
+            // 1. Obter usuários com quem o usuário atual já conversou
+            const conversationsSnapshot = await db.collection('conversations')
+                .where('participants', 'array-contains', currentUser.uid).get();
+            const conversedUserIds = new Set();
+            conversationsSnapshot.forEach(doc => {
+                doc.data().participants.forEach(id => {
+                    if (id !== currentUser.uid) {
+                        conversedUserIds.add(id);
+                    }
+                });
+            });
+
+            // 2. Obter todos os usuários do banco de dados
+            const allUsersSnapshot = await db.collection('users').get();
+            const allUsers = [];
+            allUsersSnapshot.forEach(doc => {
+                if (doc.id !== currentUser.uid && !conversedUserIds.has(doc.id)) {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                }
+            });
+
+            // 3. Calcular a pontuação de correspondência para cada usuário
+            const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
+            const suggestedUsers = allUsers.map(user => {
+                const otherUserHobbies = new Set(user.hobbies || []);
+                const commonHobbies = [...currentUserHobbies].filter(hobby => otherUserHobbies.has(hobby));
+                const score = commonHobbies.length;
+                return { ...user, score, commonHobbies };
+            }).filter(user => user.score > 0); // Apenas usuários com hobbies em comum
+
+            // 4. Ordenar usuários por pontuação (mais hobbies em comum primeiro)
+            suggestedUsers.sort((a, b) => b.score - a.score);
+
+            suggestionsList.innerHTML = ''; // Limpar sugestões anteriores
+
+            if (suggestedUsers.length === 0) {
+                suggestionsList.innerHTML = '<p>Não encontramos sugestões com base em hobbies em comum.</p>';
+            } else {
+                // Limitar o número de sugestões para não sobrecarregar a UI
+                const suggestionsToShow = suggestedUsers.slice(0, 10);
+                for (const userData of suggestionsToShow) {
+                    addSuggestionToDOM(userData.id, userData);
+                }
+            }
+
+            suggestionsContainer.style.display = 'block';
+        } catch (error) {
+            console.error("Erro ao carregar sugestões de usuários:", error);
+            if (suggestionsList) {
+                suggestionsList.innerHTML = '<p>Ocorreu um erro ao carregar as sugestões.</p>';
+            }
+        }
+    }
+
+
+    async function checkConversations() {
+        if (!currentUser) return;
+
+        const conversationsRef = db.collection('conversations')
+            .where('participants', 'array-contains', currentUser.uid);
+
+        const snapshot = await conversationsRef.get();
+        const conversationsContainer = document.getElementById('conversations-list-container');
+
+        if (snapshot.empty) {
+            if (conversationsContainer) conversationsContainer.style.display = 'none';
+            loadConversations(); // Carrega o estado de "nenhuma conversa"
+            await showUserSuggestions();
+        } else {
+            if (conversationsContainer) conversationsContainer.style.display = 'block';
+            loadConversations(); // Carrega as conversas existentes
+            // Não é necessário chamar showUserSuggestions aqui, pois será chamado em loadConversations
+        }
+    }
+
+    /**
+     * Adiciona uma sugestão de amigo na tela.
+     * @param {string} userId - O ID do usuário amigo.
+     * @param {object} userData - Os dados do perfil do amigo.
+     */
+    function addSuggestionToDOM(userId, userData) {
+        const suggestionTemplate = document.getElementById('suggestion-template');
+        if (!suggestionTemplate || !suggestionsList) return;
+
+        const suggestionClone = document.importNode(suggestionTemplate.content, true);
+        const linkElement = suggestionClone.querySelector('.suggestion-item-link');
+        const photoElement = suggestionClone.querySelector('.suggestion-photo');
+        const nameElement = suggestionClone.querySelector('.suggestion-name');
+        const courseElement = suggestionClone.querySelector('.suggestion-course');
+
+        photoElement.src = userData.photoURL || '../img/Design sem nome2.png';
+        nameElement.textContent = userData.nickname || 'Usuário';
+        courseElement.textContent = userData.grade || 'Curso não informado';
+
+        linkElement.href = '#';
+        linkElement.addEventListener('click', (e) => {
+            e.preventDefault();
+            const conversationsContainer = document.getElementById('conversations-list-container');
+            if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+            if (conversationsContainer) conversationsContainer.style.display = 'block';
+            startConversation(userId);
+        });
+
+        suggestionsList.appendChild(suggestionClone);
+    }
 
     // Event listener para o botão de logout
     if (logoutButton) {
@@ -256,31 +215,31 @@ function addSuggestionToDOM(userId, userData) {
     }
 
     // Event listener para o botão de emoji
-if (emojiBtn && emojiPicker) {
-    emojiBtn.addEventListener('click', (event) => {
-        event.stopPropagation(); // Impede que o clique feche o seletor imediatamente
-        const isVisible = emojiPicker.style.display !== 'none';
-        emojiPicker.style.display = isVisible ? 'none' : 'block';
-    });
+    if (emojiBtn && emojiPicker) {
+        emojiBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Impede que o clique feche o seletor imediatamente
+            const isVisible = emojiPicker.style.display !== 'none';
+            emojiPicker.style.display = isVisible ? 'none' : 'block';
+        });
 
-    // Adiciona o emoji selecionado ao campo de texto
-    emojiPicker.addEventListener('emoji-click', event => {
-        chatInput.value += event.detail.emoji.unicode;
-    });
+        // Adiciona o emoji selecionado ao campo de texto
+        emojiPicker.addEventListener('emoji-click', event => {
+            if(chatInput) chatInput.value += event.detail.emoji.unicode;
+        });
 
-    // Fecha o seletor de emojis se clicar fora dele
-    document.addEventListener('click', (event) => {
-        if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
-            emojiPicker.style.display = 'none';
-        }
-    });
-}
+        // Fecha o seletor de emojis se clicar fora dele
+        document.addEventListener('click', (event) => {
+            if (!emojiPicker.contains(event.target) && event.target !== emojiBtn) {
+                emojiPicker.style.display = 'none';
+            }
+        });
+    }
 
     // Função para verificar parâmetros da URL
     function checkUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('uid');
-        
+
         if (userId && userId !== currentUser.uid) {
             startConversation(userId);
         }
@@ -290,7 +249,7 @@ if (emojiBtn && emojiPicker) {
     async function loadUserProfile(userId) {
         try {
             const doc = await db.collection('users').doc(userId).get();
-            
+
             if (doc.exists) {
                 currentUserProfile = doc.data();
             } else {
@@ -319,15 +278,19 @@ if (emojiBtn && emojiPicker) {
     }
 
     function loadConversations() {
+        if (!conversationsList) return;
         conversationsList.innerHTML = '<div class="loading-conversations"><i class="fas fa-spinner fa-spin"></i> Carregando conversas...</div>';
         if (conversationsListener) conversationsListener();
         processedConversations = new Map();
         try {
             conversationsListener = db.collection('conversations')
                 .where('participants', 'array-contains', currentUser.uid)
-                .onSnapshot(snapshot => {
+                .onSnapshot(async snapshot => { // Adicionado async aqui
                     if (snapshot.empty) {
-                        conversationsList.innerHTML = '<div class="no-conversations">Nenhuma conversa encontrada.</div>';
+                        if (conversationsList.innerHTML.includes('loading-conversations')) {
+                            conversationsList.innerHTML = '<div class="no-conversations">Nenhuma conversa encontrada.</div>';
+                        }
+                        await showUserSuggestions(); // Chamar sugestões se não houver conversas
                         return;
                     }
                     const existingConversations = new Map();
@@ -346,7 +309,8 @@ if (emojiBtn && emojiPicker) {
                         const timeB = safeGetDate(b.lastMessageTime);
                         return timeB - timeA;
                     });
-                    processConversations(allConversations, existingConversations);
+                    await processConversations(allConversations, existingConversations); // Adicionado await aqui
+                    await showUserSuggestions(); // Chamar sugestões após carregar as conversas
                 }, error => {
                     console.error('Erro ao carregar conversas:', error);
                     conversationsList.innerHTML = '<div class="error-message">Erro ao carregar conversas. Tente novamente mais tarde.</div>';
@@ -356,7 +320,7 @@ if (emojiBtn && emojiPicker) {
             conversationsList.innerHTML = '<div class="error-message">Erro ao configurar sistema de mensagens. Tente novamente mais tarde.</div>';
         }
     }
-    
+
     async function processConversations(conversations, existingConversations) {
         const fragment = document.createDocumentFragment();
         const processedIds = new Set();
@@ -412,10 +376,12 @@ if (emojiBtn && emojiPicker) {
                 conversationsList.removeChild(element);
             }
         });
-        conversationsList.appendChild(fragment);
-        if (!currentChatId && conversationsList.children.length > 0) {
-            const firstConversation = conversationsList.querySelector('.conversation-item');
-            if (firstConversation) firstConversation.click();
+        if (conversationsList) {
+            conversationsList.appendChild(fragment);
+            if (!currentChatId && conversationsList.children.length > 0) {
+                const firstConversation = conversationsList.querySelector('.conversation-item');
+                if (firstConversation) firstConversation.click();
+            }
         }
     }
 
@@ -460,6 +426,7 @@ if (emojiBtn && emojiPicker) {
 
     function loadMessages(conversationId, otherUserId) {
         currentChatId = conversationId;
+        if (!chatMessages || !chatArea) return;
         chatMessages.innerHTML = '<div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Carregando mensagens...</div>';
         if (messagesListener) messagesListener();
         db.collection('users').doc(otherUserId).get()
@@ -467,8 +434,8 @@ if (emojiBtn && emojiPicker) {
                 if (doc.exists) {
                     const userData = doc.data();
                     currentChatUser = { id: otherUserId, ...userData };
-                    chatUserName.textContent = userData.nickname || 'Usuário';
-                    chatAvatar.src = userData.photoURL || '../img/Design sem nome2.png';
+                    if (chatUserName) chatUserName.textContent = userData.nickname || 'Usuário';
+                    if (chatAvatar) chatAvatar.src = userData.photoURL || '../img/Design sem nome2.png';
                     chatArea.style.display = 'flex';
                 }
             }).catch(error => console.error('Erro ao carregar perfil do usuário:', error));
@@ -494,8 +461,7 @@ if (emojiBtn && emojiPicker) {
                     if (change.type === 'added') {
                         const message = { id: change.doc.id, ...change.doc.data() };
                         if (!messagesSent.has(message.id)) addMessageToDOM(message);
-                    }
-                    else if (change.type === 'removed') {
+                    } else if (change.type === 'removed') {
                         const messageElement = document.querySelector(`.message[data-message-id="${change.doc.id}"]`);
                         if (messageElement) messageElement.remove();
                     }
@@ -532,11 +498,11 @@ if (emojiBtn && emojiPicker) {
                 deleteMessage(message.id);
             });
         }
-        chatMessages.appendChild(messageElement);
+        if (chatMessages) chatMessages.appendChild(messageElement);
     }
 
     async function sendMessage() {
-        if (!currentChatId || !currentChatUser) {
+        if (!currentChatId || !currentChatUser || !chatInput) {
             alert('Selecione uma conversa para enviar mensagens.');
             return;
         }
@@ -554,10 +520,12 @@ if (emojiBtn && emojiPicker) {
                     lastMessage: messageText
                 });
             }
-            const noMessagesElement = chatMessages.querySelector('.no-messages');
-            if (noMessagesElement) {
-                noMessagesElement.remove();
-                hasMessages = true;
+            if (chatMessages) {
+                const noMessagesElement = chatMessages.querySelector('.no-messages');
+                if (noMessagesElement) {
+                    noMessagesElement.remove();
+                    hasMessages = true;
+                }
             }
             const message = {
                 text: messageText,
@@ -604,8 +572,9 @@ if (emojiBtn && emojiPicker) {
         }
     }
 
-async function deleteMessage(messageId) {
-        const confirmed = await showConfirmationModal("Excluir Mensagem", "Tem a certeza que deseja excluir esta mensagem?");
+    async function deleteMessage(messageId) {
+        // Assuming showConfirmationModal and showCustomAlert are defined elsewhere
+        const confirmed = confirm("Tem a certeza que deseja excluir esta mensagem?");
         if (!confirmed) return;
 
         try {
@@ -614,9 +583,10 @@ async function deleteMessage(messageId) {
             console.log('Mensagem excluída com sucesso');
         } catch (error) {
             console.error('Erro ao excluir mensagem:', error);
-            showCustomAlert('Erro ao excluir mensagem. Tente novamente.');
+            alert('Erro ao excluir mensagem. Tente novamente.');
         }
     }
+
     function formatTimestamp(date, includeTime = false) {
         if (!(date instanceof Date) || isNaN(date)) return 'Agora mesmo';
         const now = new Date();
@@ -635,8 +605,8 @@ async function deleteMessage(messageId) {
     }
 
     function scrollToBottom() {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     }
-    
-    
 });

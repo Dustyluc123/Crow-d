@@ -123,24 +123,25 @@
        </aside>
 
 
-   </div> <template id="post-template">
-  
+   </div> 
+   
+   <template id="post-template">
        <div class="post">
            <div class="post-header">
-    <img src="img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
-    <div class="post-info">
-        <h3 class="post-author-name">Nome do Usuário</h3>
-        <span class="post-timestamp">há 5 minutos</span>
-    </div>
-    <button class="delete-btn post-delete-btn" style="display: none;" title="Excluir publicação">
-        <i class="fas fa-trash"></i>
-    </button>
-</div>
+                <img src="img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic post-author-photo">
+                <div class="post-info">
+                    <h3 class="post-author-name">Nome do Usuário</h3>
+                    <span class="post-timestamp">há 5 minutos</span>
+                </div>
+                <button class="delete-btn post-delete-btn" style="display: none;" title="Excluir publicação">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
            <div class="post-content">
                <p class="post-text">Conteúdo da publicação...</p>
                <div class="post-media" style="display: none;">
-    <img src="" alt="Imagem da publicação" class="post-image">
-</div>
+                    <img src="" alt="Imagem da publicação" class="post-image">
+                </div>
            </div>
            <div class="post-actions">
                <button class="post-action like-btn"><i class="far fa-heart"></i> <span class="like-count">0</span></button>
@@ -194,7 +195,7 @@
    </template>
 
 
-<div id="customAlertModal" class="modal">
+    <div id="customAlertModal" class="modal">
        <div class="modal-content">
            <div class="modal-header">
                <h2 id="customAlertTitle">Aviso</h2>
@@ -209,12 +210,21 @@
        </div>
    </div>
 
+   <div id="mobile-bottom-nav">
+     <a href="mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
+        <a href="index.html" class="mobile-nav-item active"><i class="fas fa-home"></i></a>
+        <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
+        <a href="friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
+        <button id="right-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-user-plus"></i></button>
+        <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
+   </div>
+
+
 
    <script src="home/scripts.js"></script>
    <script src="config/darkmode.js"></script>
    <script src="config/global.js" defer></script>
    <script src="config/global-notifications.js" defer></script>
-    <script src="config/global-modals.js"></script>
+   <script src="config/global-modals.js"></script>
 </body>
 </html>
-
