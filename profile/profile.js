@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (user) {
             currentUser = user;
             db.collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists) window.location.href = '../home/home.html';
+                if (doc.exists) window.location.href = '../index.html';
             });
         } else {
             window.location.href = '../login/login.html';
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             await db.collection('users').doc(userId).set(profileData);
-            window.location.href = '../home/home.html';
+            window.location.href = '../index.html';
         } catch (error) {
             console.error('Erro ao salvar perfil:', error);
             showCustomAlert('Erro ao salvar perfil: ' + error.message);

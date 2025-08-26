@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
             profileUserId = urlParams.get('uid');
             
             if (!profileUserId) {
-                window.location.href = '../home/home.html';
+                window.location.href = '../index.html';
                 return;
             }
             const profileLink = document.querySelector('.main-nav a.profile-link');
@@ -210,7 +210,7 @@ async function loadProfileUser(userId) {
 
         updateProfileUI();
     } else {
-        window.location.href = '../home/home.html';
+        window.location.href = '../index.html';
     }
 }
 
@@ -528,7 +528,7 @@ async function loadMoreUserPosts() {
                 if (e.target.closest('button, a, .post-actions, .post-comments, .original-post-container, .post-image')) {
                     return;
                 }
-                window.location.href = `../home/home.html?post=${post.id}`;
+                window.location.href = `../index?post=${post.id}`;
             });
         }
     
@@ -549,7 +549,7 @@ async function loadMoreUserPosts() {
             
             originalPostContainer.style.cursor = 'pointer';
             originalPostContainer.addEventListener('click', () => {
-                window.location.href = `../home/home.html?post=${post.originalPostId}`;
+                window.location.href = `../index?post=${post.originalPostId}`;
             });
     
             postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
@@ -932,7 +932,7 @@ async function toggleRepost(postId, buttonElement) {
      * @param {string} postId O ID do post a ser compartilhado.
      */
   async function sharePost(postId) {
-    const homeUrl = new URL('../home/home.html', window.location.href).href;
+    const homeUrl = new URL('../index.html', window.location.href).href;
     const postUrl = `${homeUrl}?post=${postId}`;
 
     try {

@@ -41,7 +41,6 @@ body.dark-mode {
     background-color: var(--dark-bg);
     color: var(--light-text);
 }
-
 /* HEADER / MENU DE NAVEGAÇÃO */
 header {
     background-color: var(--light-text);
@@ -70,20 +69,26 @@ body.dark-mode header {
     font-size: 1.2rem;
     color: var(--dark-text);
     transition: color 0.3s;
+    flex-shrink: 0;
 }
 
 body.dark-mode .logo {
     color: var(--light-text);
 }
 
-.logo-img {
-    height: 150px;
-    margin-right: 50px;
+ .logo-img {
+height: 100px; 
+width: auto; 
+margin-right: 15px; 
 }
 
+/* MODIFICAÇÃO 2: Centralização da navegação */
 .main-nav {
+   flex-grow: 1; /* Permite que a navegação ocupe o espaço restante */
     display: flex;
+    justify-content: center; /* Centraliza os links */
     gap: 20px;
+    min-width: 0; /* Impede que os links "empurrem" os outros elementos */
 }
 
 .main-nav a {
@@ -104,7 +109,7 @@ body.dark-mode .main-nav a {
     color: var(--primary-color);
 }
 
-body.dark-mode .main-nav a:hover, 
+body.dark-mode .main-nav a:hover,
 body.dark-mode .main-nav a.active {
     background-color: var(--dark-bg-tertiary);
     color: var(--primary-hover);
@@ -113,6 +118,7 @@ body.dark-mode .main-nav a.active {
 .user-actions {
     display: flex;
     align-items: center;
+       flex-shrink: 0; /* Impede que a área do usuário encolha */
 }
 
 .logout-btn {

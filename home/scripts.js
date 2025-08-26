@@ -202,7 +202,7 @@ auth.onAuthStateChanged(async function (user) {
    const profileLink = document.querySelector('.main-nav a.profile-link');
    if (profileLink) {
        // Define o link para a página do usuário logado (user.html) com o UID correto
-       profileLink.href = `../pages/user.html?uid=${user.uid}`;
+       profileLink.href = `pages/user.html?uid=${user.uid}`;
    }
 
 
@@ -230,7 +230,7 @@ auth.onAuthStateChanged(async function (user) {
 
  } else {
    window.removeEventListener('scroll', handleScroll);
-   window.location.href = "../login/login.html";
+   window.location.href = "login/login.html";
  }
 });
  // Event listener para o botão de logout
@@ -239,7 +239,7 @@ auth.onAuthStateChanged(async function (user) {
      e.preventDefault();
      auth.signOut()
        .then(() => {
-         window.location.href = "../login/login.html";
+         window.location.href = "login/login.html";
        })
        .catch((error) => {
          console.error("Erro ao fazer logout:", error);
@@ -687,7 +687,7 @@ function addPostToDOM(post, isSingleView = false) {
         originalPostContainer.appendChild(originalPostContent);
         originalPostContainer.style.cursor = 'pointer';
         originalPostContainer.addEventListener('click', () => {
-            window.location.href = `home.html?post=${post.originalPostId}`;
+            window.location.href = `index?post=${post.originalPostId}`;
         });
         postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 
@@ -836,7 +836,7 @@ function addPostToDOM(post, isSingleView = false) {
 }
  // Função para redirecionar para o perfil do usuário
  function redirectToUserProfile(userId) {
-   window.location.href = `../pages/user.html?uid=${userId}`;
+   window.location.href = `pages/user.html?uid=${userId}`;
  }
  async function toggleSavePost(postId, buttonElement) {
    if (!currentUser) {

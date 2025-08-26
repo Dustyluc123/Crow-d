@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notificationElement.addEventListener('click', () => {
                 let url = '#';
                 if (notification.postId) {
-                    url = `../home/home.html?post=${notification.postId}`;
+                    url = `../index.html?post=${notification.postId}`;
                 } else if (notification.groupId) { // Adicionado para levar ao grupo
                     url = `../Club/grupos.html`;
                 } else if (notification.fromUserId) {

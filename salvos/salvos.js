@@ -695,7 +695,7 @@ async function deletePost(postId) {
 */
 async function sharePost(postId) {
   // Constrói a URL correta, garantindo que ela aponte para a home
-  const homeUrl = new URL('../home/home.html', window.location.href).href;
+  const homeUrl = new URL('../index.html', window.location.href).href;
   const postUrl = `${homeUrl}?post=${postId}`;
 
   try {
