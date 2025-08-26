@@ -77,9 +77,9 @@ body.dark-mode .logo {
 }
 
  .logo-img {
-height: 100px; 
+height: 40px; 
 width: auto; 
-margin-right: 15px; 
+margin-right: 10px; 
 }
 
 /* MODIFICAÇÃO 2: Centralização da navegação */
@@ -1585,4 +1585,87 @@ body.dark-mode .modal-input {
     background-color: var(--dark-bg-tertiary);
     border-color: var(--dark-border);
     color: var(--light-text);
+}
+/* ====================================================== */
+/* ESTILOS PARA RESPONSIVIDADE (TABLETS E TELEMÓVEIS) */
+/* ====================================================== */
+
+/* Para ecrãs até 992px (tablets e telemóveis maiores) */
+@media (max-width: 992px) {
+    .main-container {
+        /* Empilha as colunas verticalmente */
+        flex-direction: column;
+        padding: 0 15px; /* Reduz o espaçamento lateral */
+        margin-top: 15px;
+    }
+
+    .sidebar {
+        /* Faz com que as barras laterais ocupem a largura total */
+        width: 100%;
+        position: static; /* Remove o efeito "sticky" */
+        order: 3; /* Coloca as barras laterais depois do feed */
+    }
+
+    .feed {
+        order: 2; /* Coloca o feed no meio */
+    }
+
+    .left-sidebar {
+        order: 1; /* Coloca os atalhos rápidos primeiro */
+    }
+}
+
+/* Para ecrãs até 768px (maioria dos telemóveis) */
+@media (max-width: 768px) {
+    body {
+        /* Aumenta o espaço do topo para o header que pode ficar maior */
+        padding-top: 70px;
+    }
+
+    header {
+        height: 70px; /* Altura do header ajustada para telemóveis */
+        padding: 0 15px;
+    }
+
+    .logo-img {
+        height: 60px; /* Reduz o logo para caber melhor */
+    }
+
+    .logo span {
+        display: none; /* Esconde o texto "Crow-d" para ganhar espaço */
+    }
+
+    .main-nav a {
+        padding: 8px; /* Menos espaçamento nos botões de navegação */
+    }
+
+    .main-nav a span {
+        display: none; /* Esconde o texto dos links, mostrando só os ícones */
+    }
+
+    .main-nav a i {
+        font-size: 1.3rem; /* Aumenta um pouco o tamanho do ícone */
+        margin: 0 5px;
+    }
+
+    /* Ajusta as grelhas para uma coluna */
+    .friends-grid, .groups-container, .events-container {
+        grid-template-columns: 1fr;
+    }
+
+    .post-actions {
+        flex-wrap: wrap;
+    }
+
+    .post-action {
+        flex-grow: 1;
+        justify-content: center;
+    }
+    /* Espaçamento extra para o botão Sair em telas menores */
+@media (max-width: 768px) {
+    .user-actions {
+        margin-left: 15px; /* Adiciona um espaço à esquerda do botão */
+    }
+}
+    
 }
