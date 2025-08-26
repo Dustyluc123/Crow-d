@@ -498,9 +498,11 @@ body.dark-mode .post-comments {
 /* Em home/home.css - Adicione estes estilos */
 
 .post-comments .comment-input {
+    overflow-wrap: break-word;
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 15px; /* << ADICIONE ESTA LINHA */
 }
 
 .post-comments .comment-text {
@@ -1662,7 +1664,6 @@ body.dark-mode .modal-input {
         justify-content: center;
     }
     /* Espaçamento extra para o botão Sair em telas menores */
-@media (max-width: 768px) {
     .user-actions {
         margin-left: 15px; /* Adiciona um espaço à esquerda do botão */
     }
@@ -1777,6 +1778,3 @@ body.dark-mode .modal-input {
                 display: none;
           }
      }
-
-
-}
