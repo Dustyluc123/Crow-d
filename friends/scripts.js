@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const target = this.getAttribute('data-target') || this.closest('.sidebar-section').querySelector('h3').textContent.toLowerCase();
             if (target.includes('sugestões') || target.includes('sugestão')) {
-                loadMoreSuggestions();
+                loadMoreSuggestions(this);
             } else {
                 loadMoreFriends();
             }
@@ -554,11 +554,18 @@ async function rejectFriendRequest(requestId) {
         });
     }
 
+// Em friends/scripts.js
+
 async function loadSuggestions() {
     if (!suggestionsContainer || !currentUserProfile) return;
     suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
+    
+    // Reseta as variáveis de paginação para um novo carregamento
+    lastVisibleSuggestion = null;
+    noMoreSuggestions = false;
 
     try {
+        // Constrói a lista de IDs a serem excluídos (amigos, pedidos pendentes, etc.)
         const exclusionIds = new Set();
         exclusionIds.add(currentUser.uid);
 
@@ -571,14 +578,17 @@ async function loadSuggestions() {
         const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
         receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
-        const allUsersSnapshot = await db.collection('users').limit(20).get();
+        // --- INÍCIO DA CORREÇÃO ---
+        // Busca os primeiros usuários, ordenando pelo ID do documento para consistência
+        const query = db.collection('users').orderBy(firebase.firestore.FieldPath.documentId()).limit(10);
+        const snapshot = await query.get();
+        // --- FIM DA CORREÇÃO ---
 
         suggestionsContainer.innerHTML = '';
         let suggestionsAdded = 0;
-
         const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
 
-        allUsersSnapshot.forEach(doc => {
+        snapshot.forEach(doc => {
             if (!exclusionIds.has(doc.id)) {
                 const userData = doc.data();
                 const suggestionUserHobbies = new Set(userData.hobbies || []);
@@ -590,14 +600,20 @@ async function loadSuggestions() {
                     }
                 }
 
-                const user = { id: doc.id, ...userData };
-                addSuggestionToDOM(user, commonHobbiesCount);
+                addSuggestionToDOM({ id: doc.id, ...userData }, commonHobbiesCount);
                 suggestionsAdded++;
             }
         });
+        
+        // --- ADIÇÃO CRÍTICA: Guarda a referência ao último documento visto ---
+        if (!snapshot.empty) {
+            lastVisibleSuggestion = snapshot.docs[snapshot.docs.length - 1];
+        }
+        // --- FIM DA ADIÇÃO ---
 
         if (suggestionsAdded === 0) {
             suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
+            noMoreSuggestions = true;
         }
 
     } catch (error) {
@@ -608,29 +624,39 @@ async function loadSuggestions() {
     }
 }
 
-    async function loadMoreSuggestions() {
-        const loadMoreBtn = document.querySelector('.suggestions-section .see-more');
-        try {
-            if (isLoadingMoreSuggestions || noMoreSuggestions) return;
-            isLoadingMoreSuggestions = true;
+async function loadMoreSuggestions(loadMoreBtn) {
+    // 1. Prevenir múltiplos cliques
+    if (isLoadingMoreSuggestions || noMoreSuggestions) return;
 
-            if (loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
+    // 2. Definir o estado de carregamento
+    isLoadingMoreSuggestions = true;
+    if (loadMoreBtn) loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Carregando...';
 
-            // Reconstruir a lista de exclusão para garantir que está atualizada
-            const exclusionIds = new Set();
-            exclusionIds.add(currentUser.uid);
+    try {
+        const MIN_SUGGESTIONS_TO_ADD = 3; // Tentar adicionar pelo menos 3 novas sugestões
+        let suggestionsAdded = 0;
 
-            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-            friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+        // 3. Construir a lista de exclusão (incluindo usuários já visíveis)
+        const exclusionIds = new Set([currentUser.uid]);
+        document.querySelectorAll('.suggestion[data-user-id]').forEach(el => exclusionIds.add(el.dataset.userId));
 
-            const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
-            sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+        const [friendsSnapshot, sentRequestsSnapshot, receivedRequestsSnapshot] = await Promise.all([
+            db.collection('users').doc(currentUser.uid).collection('friends').get(),
+            db.collection('friendRequests').where('from', '==', currentUser.uid).get(),
+            db.collection('friendRequests').where('to', '==', currentUser.uid).get()
+        ]);
+        friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
+        sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
+        receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
-            const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
-            receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
+        const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
 
-            // Criar a query para a próxima página
-            let query = db.collection('users').orderBy(firebase.firestore.FieldPath.documentId()).limit(10); // Limite maior para ter chance de encontrar alguém
+        // 4. Loop para buscar usuários até encontrar sugestões válidas
+        while (suggestionsAdded < MIN_SUGGESTIONS_TO_ADD && !noMoreSuggestions) {
+            let query = db.collection('users')
+                        .orderBy(firebase.firestore.FieldPath.documentId())
+                        .limit(10);
+
             if (lastVisibleSuggestion) {
                 query = query.startAfter(lastVisibleSuggestion);
             }
@@ -639,55 +665,40 @@ async function loadSuggestions() {
 
             if (snapshot.empty) {
                 noMoreSuggestions = true;
-                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                isLoadingMoreSuggestions = false;
-                return;
+                break; // Sai do loop se não houver mais usuários no banco
             }
 
-            const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
-            let suggestionsAdded = 0;
-
             snapshot.forEach(doc => {
-                if (!exclusionIds.has(doc.id)) {
+                if (suggestionsAdded < MIN_SUGGESTIONS_TO_ADD && !exclusionIds.has(doc.id)) {
                     const userData = doc.data();
                     const suggestionUserHobbies = new Set(userData.hobbies || []);
-                    
                     let commonHobbiesCount = 0;
-                    for (const hobby of suggestionUserHobbies) {
-                        if (currentUserHobbies.has(hobby)) {
-                            commonHobbiesCount++;
-                        }
-                    }
-
+                    suggestionUserHobbies.forEach(hobby => {
+                        if (currentUserHobbies.has(hobby)) commonHobbiesCount++;
+                    });
                     const user = { id: doc.id, ...userData };
                     addSuggestionToDOM(user, commonHobbiesCount);
                     suggestionsAdded++;
+                    exclusionIds.add(user.id); // Evita adicionar o mesmo usuário novamente
                 }
             });
 
             lastVisibleSuggestion = snapshot.docs[snapshot.docs.length - 1];
-
-            if (snapshot.docs.length < 10) {
-                noMoreSuggestions = true;
-                if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-            } else {
-                 if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
-            }
-            
-            // Se nenhum usuário válido foi encontrado nesta página, tenta carregar a próxima
-            if (suggestionsAdded === 0 && !noMoreSuggestions) {
-                loadMoreSuggestions();
-            } else {
-                isLoadingMoreSuggestions = false;
-            }
-
-        } catch (error) {
-            console.error('Erro ao carregar mais sugestões:', error);
-            showToast('Erro ao carregar mais sugestões.', 'error');
-            isLoadingMoreSuggestions = false;
-            if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
+            if (snapshot.docs.length < 10) noMoreSuggestions = true;
         }
+
+        // 5. Atualizar a UI do botão após o loop
+        if (noMoreSuggestions && loadMoreBtn) loadMoreBtn.style.display = 'none';
+        else if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
+
+    } catch (error) {
+        console.error('Erro ao carregar mais sugestões:', error);
+        showToast('Erro ao carregar mais sugestões.', 'error');
+        if (loadMoreBtn) loadMoreBtn.innerHTML = 'Ver mais';
+    } finally {
+        isLoadingMoreSuggestions = false; // 6. Liberar a trava de carregamento
     }
+}
 
     function addSuggestionToDOM(user, commonHobbiesCount) {
         if (!suggestionsContainer) return;

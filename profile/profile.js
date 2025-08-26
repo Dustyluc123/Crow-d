@@ -26,20 +26,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modais e Overlays
     const confirmationModal = document.getElementById('confirmationModal');
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const termsModal = document.getElementById('termsModal');
+    const passwordModal = document.getElementById('passwordModal'); // Novo modal
     const editBtn = document.getElementById('editBtn');
     const confirmBtn = document.getElementById('confirmBtn');
-    const acceptTermsBtn = document.getElementById('acceptTermsBtn');
-    const declineTermsBtn = document.getElementById('declineTermsBtn');
+    
+    // Botões do novo modal de senha
+    const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
+    const submitPasswordBtn = document.getElementById('submitPasswordBtn');
+    const accessCodeInput = document.getElementById('accessCodeInput');
 
     // Cropper
     const cropperModal = document.getElementById('cropperModal');
     const imageToCrop = document.getElementById('imageToCrop');
     const cropSaveBtn = document.getElementById('cropSaveBtn');
     const cropCancelBtn = document.getElementById('cropCancelBtn');
-    const rotateBtn = document.getElementById('rotateBtn'); // Adicionado
-    const flipHorizontalBtn = document.getElementById('flipHorizontalBtn'); // Adicionado
-    const flipVerticalBtn = document.getElementById('flipVerticalBtn'); // Adicionado
+    const rotateBtn = document.getElementById('rotateBtn');
+    const flipHorizontalBtn = document.getElementById('flipHorizontalBtn');
+    const flipVerticalBtn = document.getElementById('flipVerticalBtn');
 
     let currentUser = null;
     let savingProfile = false;
@@ -47,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let cropper = null;
     let debounceTimer;
     let isNicknameValid = false;
-    let scaleX = 1; // Adicionado
-    let scaleY = 1; // Adicionado
+    let scaleX = 1;
+    let scaleY = 1;
 
     // --- Autenticação ---
     auth.onAuthStateChanged(function(user) {
@@ -62,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- LÓGICA DE VALIDAÇÃO DE APELIDO EM TEMPO REAL ---
+    // --- LÓGICA DE VALIDAÇÃO DE APELIDO ---
     nicknameInput.addEventListener('input', () => {
         const nickname = nicknameInput.value.trim();
         nicknameCounter.textContent = `${nickname.length}/40`;
@@ -114,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showConfirmationModal();
     });
     
-    // --- Salvar Perfil ---
+    // --- Salvar Perfil (com isApproved: true) ---
     async function saveProfileData(userId) {
         savingProfile = true;
         try {
@@ -129,11 +132,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 settings: { profilePublic: true, darkMode: true },
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                termsAccepted: true
+                termsAccepted: true,
+                isApproved: true // <-- ALTERADO PARA TRUE
             };
             
             await db.collection('users').doc(userId).set(profileData);
-            window.location.href = '../index.html';
+            window.location.href = '../index.html'; // Redireciona para o feed
         } catch (error) {
             console.error('Erro ao salvar perfil:', error);
             showCustomAlert('Erro ao salvar perfil: ' + error.message);
@@ -142,10 +146,12 @@ document.addEventListener('DOMContentLoaded', function() {
             savingProfile = false;
         }
     }
-    
-    // --- Funções dos Modais, Cropper, "Ver Mais", etc. ---
 
+    // --- LÓGICA DOS MODAIS (ATUALIZADA) ---
+
+    // Mostra a revisão do perfil
     function showConfirmationModal() {
+        // ... (código para preencher o modal de confirmação, sem alterações)
         const school = document.getElementById('school').value;
         const grade = document.getElementById('grade').value;
         if (!nicknameInput.value.trim() || !school || !grade) {
@@ -174,22 +180,38 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             hobbiesContainer.textContent = "Nenhum hobby selecionado.";
         }
-
         confirmationModal.style.display = 'flex';
     }
 
+    // Botão "Voltar e Editar" no modal de confirmação
     editBtn.addEventListener('click', () => confirmationModal.style.display = 'none');
+    
+    // Botão "Confirmar" no modal de confirmação AGORA ABRE O MODAL DE SENHA
     confirmBtn.addEventListener('click', () => {
         confirmationModal.style.display = 'none';
-        termsModal.style.display = 'flex';
-    });
-    declineTermsBtn.addEventListener('click', () => termsModal.style.display = 'none');
-    acceptTermsBtn.addEventListener('click', () => {
-        termsModal.style.display = 'none';
-        loadingOverlay.style.display = 'flex';
-        saveProfileData(currentUser.uid);
+        passwordModal.style.display = 'flex';
+        accessCodeInput.focus();
     });
 
+    // Botão "Cancelar" no modal de senha
+    cancelPasswordBtn.addEventListener('click', () => passwordModal.style.display = 'none');
+
+    // Botão "Entrar" no modal de senha
+    submitPasswordBtn.addEventListener('click', () => {
+        const accessCode = accessCodeInput.value;
+        const correctCode = "1506"; // <<< COLOQUE A SUA SENHA SECRETA AQUI
+
+        if (accessCode === correctCode) {
+            passwordModal.style.display = 'none';
+            loadingOverlay.style.display = 'flex';
+            saveProfileData(currentUser.uid);
+        } else {
+            showToast("Código de acesso incorreto.", "error");
+            accessCodeInput.value = '';
+        }
+    });
+
+    // --- Lógica do Cropper e "Ver Mais" (sem alterações) ---
     photoFileInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file && file.type.startsWith('image/')) {
