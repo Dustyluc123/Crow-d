@@ -624,7 +624,7 @@ async function loadSuggestions() {
     }
 }
 
-async function loadMoreSuggestions(loadMoreBtn) {
+    async function loadMoreSuggestions(loadMoreBtn) {
     // 1. Prevenir múltiplos cliques
     if (isLoadingMoreSuggestions || noMoreSuggestions) return;
 

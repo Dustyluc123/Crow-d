@@ -170,4 +170,5 @@ async function saveAllSettings(settingsToSave) {
             if(deleteAccountModal) deleteAccountModal.style.display = 'none';
         }
     }
+    
 });

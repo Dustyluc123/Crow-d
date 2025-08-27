@@ -1,0 +1,174 @@
+/* css/global.css */
+
+/* Estilos Gerais e Variáveis */
+:root {
+    --primary-color: #1a1a1a;
+    --secondary-color: #2c2c2c;
+    --text-color: #e0e0e0;
+    --accent-color: #007bff;
+    --border-color: #444;
+    --hover-color: #383838;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+body.light-mode {
+    --primary-color: #ffffff;
+    --secondary-color: #f8f9fa;
+    --text-color: #212529;
+    --accent-color: #007bff;
+    --border-color: #dee2e6;
+    --hover-color: #e9ecef;
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+/* Estrutura Principal da Página */
+.page-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--secondary-color);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.main-content {
+    flex-grow: 1;
+    margin-left: 250px; /* Mesma largura do sidebar */
+    padding: 20px;
+}
+
+/* Header (Barra de Navegação Superior) */
+.main-header {
+    background-color: var(--secondary-color);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Navegação Principal (Desktop) */
+.main-nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.main-nav ul li a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin: 5px 0;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.main-nav ul li a:hover, .main-nav ul li a.active {
+    background-color: var(--accent-color);
+    color: #fff;
+}
+
+.main-nav ul li a i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Navegação Mobile (Barra Inferior) */
+.mobile-nav {
+    display: none; /* Escondido por padrão */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--secondary-color);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+}
+
+.mobile-nav ul {
+    display: flex;
+    justify-content: space-around;
+    list-style: none;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.mobile-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.7rem;
+    color: var(--text-color);
+}
+
+.mobile-nav a i {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+/* Container principal para o conteúdo */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* --- REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) --- */
+
+/* Para tablets e ecrãs menores */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 200px;
+    }
+    .main-content {
+        margin-left: 200px;
+    }
+}
+
+/* Oculta a barra lateral e mostra a navegação mobile */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+    .main-content {
+        margin-left: 0;
+        padding-bottom: 70px; /* Espaço para a barra de navegação inferior */
+    }
+    .mobile-nav {
+        display: block; /* Mostra a barra de navegação mobile */
+    }
+    .main-header {
+        display: none; /* Opcional: esconder o header superior em mobile */
+    }
+}
+
+/* Ajustes finos para telemóveis pequenos */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+        padding-bottom: 70px;
+    }
+}

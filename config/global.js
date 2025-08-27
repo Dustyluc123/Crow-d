@@ -1,7 +1,6 @@
 // Ficheiro: Crow-d/config/global.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // A configuração do Firebase precisa estar aqui para ser acessível globalmente
     const firebaseConfig = {
         apiKey: "AIzaSyAeEyxi-FUvoPtP6aui1j6Z7Wva9lWd7WM",
         authDomain: "tcclogin-7e7b8.firebaseapp.com",
@@ -17,27 +16,77 @@ document.addEventListener('DOMContentLoaded', function() {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Função que fica "escutando" por notificações não lidas em tempo real
+    /**
+     * Atualiza o atributo href de todos os links de perfil na página.
+     * @param {string} uid - O ID do utilizador autenticado.
+     */
+    function updateUserProfileLinks(uid) {
+        // Seleciona TODOS os elementos com a classe .profile-link
+        const profileLinks = document.querySelectorAll('.profile-link');
+        
+        profileLinks.forEach(link => {
+            if (uid) {
+                link.href = `../pages/user.html?uid=${uid}`;
+            } else {
+                // Se não houver utilizador, aponta para a página de login como fallback
+                link.href = '../login/login.html';
+            }
+        });
+    }
+
+    /**
+     * Fica "escutando" por notificações não lidas em tempo real.
+     * @param {string} userId - O ID do utilizador.
+     */
     function setupNotificationListener(userId) {
         const notificationsRef = db.collection('users').doc(userId).collection('notifications');
         
         notificationsRef.where('read', '==', false).onSnapshot(snapshot => {
             const unreadCount = snapshot.size;
-            // Seleciona a bolinha no HEADER principal
             const badge = document.getElementById('header-notification-badge');
 
             if (badge) {
-                // Se houver notificações não lidas, mostra a bolinha. Senão, esconde.
                 badge.style.display = unreadCount > 0 ? 'block' : 'none';
             }
         });
     }
 
-    // Verifica o estado do login e inicia o listener de notificações
+    // Ponto central de autenticação
     auth.onAuthStateChanged(function(user) {
         if (user) {
-            // Inicia o listener assim que o usuário for confirmado
+            // Se o utilizador estiver logado, atualiza os links e inicia o listener
+            updateUserProfileLinks(user.uid);
             setupNotificationListener(user.uid);
+        } else {
+            // Se não houver utilizador, garante que os links não fiquem quebrados
+            updateUserProfileLinks(null);
+            console.log("Nenhum utilizador logado.");
         }
     });
+    // Adicione este código ao final do ficheiro: Crow-d/config/global.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (o código existente do global.js fica aqui) ...
+
+    // --- NOVA LÓGICA PARA O MENU MOBILE ---
+    const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
+    const leftSidebar = document.querySelector('.sidebar.left-sidebar'); // Seleciona a sidebar pela classe
+
+    if (leftSidebarToggle && leftSidebar) {
+        leftSidebarToggle.addEventListener('click', () => {
+            // A classe 'active' fará a sidebar aparecer
+            leftSidebar.classList.toggle('active'); 
+        });
+
+        // Opcional: Fechar a sidebar se clicar fora dela
+        document.addEventListener('click', function(event) {
+            const isClickInsideSidebar = leftSidebar.contains(event.target);
+            const isClickOnToggleButton = leftSidebarToggle.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnToggleButton && leftSidebar.classList.contains('active')) {
+                leftSidebar.classList.remove('active');
+            }
+        });
+    }
+});
 });

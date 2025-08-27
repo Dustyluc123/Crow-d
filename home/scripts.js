@@ -687,7 +687,7 @@ function addPostToDOM(post, isSingleView = false) {
         originalPostContainer.appendChild(originalPostContent);
         originalPostContainer.style.cursor = 'pointer';
         originalPostContainer.addEventListener('click', () => {
-            window.location.href = `index?post=${post.originalPostId}`;
+            window.location.href = `index.html?post=${post.originalPostId}`;
         });
         postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 

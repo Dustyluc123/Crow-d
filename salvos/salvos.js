@@ -318,6 +318,38 @@ function addPostToDOM(post) {
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
     
+    // --- Lógica para tratar e exibir uma republicação ---
+    if (post.isRepost) {
+        const repostHeader = document.createElement('div');
+        repostHeader.className = 'repost-header';
+        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
+        postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
+
+        const originalPostContainer = document.createElement('div');
+        originalPostContainer.className = 'original-post-container';
+        const originalPostHeader = postClone.querySelector('.post-header');
+        const originalPostContent = postClone.querySelector('.post-content');
+        
+        originalPostContainer.appendChild(originalPostHeader);
+        originalPostContainer.appendChild(originalPostContent);
+        
+        originalPostContainer.style.cursor = 'pointer';
+        originalPostContainer.addEventListener('click', () => {
+            // Leva para a página do post original
+            window.location.href = `../index.html?post=${post.originalPostId}`;
+        });
+
+        postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
+
+        // Sobrescreve os dados do post com os dados do post original para exibição
+        post.content = post.originalPost.content;
+        post.authorName = post.originalPost.authorName;
+        post.authorPhoto = post.originalPost.authorPhoto;
+        post.timestamp = post.originalPost.timestamp;
+        post.authorId = post.originalPost.authorId;
+        post.imageUrl = post.originalPost.imageUrl; // Garante que a imagem do post original seja usada
+    }
+
     // --- Seleciona todos os elementos do post ---
     const authorPhotoElement = postClone.querySelector(".post-author-photo");
     const authorNameElement = postClone.querySelector(".post-author-name");
@@ -330,6 +362,8 @@ function addPostToDOM(post) {
     const saveButton = postClone.querySelector(".save-btn");
     const commentInput = postClone.querySelector(".comment-text");
     const sendCommentButton = postClone.querySelector(".send-comment-btn");
+    const postMediaContainer = postClone.querySelector(".post-media");
+    const postImageElement = postClone.querySelector(".post-image");
 
     // --- Preenche os dados do post ---
     postElement.dataset.postId = post.id;
@@ -337,7 +371,7 @@ function addPostToDOM(post) {
     
     if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
     authorNameElement.textContent = post.authorName;
-    if (post.timestamp) timestampElement.textContent = formatTimestamp(post.timestamp.toDate());
+    if (post.timestamp) timestampElement.textContent = formatTimestamp(post.timestamp.toDate ? post.timestamp.toDate() : post.timestamp);
     contentElement.textContent = post.content;
     likeCount.textContent = post.likes || 0;
     commentCount.textContent = post.commentCount || 0;
@@ -345,11 +379,18 @@ function addPostToDOM(post) {
     if (post.likedBy?.includes(currentUser.uid)) likeButton.classList.add("liked");
     if (post.savedBy?.includes(currentUser.uid)) saveButton.classList.add("saved");
 
-    // --- Adiciona os Event Listeners (VERSÃO CORRIGIDA E SEM DUPLICATAS) ---
+    // --- Lógica para exibir a imagem do post ---
+    if (post.imageUrl) {
+        postImageElement.src = post.imageUrl;
+        postMediaContainer.style.display = 'block';
+    } else {
+        postMediaContainer.style.display = 'none';
+    }
+
+    // --- Adiciona os Event Listeners ---
     likeButton.addEventListener("click", () => toggleLike(post.id));
     saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
     
-    // Listener ÚNICO e CORRETO para os comentários
     commentButton.addEventListener("click", () => toggleComments(post.id));
     sendCommentButton.addEventListener("click", () => sendComment(post.id));
     commentInput.addEventListener('keypress', (e) => {

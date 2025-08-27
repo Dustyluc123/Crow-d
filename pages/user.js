@@ -528,7 +528,7 @@ async function loadMoreUserPosts() {
                 if (e.target.closest('button, a, .post-actions, .post-comments, .original-post-container, .post-image')) {
                     return;
                 }
-                window.location.href = `../index?post=${post.id}`;
+                window.location.href = `../index.html?post=${post.id}`;
             });
         }
     
@@ -549,7 +549,7 @@ async function loadMoreUserPosts() {
             
             originalPostContainer.style.cursor = 'pointer';
             originalPostContainer.addEventListener('click', () => {
-                window.location.href = `../index?post=${post.originalPostId}`;
+                window.location.href = `../index.html?post=${post.originalPostId}`;
             });
     
             postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
