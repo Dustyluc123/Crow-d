@@ -1716,7 +1716,8 @@ function loadHobbiesPreview() {
         // Adiciona o botão "+" que leva ao perfil para ver/editar todos os hobbies
         if (hobbies.length > 4) {
              const addHobbyLink = document.createElement('a');
-             addHobbyLink.href = `../editprofile/edit-profile.html?uid=${currentUser.uid}`; // Link para a página de edição de perfil
+// Esta é a correção: Aponta para a sua página de perfil com o caminho correto
+addHobbyLink.href = `pages/user.html?uid=${currentUser.uid}`;
              addHobbyLink.className = 'hobby-add-btn';
              addHobbyLink.innerHTML = '<i class="fas fa-plus"></i>';
              addHobbyLink.title = "Ver todos os hobbies";

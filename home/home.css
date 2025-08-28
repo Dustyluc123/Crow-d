@@ -2,8 +2,8 @@
     --primary-color: #5b5ad3;
     --primary-hover: #8483de;
     --dark-bg: #222326;
-    --dark-bg-secondary: #2c2d31;
-    --dark-bg-tertiary: #36373d;
+    --dark-bg-secondary: #13141a;
+    --dark-bg-tertiary: #171718;
     --light-text: #ffffff;
     --dark-text: #333333;
     --light-bg: #f9f9f9;
@@ -1734,7 +1734,7 @@ body.dark-mode .modal-input {
         width: 100%;
         height: 60px;
         background-color: var(--light-text);
-        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 -2px 5px rgba(55, 13, 13, 0.1);
         z-index: 1000;
     }
 
@@ -1817,3 +1817,137 @@ body.dark-mode .modal-input {
                 display: none;
           }
      }
+     /* --- Estilo para Seção de Anúncio --- */
+.announcement-section {
+    background: linear-gradient(45deg, #5b5ad3, #8483de);
+    border: 2px solid #ffffff44;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 82, 82, 0.4);
+    animation: pulse-animation 2.5s infinite;
+}
+
+.announcement-section h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff; /* Texto branco para melhor contraste */
+    font-weight: 600;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Ajustes para o Modo Escuro (opcional, mas recomendado) */
+body.dark-mode .announcement-section {
+    background: linear-gradient(45deg, #5b5ad3, #8483de);
+}
+
+/* Animação de pulso para chamar a atenção */
+@keyframes pulse-animation {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(34, 2, 2, 0.4);
+    }
+}
+
+/* No mobile, a sidebar já ocupa a largura total, então o ajuste é mínimo */
+@media (max-width: 992px) {
+    .announcement-section {
+        margin-top: 15px; /* Adiciona um espaço no topo em telas menores */
+        padding: 15px;
+    }
+    .announcement-section h2 {
+        font-size: 1rem; /* Diminui um pouco a fonte no mobile */
+    }
+}
+/* --- Sidebar Esquerda (quando aberta no mobile) --- */
+@media (max-width: 992px) {
+    .left-sidebar {
+        /* Garante que a sidebar ocupe 100% da altura e fique sobreposta */
+        position: fixed; /* Ou 'absolute' dependendo do seu layout */
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 250px; /* Largura da sidebar no mobile */
+
+        transform: translateX(-100%); /* Escondida por padrão */
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000; /* Garante que fique acima de outros conteúdos */
+        overflow-y: auto; /* Adiciona scroll se o conteúdo for muito longo */
+        padding-top: 20px; /* Espaço no topo */
+        padding-bottom: 80px; /* Espaço para não cobrir a nav-bottom */
+
+        display: flex; /* Adicione flexbox para organizar os itens */
+        flex-direction: column; /* Coloca os itens um abaixo do outro */
+        align-items: stretch; /* Faz com que os itens ocupem toda a largura */
+    }
+
+    .left-sidebar.active {
+        transform: translateX(0); /* Mostra a sidebar */
+        box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+    }
+
+    /* Garante que as seções internas da sidebar ocupem a largura total */
+    .left-sidebar .sidebar-section {
+        width: 100%; /* Ocupa a largura total da sidebar */
+        box-sizing: border-box; /* Inclui padding e border na largura */
+        margin-bottom: 15px; /* Espaçamento entre as seções */
+        padding: 0 20px; /* Adiciona padding lateral para o conteúdo */
+    }
+
+    /* Ajuste específico para o anúncio no mobile */
+    .announcement-section {
+        margin-top: 0; /* Remove a margem superior que adicionei antes, não é necessária aqui */
+        margin-bottom: 20px; /* Espaço inferior para separar dos atalhos */
+        border-radius: 0; /* Opcional: remover border-radius para preencher a largura */
+        box-shadow: none; /* Opcional: remover sombra para um visual mais limpo na sidebar */
+        padding: 15px 20px; /* Ajusta padding para dentro da sidebar */
+    }
+}
+/* ========== Instagram Notes (enxuto) ========== */
+.notes-bar{
+  display:flex; gap:12px; overflow-x:auto; padding:8px 2px;
+}
+.note-tile{
+  position:relative; width:72px; display:flex; flex-direction:column; align-items:center; gap:6px; flex:0 0 auto;
+}
+.note-avatar{
+  width:56px; height:56px; border-radius:50%; padding:2px;
+  background:linear-gradient(45deg,#5b5ad3,#8483de);
+}
+.note-avatar img{
+  width:100%; height:100%; border-radius:50%; object-fit:cover; background:#000;
+}
+.note-bubble{
+  max-width:72px; font-size:.75rem; line-height:1.2; text-align:center; padding:6px 8px;
+  border-radius:12px; background:var(--light-bg-secondary,#f0f0f0); color:var(--dark-text,#333);
+  white-space:normal; word-break:break-word;
+}
+.note-bubble.muted{opacity:.6}
+.note-bubble.spotify{
+  padding:2px; background:transparent;
+}
+.note-bubble.spotify img{
+  width:56px; height:56px; border-radius:10px; object-fit:cover; display:block;
+}
+.note-owner{
+  font-size:.72rem; color:var(--light-text-secondary,#777); max-width:72px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* botão excluir na sua própria nota */
+.note-del{
+  position:absolute; top:-6px; right:-6px; width:20px; height:20px; border:none; border-radius:50%;
+  background:#dc3545; color:#fff; cursor:pointer; font-weight:700; line-height:20px;
+}
+
+/* Dark mode um pouco mais preto */
+body.dark-mode .note-bubble{ background:#202227; color:#ffffff; }
+body.dark-mode .note-owner{ color:#aaaaaa; }

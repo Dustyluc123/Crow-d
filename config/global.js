@@ -89,4 +89,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// config/global.js
+document.addEventListener('DOMContentLoaded', () => {
+    const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
+    const leftSidebar = document.querySelector('.left-sidebar');
+
+    if (leftSidebarToggle && leftSidebar) {
+        leftSidebarToggle.addEventListener('click', () => {
+            leftSidebar.classList.toggle('active');
+        });
+    }
+
+    // Adiciona funcionalidade para fechar a sidebar se clicar fora dela (opcional, mas recomendado)
+    document.addEventListener('click', (event) => {
+        if (leftSidebar && leftSidebar.classList.contains('active')) {
+            const isClickInsideSidebar = leftSidebar.contains(event.target);
+            const isClickOnToggleButton = leftSidebarToggle.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnToggleButton) {
+                leftSidebar.classList.remove('active');
+            }
+        }
+    });
+});
 });

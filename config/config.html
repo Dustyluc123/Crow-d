@@ -129,14 +129,13 @@
             </div>
         </aside>
     </div>
-  <nav class="mobile-nav">
-        <ul>
-            <li><a href="../index.html"><i class="fas fa-home"></i><span>Feed</span></a></li>
-            <li><a href="../friends/amigos.html"><i class="fas fa-user-friends"></i><span>Amigos</span></a></li>
-            <li><a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i><span>Mensagens</span></a></li>
-            <li><a href="#" class="profile-link active"><i class="fas fa-user"></i><span>Perfil</span></a></li>
-        </ul>
-    </nav>
+  <div id="mobile-bottom-nav">
+    <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
+    <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
+    <a href="../friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
+    <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
+    <a href="#" class="profile-link mobile-nav-item active"><i class="fas fa-user"></i></a>
+</div>
     <!-- Adicione os scripts do Firebase e o seu config.js aqui -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>

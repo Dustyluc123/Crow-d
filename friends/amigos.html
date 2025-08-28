@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amigos - Crow-d</title>
+      <script src="../config/global.js"></script>
     <link rel="stylesheet" href="amigos.css">
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../home/home.css">
@@ -459,7 +460,45 @@ body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
                 <button><i class="fas fa-search"></i></button>
             </div>
             
-           
+           <section class="notes-section">
+  <div class="notes-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <h2 style="margin:0;display:flex;align-items:center;gap:8px"><i class="fas fa-music"></i> Notas</h2>
+    <button id="addNoteBtn" class="action-btn"><i class="fas fa-plus"></i> Nova nota</button>
+  </div>
+  <div id="notesBar" class="notes-bar"></div>
+</section>
+
+<!-- Modal de Nota -->
+<div id="noteModal" class="modal" style="display:none">
+  <div class="modal-content" style="max-width:420px">
+    <div class="modal-header">
+      <h2>Postar nota</h2>
+      <button class="close-modal note-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="note-tabs" style="display:flex;gap:8px;margin-bottom:10px;">
+        <button class="secondary-btn active" data-note-tab="tab-text">Texto</button>
+        <button class="secondary-btn" data-note-tab="tab-spotify">Spotify</button>
+      </div>
+
+      <div id="tab-text" class="note-tab active">
+        <label for="noteText">Sua nota (máx. 60 caracteres)</label>
+        <textarea id="noteText" class="modal-input" maxlength="60" rows="3" placeholder="ex.: estudando hoje..."></textarea>
+      </div>
+
+      <div id="tab-spotify" class="note-tab" style="display:none">
+        <label for="spotifyUrl">URL da música do Spotify</label>
+        <input id="spotifyUrl" class="modal-input" type="url" placeholder="https://open.spotify.com/track/..." />
+        <small>Dica: cole o link de uma <b>faixa</b> (não precisa logar no Spotify).</small>
+      </div>
+    </div>
+    <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="secondary-btn close-note-modal">Cancelar</button>
+      <button id="submitNoteBtn" class="primary-btn">Postar</button>
+    </div>
+  </div>
+</div>
+
             
             <div class="friends-section">
                 <h2><i class="fas fa-users"></i> Todos os seus Amigos</h2>
@@ -505,18 +544,15 @@ body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
             </form>
         </div>
     </div>
-      <nav class="mobile-nav">
-        <ul>
-            <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
-            <li><a href="../index.html"><i class="fas fa-home"></i><span>Feed</span></a></li>
-            <li><a href="../friends/amigos.html"><i class="fas fa-user-friends"></i><span>Amigos</span></a></li>
-            <li><a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i><span>Mensagens</span></a></li>
-            <li><a href="#" class="profile-link active"><i class="fas fa-user"></i><span>Perfil</span></a></li>
-        </ul>
-    </nav>
+    <div id="mobile-bottom-nav">
+    <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
+    <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
+    <a href="../friends/amigos.html" class="mobile-nav-item active"><i class="fas fa-user-friends"></i></a>
+    <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
+    <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
+</div>
 
-    <script src="scripts.js"></script>
-   <script src="../config/global.js" defer></script>
+<script src="scripts.js" defer></script> 
     <script src="../config/darkmode.js"></script>
     <script src="../config/global-notifications.js" defer></script>
 </body>

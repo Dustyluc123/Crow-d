@@ -1,0 +1,178 @@
+/* ======================================================
+   Variáveis (fallback caso não venham do tema)
+====================================================== */
+:root{
+  --primary-color:#5b5ad3;
+  --primary-color-dark:#4847b5;
+
+  --bg-primary:#ffffff;
+  --bg-secondary:#f5f5f7;
+  --bg-hover:#f0f0f4;
+
+  --text-primary:#222;
+  --text-secondary:#666;
+  --text-tertiary:#999;
+
+  --light-border:#e3e3ea;
+  --border-color:#e3e3ea;
+
+  --shadow:0 4px 12px rgba(0,0,0,.08);
+}
+body.dark-mode{
+  --bg-primary:#1a1b1f;
+  --bg-secondary:#202227;
+  --bg-hover:#2a2d33;
+
+  --text-primary:#fff;
+  --text-secondary:#bbb;
+  --text-tertiary:#888;
+
+  --light-border:#2f3238;
+  --border-color:#2f3238;
+}
+
+/* ======================================================
+   Layout da página de Mensagens
+====================================================== */
+body{ padding-top:60px; }
+header{
+  height:60px; position:fixed; top:0; left:0; right:0; z-index:1000;
+  background:var(--bg-primary); display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px; box-shadow:var(--shadow);
+}
+.logo{ display:flex; align-items:center; gap:10px; color:var(--text-primary); font-weight:700; }
+.logo-img{ width:40px; height:40px; }
+.main-nav{ display:flex; gap:12px; }
+.main-nav a{ color:var(--text-primary); text-decoration:none; padding:8px 10px; border-radius:8px; font-weight:600; }
+.main-nav a.active{ background:var(--bg-hover); color:var(--primary-color); }
+.logout-btn{ color:var(--text-primary); text-decoration:none; font-weight:700; }
+
+.main-container{ max-width:1200px; margin:16px auto; padding:0 16px; }
+.feed{ display:flex; flex-direction:column; gap:16px; }
+.page-title{ display:flex; align-items:center; gap:8px; margin:0; color:var(--text-primary); }
+
+/* ======================================================
+   Container principal
+====================================================== */
+.messages-container{
+  display:flex; flex-direction:row; height:calc(100vh - 145px);
+  background:var(--bg-primary); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);
+  position:relative;
+}
+
+/* ================= Lista de conversas ================= */
+.conversations-list{
+  flex:0 0 320px; border-right:1px solid var(--light-border); overflow-y:auto; background:var(--bg-primary);
+  display:flex; flex-direction:column;
+}
+#conversations-items{ flex:1; }
+
+.conversation-item{
+  display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer;
+  border-bottom:1px solid var(--border-color); transition:background .2s;
+}
+.conversation-item:hover, .conversation-item.active{ background:var(--bg-hover); }
+.conversation-avatar{ width:48px; height:48px; border-radius:50%; object-fit:cover; }
+.conversation-info{ flex:1; min-width:0; }
+.conversation-name{ margin:0 0 4px; font-weight:700; color:var(--text-primary); }
+.conversation-last-message, .conversation-time{
+  margin:0; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ================= Área do chat ================= */
+.chat-area{ flex:1; display:flex; flex-direction:column; }
+.chat-header{
+  display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--border-color);
+  background:var(--bg-secondary);
+}
+.back-to-conversations{ display:none; background:none; border:none; font-size:1.2rem; color:var(--text-primary); cursor:pointer; }
+.chat-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
+.chat-user-name{ margin:0; font-weight:700; color:var(--text-primary); }
+.chat-user-status{ font-size:12px; color:var(--text-secondary); }
+.status-badge{ width:8px; height:8px; border-radius:50%; background:#4caf50; display:inline-block; margin-right:5px; }
+
+.chat-messages{
+  flex:1; padding:16px; overflow-y:auto; overflow-x:hidden; background:var(--bg-primary); display:flex; flex-direction:column;
+}
+.message{ display:flex; margin-bottom:12px; max-width:75%; position:relative; }
+.message-sent{ align-self:flex-end; justify-content:flex-end; }
+.message-received{ align-self:flex-start; justify-content:flex-start; }
+.message-content{ padding:10px 14px; border-radius:16px; word-wrap:break-word; white-space:pre-wrap; }
+.message-sent .message-content{ background:var(--primary-color); color:#fff; border-bottom-right-radius:6px; }
+.message-received .message-content{ background:#e9ecef; color:#222; border-bottom-left-radius:6px; }
+body.dark-mode .message-received .message-content{ background:#36373d; color:#fff; }
+.message-time{ font-size:10px; opacity:.7; margin-top:4px; text-align:right; }
+
+.chat-input-area{
+  display:flex; align-items:center; gap:8px; padding:12px 14px; border-top:1px solid var(--border-color); background:var(--bg-secondary);
+  position:relative;
+}
+.chat-action-btn{ background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer; padding:4px; border-radius:50%; }
+.chat-input{
+  flex:1; padding:12px 14px; border:1px solid var(--border-color); border-radius:20px; background:var(--bg-primary);
+  color:var(--text-primary); outline:none;
+}
+.chat-input:focus{ border-color:var(--primary-color); }
+.chat-send-btn{
+  background:var(--primary-color); color:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.chat-send-btn:hover{ background:var(--primary-color-dark); }
+
+.loading-conversations, .loading-messages, .no-conversations, .no-messages, .error-message{
+  color:var(--text-secondary); text-align:center; padding:20px;
+}
+
+/* Emoji picker */
+emoji-picker{
+  position:absolute; bottom:60px; left:14px; z-index:20; box-shadow:var(--shadow); border-radius:8px; display:none;
+}
+
+/* ================= Sugestões (iniciar conversa) ================= */
+#suggestions-container{
+  display:none; padding:15px; border-top:1px solid var(--border-color); flex-shrink:0;
+}
+.suggestions-title{ margin:0 0 5px; font-size:14px; font-weight:600; color:var(--text-primary); }
+.section-subtitle{ font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
+#suggestions-list{ display:flex; flex-direction:column; gap:10px; }
+.suggestion-item-link{ text-decoration:none; color:inherit; display:block; }
+.suggestion-item{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; transition:background .2s; }
+.suggestion-item:hover{ background:var(--bg-hover); }
+.suggestion-photo{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
+.suggestion-info{ flex:1; min-width:0; }
+.suggestion-info h4{ margin:0; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-primary); }
+.suggestion-info .suggestion-sub{ margin:3px 0 0; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.start-chat-btn{ background:none; border:none; color:var(--primary-color); font-size:1.2rem; cursor:pointer; padding:5px; }
+
+/* ================= Mobile mágico ================= */
+@media (max-width: 768px){
+  .messages-container{ height:calc(100vh - 120px - 60px); }
+  .conversations-list, .chat-area{
+    width:100%; height:100%; position:absolute; top:0; left:0; transition:transform .3s ease-in-out;
+  }
+  .conversations-list{ transform:translateX(0); z-index:2; }
+  .chat-area{ transform:translateX(100%); z-index:3; }
+  /* Quando um chat é aberto */
+  .feed.chat-active .chat-area{ transform:translateX(0); }
+  .feed.chat-active .page-title{ display:none; }
+  .back-to-conversations{ display:block; }
+}
+
+/* ================= Scrollbar ================= */
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-track{ background:var(--bg-secondary); }
+::-webkit-scrollbar-thumb{ background-color:var(--border-color); border-radius:4px; }
+::-webkit-scrollbar-thumb:hover{ background-color:var(--primary-color); }
+body.dark-mode ::-webkit-scrollbar-track{ background:var(--bg-primary); }
+body.dark-mode ::-webkit-scrollbar-thumb{ background-color:#555; }
+
+/* ================= Mobile bottom nav ================= */
+#mobile-bottom-nav{ display:none; }
+@media (max-width:768px){
+  #mobile-bottom-nav{
+    display:flex; justify-content:space-around; align-items:center; position:fixed; bottom:0; left:0; width:100%; height:60px;
+    background:var(--bg-primary); box-shadow:0 -2px 6px rgba(0,0,0,.15); z-index:999;
+  }
+  .mobile-nav-item{ background:none; border:none; color:var(--text-primary); font-size:1.4rem; padding:8px; border-radius:50%; }
+  .mobile-nav-item.active, .mobile-nav-item:hover{ color:var(--primary-color); }
+}

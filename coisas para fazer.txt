@@ -3,7 +3,20 @@ resolver bugs
 definir quais bugs estao acontecendo 
 Notas na paginas de amigos
 Emoji facil no home
-fazer os hobbies que sao #
+fazer os hobbies que funciona igual # no post do indez 
 Resolver os problemas do Firebase plano basico
 Mudar a indentidade vizual do site para ter mais roxo mais e mais ipacato 
 fazer ser acessivo nos celulares com mais facilidade 
+app talvez(muito avancado)
+
+Inegociaveis 
+
+criar um habiende agradave no crow-d sempre pensando no usuarios
+para isso
+monitoriamento
+TERMOS DE USOS maior mais bem detalhados
+(pensar em jeitos de monitoral,com ia, com detecsao de palavras sla)
+
+fazer os eventos serem mais importades 
+eventos por grupos
+eventos online(sla como)
