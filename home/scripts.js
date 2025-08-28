@@ -671,6 +671,7 @@ function addPostToDOM(post, isSingleView = false) {
     const repostButton = postClone.querySelector(".repost-btn");
     const saveButton = postClone.querySelector(".save-btn");
     const shareButton = postClone.querySelector(".share-btn");
+ 
 
     // Lógica para tratar e exibir uma republicação
     if (post.isRepost) {
@@ -1690,6 +1691,64 @@ async function checkUpcomingEventNotifications() {
    } catch (error) {
        console.error("Erro ao verificar notificações de eventos:", error);
    }
+}
+// Em home/scripts.js, substitua a função inteira
+
+async function repostPost(postId) {
+    if (!currentUser) {
+        showCustomAlert("Você precisa estar logado para republicar.");
+        return;
+    }
+
+    const postToRepostRef = db.collection("posts").doc(postId);
+
+    try {
+        const postDoc = await postToRepostRef.get();
+        if (!postDoc.exists) {
+            showCustomAlert("Este post não existe mais.");
+            return;
+        }
+
+        const postData = postDoc.data();
+
+        // ▼▼▼ ADICIONE ESTA VERIFICAÇÃO DE SEGURANÇA ▼▼▼
+        // Impede a republicação de um post que já é uma republicação.
+        if (postData.isRepost) {
+            showCustomAlert("Não é possível republicar um post já republicado.");
+            return; 
+        }
+        // ▲▲▲ FIM DA VERIFICAÇÃO ▲▲▲
+
+        // Cria o novo post como uma republicação
+        const newPost = {
+            authorId: currentUser.uid,
+            authorName: currentUser.displayName,
+            authorPhoto: currentUser.photoURL,
+            content: postData.content,
+            imageURL: postData.imageURL || null,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: 0,
+            likedBy: [],
+            commentCount: 0,
+            isRepost: true, // Marca como uma republicação
+            originalPostId: postId, // Link para o post original
+            originalAuthorId: postData.authorId,
+            originalAuthorName: postData.authorName,
+        };
+
+        await db.collection("posts").add(newPost);
+
+        // Atualiza a contagem de republicações no post original
+        await postToRepostRef.update({
+            repostCount: firebase.firestore.FieldValue.increment(1)
+        });
+
+        showCustomAlert("Post republicado com sucesso!", "success");
+
+    } catch (error) {
+        console.error("Erro ao republicar o post:", error);
+        showCustomAlert("Ocorreu um erro ao republicar.");
+    }
 }
 // Em home/scripts.js, substitua a função loadSuggestions por esta:
 // Adicione esta nova função ao ficheiro: home/scripts.js

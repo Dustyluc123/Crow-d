@@ -1877,7 +1877,7 @@ body.dark-mode .announcement-section {
         left: 0;
         height: 100%;
         width: 250px; /* Largura da sidebar no mobile */
-
+/* Cor de fundo da sidebar */
         transform: translateX(-100%); /* Escondida por padrão */
         transition: transform 0.3s ease-in-out;
         z-index: 1000; /* Garante que fique acima de outros conteúdos */
