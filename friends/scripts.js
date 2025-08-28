@@ -73,6 +73,12 @@
   let _friendsCache = []; // [{uid, displayName, photoURL, hobbies}]
   let currentUser = null;
   let currentUserProfile = null;
+  // Adicione estas linhas no topo do seu friends/scripts.js
+
+
+let lastVisibleFriend = null; // Guarda o último amigo carregado para saber onde continuar
+let isFetchingFriends = false; // Evita carregar mais amigos enquanto uma busca já está em andamento
+const FRIENDS_PER_PAGE = 4; // Define quantos amigos carregar por vez
 
   // ---------------------- Hobbies helpers ----------------------
   const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
@@ -117,96 +123,112 @@
     } catch (e) { console.debug('fetchUserProfile:', e?.message); return { uid, nickname: 'Usuário', photoURL: null }; }
   }
 
-  async function loadFriendsList(auth, db) {
-  const grid = refs.gridAll();
-  if (!grid) return;
+// Substitua a sua função loadFriendsList inteira por esta versão
 
-  grid.innerHTML = `
-    <div class="loading-indicator">
-      <i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos...
-    </div>`;
+async function loadFriendsList(auth, db) {
+    const grid = refs.gridAll();
+    if (!grid) return;
 
-  const user = auth.currentUser;
-  if (!user) {
-    grid.innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`;
-    return;
-  }
+    // Esta função agora será chamada apenas uma vez para buscar TODOS os IDs de amigos
+    // A paginação será feita no lado do cliente
+    
+    grid.innerHTML = `
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos...
+        </div>`;
 
-  try {
-    const sub = db.collection("users").doc(user.uid).collection("friends");
-
-    // 1) tenta apenas os com status 'accepted'
-    let snap = await sub.where("status", "==", "accepted").get();
-
-    // 2) fallback: se vier vazio, busca TODOS e considera aceitos conforme regras abaixo
-    let docs = [];
-    if (snap.empty) {
-      const all = await sub.get();
-      docs = all.docs;
-    } else {
-      docs = snap.docs;
+    const user = auth.currentUser;
+    if (!user) {
+        grid.innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`;
+        return;
     }
 
-    const friendIds = new Set();
-    docs.forEach(d => {
-      const data = d.data() || {};
-      const status = data.status;
+    try {
+        const friendsSubCollection = db.collection("users").doc(user.uid).collection("friends");
+        const allFriendsSnapshot = await friendsSubCollection.get();
 
-      // aceita se: 'accepted', true, 'friend', approved true, isFriend true, 'aprovado'/'aceito' ou sem status (esquema antigo)
-      const accepted =
-        status === "accepted" ||
-        status === true ||
-        status === "friend" ||
-        status === "aceito" ||
-        status === "aprovado" ||
-        data.approved === true ||
-        data.isFriend === true ||
-        typeof status === "undefined";
+        const acceptedFriendIds = [];
+        allFriendsSnapshot.forEach(doc => {
+            const data = doc.data() || {};
+            const status = data.status;
 
-      if (!accepted) return;
+            // Reutilizando a sua lógica original e robusta para verificar amizades aceites
+            const isAccepted =
+                status === "accepted" ||
+                status === true ||
+                status === "friend" ||
+                status === "aceito" ||
+                status === "aprovado" ||
+                data.approved === true ||
+                data.isFriend === true ||
+                typeof status === "undefined";
 
-      const fid = (typeof data.friendId === "string" && data.friendId) ||
-                  (typeof data.uid === "string" && data.uid) ||
-                  d.id;
+            if (isAccepted) {
+                const friendId = doc.id;
+                if (friendId && friendId !== user.uid) {
+                    acceptedFriendIds.push(friendId);
+                }
+            }
+        });
+        
+        // Limpa o grid para começar a adicionar os amigos
+        const loadingIndicator = grid.querySelector('.loading-indicator');
+        if (loadingIndicator) loadingIndicator.remove();
+        
+        if (acceptedFriendIds.length === 0) {
+            grid.innerHTML = `<div class="no-friends">Nenhum amigo encontrado.</div>`;
+            return;
+        }
 
-      if (fid && fid !== user.uid) friendIds.add(fid);
-    });
+        // --- LÓGICA DE PAGINAÇÃO NO CLIENTE ---
+        let currentIndex = 0;
+        const loadMoreBtn = document.getElementById('load-more-friends');
 
-    if (!friendIds.size) {
-      grid.innerHTML = `<div class="no-friends">Nenhum amigo encontrado na sua subcoleção.</div>`;
-      _friendsCache = [];
-      return;
+        async function loadNextBatch() {
+            const batchIds = acceptedFriendIds.slice(currentIndex, currentIndex + FRIENDS_PER_PAGE);
+            if (batchIds.length === 0) {
+                loadMoreBtn.style.display = 'none';
+                return;
+            }
+
+            const friendPromises = batchIds.map(id => db.collection("users").doc(id).get());
+            const friendDocs = await Promise.all(friendPromises);
+
+            const newCards = [];
+            friendDocs.forEach(udoc => {
+                if (!udoc.exists) return;
+                const u = udoc.data() || {};
+                // SUBSTITUA PELA LINHA CORRETA:
+const displayName = u.nickname || u.displayName || u.name || "Usuário";
+                const photoURL = u.photoURL || "../img/corvo.png";
+                newCards.push(friendCardHtml({ uid: udoc.id, displayName, photoURL, hobbies: u.hobbies || [] }));
+            });
+
+            grid.insertAdjacentHTML('beforeend', newCards.join(""));
+            wireFriendCardClicks();
+
+            currentIndex += FRIENDS_PER_PAGE;
+
+            // Decide se o botão "Ver Mais" deve continuar aparecendo
+            if (currentIndex >= acceptedFriendIds.length) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'block';
+            }
+        }
+        
+        // Carrega o primeiro lote
+        await loadNextBatch();
+
+        // Configura o botão para carregar os próximos
+        loadMoreBtn.removeEventListener('click', loadNextBatch); // Evita adicionar múltiplos eventos
+        loadMoreBtn.addEventListener('click', loadNextBatch);
+
+    } catch (err) {
+        console.error(err);
+        grid.innerHTML = `<div class="error-message">Erro ao carregar amigos: ${htmlEscape(err.message || String(err))}</div>`;
     }
-
-    // Busca perfis + hobbies e renderiza
-    const cards = [];
-    _friendsCache = [];
-
-    for (const fid of friendIds) {
-      const udoc = await db.collection("users").doc(fid).get();
-      if (!udoc.exists) continue;
-
-      const u = udoc.data() || {};
-      const displayName = u.displayName || u.name || "Usuário";
-      const photoURL = u.photoURL || "../img/corvo.png";
-
-      const hobbies = await getUserHobbies(db, fid);
-      _friendsCache.push({ uid: fid, displayName, photoURL, hobbies });
-      cards.push(friendCardHtml({ uid: fid, displayName, photoURL, hobbies }));
-    }
-
-    grid.innerHTML = cards.length
-      ? cards.join("")
-      : `<div class="error-message">Não foi possível renderizar os amigos agora.</div>`;
-
-    wireFriendCardClicks();
-
-  } catch (err) {
-    console.error(err);
-    grid.innerHTML = `<div class="error-message">Erro ao carregar amigos: ${htmlEscape(err.message || String(err))}</div>`;
-  }
 }
-
 
   function friendCardHtml({ uid, displayName, photoURL, hobbies }) {
     const hasHobbies = Array.isArray(hobbies) && hobbies.length > 0;
@@ -223,22 +245,30 @@
         </div>
       </div>`;
   }
-  function wireFriendCardClicks() {
+ function wireFriendCardClicks() {
+    // Para cliques na foto ou no nome do amigo
     $$(".friend-card .friend-avatar, .friend-card .friend-name").forEach(el => {
       el.addEventListener('click', (e) => {
         const card = e.currentTarget.closest('.friend-card');
-        const uid = card?.dataset?.uid; if (!uid) return;
-        window.location.href = `../perfil/perfil.html?uid=${encodeURIComponent(uid)}`;
+        const uid = card?.dataset?.uid; // Pega o UID do amigo a partir do card
+        if (!uid) return;
+        
+        // CORREÇÃO: Usa a variável 'uid' que acabamos de pegar, e não 'user.uid'
+        window.location.href = `../pages/user.html?uid=${uid}`; 
       });
     });
+
+    // Para cliques no botão "Ver perfil"
     $$(".friend-card .profile-btn").forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const uid = e.currentTarget.getAttribute('data-uid'); if (!uid) return;
-        window.location.href = `../perfil/perfil.html?uid=${encodeURIComponent(uid)}`;
+        const uid = e.currentTarget.getAttribute('data-uid'); // Pega o UID do amigo a partir do botão
+        if (!uid) return;
+
+        // CORREÇÃO: Usa a variável 'uid' aqui também
+        window.location.href = `../pages/user.html?uid=${uid}`;
       });
     });
   }
-
   function wireSearch() {
     const input = refs.searchInput(); const grid = refs.gridAll(); if (!input || !grid) return;
     input.addEventListener('input', () => {
@@ -586,5 +616,15 @@
       // Atualiza notas a cada 60s para respeitar expiração
       setInterval(loadNotesBar, 60000);
     });
+    // Adicione este código dentro do seu 'DOMContentLoaded'
+
+const loadMoreFriendsBtn = document.getElementById('load-more-friends');
+if (loadMoreFriendsBtn) {
+    loadMoreFriendsBtn.addEventListener('click', () => {
+        // Precisa passar auth e db para a função
+        const { auth, db } = ensureFirebase();
+        loadFriendsList(auth, db);
+    });
+}
   });
 })();

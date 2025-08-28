@@ -654,7 +654,7 @@ function addPostToDOM(post, isSingleView = false) {
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
 
-    // Lógica de clique para abrir a visualização de post único
+    // Lógica de clique para abrir a visualização de post único (não aplica para republicações)
     if (!isSingleView && !post.isRepost) {
         postElement.style.cursor = 'pointer';
         postElement.addEventListener('click', (e) => {
@@ -671,15 +671,17 @@ function addPostToDOM(post, isSingleView = false) {
     const repostButton = postClone.querySelector(".repost-btn");
     const saveButton = postClone.querySelector(".save-btn");
     const shareButton = postClone.querySelector(".share-btn");
- 
 
-    // Lógica para tratar e exibir uma republicação
+    // ==============================
+    // REPUBLICAÇÃO (card de repost)
+    // ==============================
     if (post.isRepost) {
         const repostHeader = document.createElement('div');
         repostHeader.className = 'repost-header';
         repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
         postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
 
+        // Container com o conteúdo do original
         const originalPostContainer = document.createElement('div');
         originalPostContainer.className = 'original-post-container';
         const originalPostHeader = postClone.querySelector('.post-header');
@@ -693,38 +695,60 @@ function addPostToDOM(post, isSingleView = false) {
         });
         postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
 
-        // ✨ NOVA LÓGICA PARA O BOTÃO DE REPOST EM ITENS REPUBLICADOS ✨
-        // Esconde os botões de interação, mas mantém o de republicar e compartilhar
+        // 🔒 Em republicação: esconda like/comentário/salvar (mantém share)
         likeButton.style.display = 'none';
         commentButton.style.display = 'none';
         saveButton.style.display = 'none';
 
-        repostButton.classList.add('reposted');
-        repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
-        // Adiciona o listener para DESFAZER a republicação, usando o ID do post original
-        repostButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            toggleRepost(post.originalPostId); 
-        });
+        // ✅ Só o dono da republicação pode desfazer aqui
+        const isMyRepost = post.authorId === currentUser.uid;
+        const baseId = post.originalPostId; // sempre atuar no post base
 
-        // Modifica os dados do post para mostrar o conteúdo e a imagem original
-        post.content = post.originalPost.content;
-        post.imageUrl = post.originalPost.imageUrl;
-        post.authorName = post.originalPost.authorName;
-        post.authorPhoto = post.originalPost.authorPhoto;
-        post.timestamp = post.originalPost.timestamp;
-        post.authorId = post.originalPost.authorId;
+        if (isMyRepost) {
+            repostButton.classList.add('reposted');
+            repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+            // ajuda event handlers futuros e patches
+            repostButton.setAttribute('data-post-id', baseId);
+            repostButton.addEventListener("click", (e) => {
+                e.stopPropagation();
+                toggleRepost(baseId, e.currentTarget); // desfaz sua republicação
+            });
+        } else {
+            // ❌ Não mostrar botão em republicações de terceiros
+            repostButton.style.display = 'none';
+        }
+
+        // Mostra no card o conteúdo/imagem/dados do POST ORIGINAL
+        if (post.originalPost) {
+            post.content     = post.originalPost.content;
+            post.imageUrl    = post.originalPost.imageUrl;
+            post.authorName  = post.originalPost.authorName;
+            post.authorPhoto = post.originalPost.authorPhoto;
+            post.timestamp   = post.originalPost.timestamp;
+            post.authorId    = post.originalPost.authorId;
+        }
 
     } else {
-        // Lógica para posts originais
-        if (post.repostedBy && post.repostedBy.includes(currentUser.uid)) {
+        // ==============================
+        // POST ORIGINAL
+        // ==============================
+        const jaRepostou = Array.isArray(post.repostedBy) && post.repostedBy.includes(currentUser.uid);
+        if (jaRepostou) {
             repostButton.classList.add("reposted");
             repostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+        } else {
+            // mantém o botão do template como "Republicar"
         }
-        repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
+        // Alterna no post base (aqui é o próprio post.id)
+        repostButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleRepost(post.id, e.currentTarget);
+        });
     }
 
-    // Referências aos elementos do DOM dentro do post
+    // ==============================
+    // Preenche dados comuns do card
+    // ==============================
     const authorPhotoElement = postClone.querySelector(".post-author-photo");
     const authorNameElement = postClone.querySelector(".post-author-name");
     const timestampElement = postClone.querySelector(".post-timestamp");
@@ -739,22 +763,31 @@ function addPostToDOM(post, isSingleView = false) {
     const postImageElement = postClone.querySelector(".post-image");
     const deletePostBtn = postClone.querySelector('.post-delete-btn');
 
-    // Preenche os dados do post
+    // data-* úteis
     postElement.dataset.postId = post.id;
     postElement.dataset.authorId = post.authorId;
-    postElement.dataset.originalPostId = post.originalPostId;
+    postElement.dataset.originalPostId = post.originalPostId || '';
 
+    // salvo
     if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
         saveButton.classList.add("saved");
         saveButton.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
     }
 
+    // autor
     if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
-    authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
+    authorPhotoElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        redirectToUserProfile(post.authorId);
+    });
 
     authorNameElement.textContent = post.authorName;
-    authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
+    authorNameElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        redirectToUserProfile(post.authorId);
+    });
 
+    // timestamp
     if (post.timestamp) {
         const date = post.timestamp instanceof Date ? post.timestamp : post.timestamp.toDate();
         timestampElement.textContent = formatTimestamp(date);
@@ -762,7 +795,8 @@ function addPostToDOM(post, isSingleView = false) {
         timestampElement.textContent = "Agora mesmo";
     }
 
-    contentElement.textContent = post.content;
+    // conteúdo + contadores
+    contentElement.textContent = post.content || '';
     likeCount.textContent = post.likes || 0;
 
     if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
@@ -776,6 +810,7 @@ function addPostToDOM(post, isSingleView = false) {
         commentUserPhoto.src = currentUserProfile.photoURL;
     }
 
+    // mídia
     if (post.imageUrl) {
         postImageElement.src = post.imageUrl;
         postMediaContainer.style.display = 'block';
@@ -783,7 +818,7 @@ function addPostToDOM(post, isSingleView = false) {
         postMediaContainer.style.display = 'none';
     }
 
-    // Mostra o botão de excluir apenas para o autor do post (não em republicações)
+    // Excluir (somente autor e não em republicações)
     if (!post.isRepost && post.authorId === currentUser.uid) {
         deletePostBtn.style.display = 'block';
         deletePostBtn.addEventListener('click', (e) => {
@@ -792,12 +827,14 @@ function addPostToDOM(post, isSingleView = false) {
         });
     }
 
-    // Adiciona os event listeners para os botões e interações
-    likeButton.addEventListener("click", () => toggleLike(post.id));
-    saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
-    shareButton.addEventListener("click", () => sharePost(post.id));
+    // Ações (like/save/share)
+    likeButton.addEventListener("click", (e) => { e.stopPropagation(); toggleLike(post.id); });
+    saveButton.addEventListener("click", (e) => { e.stopPropagation(); toggleSavePost(post.id, e.currentTarget); });
+    shareButton.addEventListener("click", (e) => { e.stopPropagation(); sharePost(post.id); });
 
-    commentButton.addEventListener("click", () => {
+    // Comentários
+    commentButton.addEventListener("click", (e) => {
+        e.stopPropagation();
         commentsSection.classList.toggle("active");
         if (commentsSection.classList.contains("active")) {
             const commentsList = commentsSection.querySelector('.comments-list');
@@ -816,7 +853,8 @@ function addPostToDOM(post, isSingleView = false) {
         }
     });
 
-    sendCommentButton.addEventListener("click", () => {
+    sendCommentButton.addEventListener("click", (e) => {
+        e.stopPropagation();
         const content = commentInput.value.trim();
         if (content) {
             addComment(post.id, content);
@@ -826,6 +864,7 @@ function addPostToDOM(post, isSingleView = false) {
 
     commentInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
+            e.stopPropagation();
             const content = commentInput.value.trim();
             if (content) {
                 addComment(post.id, content);
@@ -836,6 +875,7 @@ function addPostToDOM(post, isSingleView = false) {
 
     return postElement;
 }
+
  // Função para redirecionar para o perfil do usuário
  function redirectToUserProfile(userId) {
    window.location.href = `pages/user.html?uid=${userId}`;
@@ -1448,136 +1488,73 @@ async function sendFriendRequest(userId, userData) {
         return false;
     }
 }
-async function toggleRepost(postId, buttonElement) {
-   try {
-       // 1. VERIFICAÇÕES INICIAIS
-       if (!currentUser || !currentUserProfile) {
-           showCustomAlert("Você precisa estar logado para republicar.");
-           return;
-       }
+// Alterna republicação SEMPRE no post BASE.
+// Assinatura usada pelo seu código: toggleRepost(basePostId, [botaoOpcional])
+async function toggleRepost(basePostId, btn) {
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+  const currentUid = auth.currentUser?.uid;
+  if (!currentUid || !basePostId) return;
 
-       const postRef = db.collection("posts").doc(postId);
-       const postDoc = await postRef.get();
+  try {
+    if (btn) btn.disabled = true;
 
-       if (!postDoc.exists) {
-           showCustomAlert("Esta publicação não existe mais.");
-           return;
-       }
-      
-       const originalPostData = postDoc.data();
+    const baseRef = db.collection('posts').doc(basePostId);
+    const snap = await baseRef.get();
+    if (!snap.exists) return;
 
-       // Impede que alguém republique uma republicação
-       if (originalPostData.isRepost) {
-           showCustomAlert("Não é possível republicar uma republicação.");
-           return;
-       }
+    const data = snap.data() || {};
+    const already = Array.isArray(data.repostedBy) && data.repostedBy.includes(currentUid);
 
-       // 2. DETERMINA A AÇÃO (REPUBLICAR OU DESFAZER)
-       const repostedBy = originalPostData.repostedBy || [];
-       const hasReposted = repostedBy.includes(currentUser.uid);
-      
-       const repostButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .repost-btn`);
+    if (already) {
+      // 1) tira do array
+      await baseRef.update({
+        repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUid)
+      });
 
-       if (hasReposted) {
-           // --- AÇÃO: DESFAZER REPUBLICAÇÃO ---
+      // 2) apaga a SUA republicação (type:'repost' do mesmo baseId)
+      const q = await db.collection('posts')
+        .where('type', '==', 'repost')
+        .where('authorId', '==', currentUid)
+        .where('repostOfId', '==', basePostId)
+        .get();
 
-           // Encontra e deleta a republicação do banco de dados
-           const repostQuery = db.collection("posts")
-               .where("originalPostId", "==", postId)
-               .where("authorId", "==", currentUser.uid);
-          
-           const repostSnapshot = await repostQuery.get();
-           if (!repostSnapshot.empty) {
-               const deletePromises = [];
-               repostSnapshot.forEach(doc => deletePromises.push(doc.ref.delete()));
-               await Promise.all(deletePromises);
-           }
+      const batch = db.batch();
+      q.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
 
-           // Remove o usuário da lista de 'repostedBy' no post original
-           await postRef.update({
-               repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-           });
+      // feedback visual (se veio de botão)
+      if (btn) {
+        btn.classList.remove('reposted');
+        btn.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
+      }
+    } else {
+      // 1) adiciona no array
+      await baseRef.update({
+        repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUid)
+      });
 
-           // ATUALIZAÇÃO DA INTERFACE EM TEMPO REAL:
-           // O listener do feed (onSnapshot) já deve remover o post automaticamente.
-           // Esta linha é um fallback caso o listener falhe ou para feedback imediato.
-           const repostElementToRemove = document.querySelector(
-               `.post[data-original-post-id="${postId}"][data-author-id="${currentUser.uid}"]`
-           );
-           if (repostElementToRemove) {
-               repostElementToRemove.remove();
-           }
+      // 2) cria doc de republicação (para aparecer no feed)
+      await db.collection('posts').add({
+        type: 'repost',
+        repostOfId: basePostId,
+        authorId: currentUid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
-           // Atualiza o botão e mostra a notificação
-           if (repostButtonUI) {
-               repostButtonUI.classList.remove('reposted');
-               repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
-           }
-           showToast("Republicação removida.", "info");
-
-       } else {
-           // --- AÇÃO: CRIAR REPUBLICAÇÃO ---
-
-           // Cria o objeto da nova publicação
-           const repostData = {
-               isRepost: true,
-               originalPostId: postId,
-               originalPost: {
-                   content: originalPostData.content,
-                   // ✨ CORREÇÃO APLICADA AQUI ✨
-                   imageUrl: originalPostData.imageUrl || null, // Garante que a imagem seja incluída
-                   authorName: originalPostData.authorName,
-                   authorPhoto: originalPostData.authorPhoto,
-                   authorId: originalPostData.authorId,
-                   timestamp: originalPostData.timestamp,
-               },
-               authorId: currentUser.uid,
-               authorName: currentUserProfile.nickname || "Usuário",
-               authorPhoto: currentUserProfile.photoURL || null,
-               timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-               likes: 0,
-               likedBy: [],
-               commentCount: 0,
-           };
-
-           // Adiciona o novo documento de republicação ao banco de dados
-           await db.collection("posts").add(repostData);
-
-           // Adiciona o usuário na lista 'repostedBy' do post original
-           await postRef.update({
-               repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-           });
-          
-           // Envia uma notificação para o autor do post original
-           if (originalPostData.authorId !== currentUser.uid) {
-               await db.collection("users").doc(originalPostData.authorId).collection("notifications").add({
-                   type: "repost",
-                   postId: postId,
-                   fromUserId: currentUser.uid,
-                   fromUserName: currentUserProfile.nickname || "Usuário",
-                   fromUserPhoto: currentUserProfile.photoURL || null,
-                   content: "republicou sua publicação.",
-                   timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                   read: false,
-               });
-           }
-          
-           // Atualiza a interface: adiciona a classe e troca o texto do botão
-           if (repostButtonUI) {
-               repostButtonUI.classList.add('reposted');
-               repostButtonUI.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
-           }
-           showToast("Publicação republicada!", "success");
-       }
-
-   } catch (error) {
-       console.error("Erro ao republicar/desrepublicar:", error);
-       showCustomAlert("Ocorreu um erro. Tente novamente.");
-   }
+      // feedback visual (se veio de botão)
+      if (btn) {
+        btn.classList.add('reposted');
+        btn.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+      }
+    }
+  } catch (err) {
+    console.error('toggleRepost error:', err);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
-/**
-* Carrega os 3 eventos mais próximos e exibe-os na página principal.
-*/
+
 async function loadUpcomingEvents() {
    const upcomingEventsContainer = document.getElementById('upcoming-events-container');
    if (!upcomingEventsContainer) return;
@@ -1856,6 +1833,68 @@ async function loadSuggestions() {
         }
     }
 }
+// ====== helpers para repost ======
+function isRepostItem(post) {
+  return post?.type === 'repost' || !!post?.repostOfId || !!post?.originalPostId;
+}
+function basePostId(post) {
+  return post?.repostOfId || post?.originalPostId || post?.id;
+}
+
+/**
+ * Renderiza os botões de Republicar/Desfazer corretamente.
+ * - Em REPUBLICAÇÕES: NUNCA mostra "Republicar". Só mostra "Desfazer" se a republicação for SUA.
+ * - Em POSTS ORIGINAIS: mostra "Desfazer" se você já republicou; senão, "Republicar".
+ */
+function renderRepostControls(post, currentUid) {
+  const baseId = basePostId(post);
+
+  // Card é uma republicação
+  if (isRepostItem(post)) {
+    // Só o dono da republicação vê "Desfazer"
+    if (post?.authorId === currentUid) {
+      return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
+                <i class="fas fa-retweet"></i> Desfazer
+              </button>`;
+    }
+    return ''; // mais ninguém vê botão em republicações
+  }
+
+  // Card é post original
+  const hasReposted = Array.isArray(post?.repostedBy) && post.repostedBy.includes(currentUid);
+  if (hasReposted) {
+    return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
+              <i class="fas fa-retweet"></i> Desfazer
+            </button>`;
+  }
+  return `<button class="repost-btn" data-post-id="${baseId}" title="Republicar">
+            <i class="fas fa-retweet"></i> Republicar
+          </button>`;
+}
+
 
 });
 
+ // === Listener global dos botões de (des)republicação — cole no FINAL do JS do FEED ===
+document.addEventListener('click', async (e) => {
+  const rep = e.target.closest('.repost-btn, .undo-repost-btn');
+  if (!rep) return;
+
+  e.preventDefault();
+
+  const baseId = rep.getAttribute('data-post-id');
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  if (!auth.currentUser) return;
+
+  try {
+    await toggleRepost(baseId, auth.currentUser.uid, db);
+    // se você tem uma função que re-renderiza o card/linha, chame aqui:
+    // ex.: refreshPostCard(baseId) OU recarregue o bloco do feed
+  } catch (err) {
+    console.error(err);
+    // opcional: toast('Falha ao (des)republicar', 'error');
+  }
+  
+});

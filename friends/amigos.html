@@ -500,14 +500,19 @@ body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
 </div>
 
             
-            <div class="friends-section">
-                <h2><i class="fas fa-users"></i> Todos os seus Amigos</h2>
-                <div class="friends-grid" id="allFriendsGrid">
-                    <div class="loading-indicator">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos...
-                    </div>
-                </div>
-            </div>
+          <div class="friends-section">
+    <h2><i class="fas fa-users"></i> Todos os seus Amigos</h2>
+
+    <div class="friends-grid" id="allFriendsGrid">
+        <div class="loading-indicator">
+            <i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos...
+        </div>
+    </div>
+
+    <div class="load-more-container">
+        <button id="load-more-friends" class="load-more-btn" style="display: none;">Ver Mais</button>
+    </div>
+</div>
         </main>
 
         <aside class="sidebar right-sidebar">
