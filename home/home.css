@@ -922,6 +922,45 @@ body.dark-mode .friend-name {
     color: var(--light-text-secondary);
     transition: color 0.3s;
 }
+/* Adicione este CSS ao final de home/home.css */
+
+.hobbies-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.hobby-tag {
+    background-color: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+}
+
+.hobby-add-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    background-color:#5b5ad3; ;
+    color: #fff;
+    border-radius: 50%;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.hobby-add-btn:hover {
+    transform: scale(1.1);
+}
+
+.no-hobbies {
+    font-size: 0.9rem;
+    color: #888;
+}
 
 body.dark-mode .friend-status {
     color: var(--dark-text-secondary);

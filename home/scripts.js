@@ -224,6 +224,7 @@ auth.onAuthStateChanged(async function (user) {
    }
 
    loadSuggestions();
+    loadHobbiesPreview(); 
    loadUpcomingEvents();
    checkUpcomingEventNotifications();
    window.addEventListener('scroll', handleScroll);
@@ -1690,66 +1691,102 @@ async function checkUpcomingEventNotifications() {
        console.error("Erro ao verificar notificações de eventos:", error);
    }
 }
-// Em scripts.js, substitua a sua função loadSuggestions por esta versão:
+// Em home/scripts.js, substitua a função loadSuggestions por esta:
+// Adicione esta nova função ao ficheiro: home/scripts.js
+
+function loadHobbiesPreview() {
+    const hobbiesContainer = document.getElementById('hobbies-preview-container');
+    if (!hobbiesContainer) return;
+
+    hobbiesContainer.innerHTML = ''; // Limpa o conteúdo anterior
+
+    const hobbies = currentUserProfile.hobbies || [];
+
+    if (hobbies.length > 0) {
+        // Pega apenas os primeiros 4 hobbies para a pré-visualização
+        const hobbiesToShow = hobbies.slice(0, 4);
+
+        hobbiesToShow.forEach(hobby => {
+            const hobbyElement = document.createElement('span');
+            hobbyElement.className = 'hobby-tag';
+            hobbyElement.textContent = hobby;
+            hobbiesContainer.appendChild(hobbyElement);
+        });
+
+        // Adiciona o botão "+" que leva ao perfil para ver/editar todos os hobbies
+        if (hobbies.length > 4) {
+             const addHobbyLink = document.createElement('a');
+             addHobbyLink.href = `../editprofile/edit-profile.html?uid=${currentUser.uid}`; // Link para a página de edição de perfil
+             addHobbyLink.className = 'hobby-add-btn';
+             addHobbyLink.innerHTML = '<i class="fas fa-plus"></i>';
+             addHobbyLink.title = "Ver todos os hobbies";
+             hobbiesContainer.appendChild(addHobbyLink);
+        }
+    } else {
+        hobbiesContainer.innerHTML = '<p class="no-hobbies">Adicione seus hobbies no perfil!</p>';
+    }
+}
 async function loadSuggestions() {
-    if (!suggestionsContainer || !currentUserProfile) return;
+    if (!suggestionsContainer) return;
     suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
 
     try {
-        // 1. Obter todos os IDs que devem ser excluídos das sugestões
-        const exclusionIds = new Set();
-        exclusionIds.add(currentUser.uid); // Excluir a si mesmo
+        // 1. Obter os hobbies do utilizador atual
+        const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
+        if (currentUserHobbies.size === 0) {
+            suggestionsContainer.innerHTML = '<p class="no-suggestions">Adicione hobbies ao seu perfil para ver sugestões.</p>';
+            return;
+        }
 
-        // 2. Obter amigos atuais e adicioná-los à lista de exclusão
+        // 2. Obter a lista de IDs a excluir (o próprio utilizador, amigos, pedidos pendentes)
+        const exclusionIds = new Set();
+        exclusionIds.add(currentUser.uid);
+
         const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
         friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
 
-        // 3. Obter pedidos de amizade ENVIADOS pelo usuário e adicionar à exclusão
         const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
         sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
 
-        // 4. Obter pedidos de amizade RECEBIDOS pelo usuário e adicionar à exclusão
         const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
         receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
 
-        // 5. Criar um Set com os hobbies do usuário atual para busca rápida
-        const currentUserHobbies = new Set([
-            ...(currentUserProfile.hobbies || []),
-            ...(currentUserProfile.customHobbies || [])
-        ]);
+        // 3. Obter todos os outros utilizadores
+        const allUsersSnapshot = await db.collection('users').get();
 
-        // 6. Buscar todos os usuários (limitado para performance)
-        const allUsersSnapshot = await db.collection('users').limit(50).get();
-
-        suggestionsContainer.innerHTML = '';
-        let suggestionsAdded = 0;
+        const suggestions = [];
 
         allUsersSnapshot.forEach(doc => {
-            // Se o ID do usuário NÃO ESTIVER na lista de exclusão, processa
+            // Se o ID do utilizador NÃO ESTIVER na lista de exclusão, processa-o
             if (!exclusionIds.has(doc.id)) {
                 const user = { id: doc.id, ...doc.data() };
-
-                // 7. Calcula os hobbies em comum
-                const suggestionUserHobbies = [
-                    ...(user.hobbies || []),
-                    ...(user.customHobbies || [])
-                ];
+                const userHobbies = new Set(user.hobbies || []);
                 
-                let commonHobbiesCount = 0;
-                for (const hobby of suggestionUserHobbies) {
-                    if (currentUserHobbies.has(hobby)) {
-                        commonHobbiesCount++;
-                    }
+                // 4. Calcular hobbies em comum
+                const commonHobbies = [...currentUserHobbies].filter(hobby => userHobbies.has(hobby));
+                
+                if (commonHobbies.length > 0) {
+                    suggestions.push({
+                        ...user,
+                        commonHobbiesCount: commonHobbies.length
+                    });
                 }
-
-                // Adiciona ao DOM com a contagem correta
-                addSuggestionToDOM(user, commonHobbiesCount);
-                suggestionsAdded++;
             }
         });
 
-        if (suggestionsAdded === 0) {
+        // 5. Ordenar as sugestões por quem tem mais hobbies em comum
+        suggestions.sort((a, b) => b.commonHobbiesCount - a.commonHobbiesCount);
+
+        // 6. Mostrar apenas as 5 melhores sugestões na página inicial
+        suggestionsContainer.innerHTML = '';
+        const top5Suggestions = suggestions.slice(0, 5);
+
+        if (top5Suggestions.length === 0) {
             suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
+        } else {
+            top5Suggestions.forEach(user => {
+                addSuggestionToDOM(user, user.commonHobbiesCount);
+            });
         }
 
     } catch (error) {

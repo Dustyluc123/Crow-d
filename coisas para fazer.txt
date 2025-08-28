@@ -1,4 +1,9 @@
-///mensagem
-1-sugestoes de quem conversar 
-
-convite na noticacao do grupo
+sugestoes de com quem conversar no mensagem.html
+resolver bugs
+definir quais bugs estao acontecendo 
+Notas na paginas de amigos
+Emoji facil no home
+fazer os hobbies que sao #
+Resolver os problemas do Firebase plano basico
+Mudar a indentidade vizual do site para ter mais roxo mais e mais ipacato 
+fazer ser acessivo nos celulares com mais facilidade 
