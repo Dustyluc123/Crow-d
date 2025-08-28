@@ -208,3 +208,58 @@ button:hover, #login-google:hover {
         transform: translateX(100%);
     }
 }
+/* Estilo para o botão de Cadastro em destaque */
+.signup-btn {
+    background-color: #5b5ad3;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem; /* Espaço entre o ícone e o texto */
+    text-decoration: none; /* Garante que não haja sublinhado */
+}
+
+/* Efeito ao passar o mouse */
+.signup-btn:hover {
+    background-color: var(--primary-color); /* Preenche o fundo */
+    color: var(--branco); /* Texto fica branco */
+}
+/* Estilo para o separador "ou" */
+.separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #ccc;
+    margin: 1rem 0; /* Espaçamento vertical */
+}
+
+/* Cria as linhas laterais */
+.separator::before,
+.separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #444; /* Cor da linha */
+}
+
+/* Espaçamento para o texto "ou" */
+.separator:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.separator:not(:empty)::after {
+    margin-left: .5em;
+}
+
+/* Ajuste final no botão de cadastro para garantir o espaçamento */
+.signup-btn {
+    margin-top: 0; /* Remove a margem superior que tínhamos antes */
+}

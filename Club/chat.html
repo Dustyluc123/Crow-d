@@ -10,6 +10,173 @@
       <link rel="icon" type="image/png" href="../img/corvo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Estilos para a página de mensagens - Foco em Mobile */
+
+/* Garante que o layout ocupe a tela inteira sem rolar */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+.main-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feed {
+    flex-grow: 1;
+    display: flex;
+    position: relative; /* Essencial para a animação de deslize */
+    overflow: hidden;
+}
+
+/* Container que segura as duas colunas (conversas e chat) */
+.messages-container {
+    display: flex;
+    width: 200%; /* O dobro da largura para conter as duas telas */
+    height: 100%;
+    transition: transform 0.3s ease-in-out; /* Animação de deslize */
+}
+
+/* Coluna da lista de conversas e do chat ativo */
+.conversations-list, .chat-area {
+    width: 50%; /* Cada "tela" ocupa metade do container */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Estilo da Lista de Conversas --- */
+.conversations-list {
+    border-right: 1px solid var(--light-border);
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid var(--light-border);
+}
+
+.conversation-item:hover {
+    background-color: var(--light-bg-secondary);
+}
+
+.conversation-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.conversation-details {
+    overflow: hidden;
+}
+
+.conversation-name {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.conversation-last-message {
+    color: var(--light-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Estilo da Área de Chat --- */
+.chat-header {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--light-border);
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse; /* Mensagens começam de baixo para cima */
+}
+
+/* Bolhas de mensagem */
+.chat-message {
+    margin-bottom: 10px;
+    max-width: 75%;
+}
+
+.message-bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.4;
+}
+
+.chat-message.sent {
+    align-self: flex-end; /* Alinha à direita */
+}
+.chat-message.sent .message-bubble {
+    background-color: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.received {
+    align-self: flex-start; /* Alinha à esquerda */
+}
+.chat-message.received .message-bubble {
+    background-color: var(--light-bg-secondary);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid var(--light-border);
+}
+
+.chat-input {
+    flex-grow: 1;
+    border: none;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: var(--light-bg-secondary);
+}
+
+.chat-send-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+/* --- LÓGICA MOBILE --- */
+/* Por padrão no mobile, a lista de conversas ocupa a tela inteira */
+@media (max-width: 768px) {
+    /* Quando um chat está ativo, o container desliza para a esquerda */
+    .feed.chat-active .messages-container {
+        transform: translateX(-50%);
+    }
+
+    .chat-header {
+        gap: 10px;
+    }
+    
+    .back-to-conversations {
+        display: block; /* Garante que o botão de voltar apareça */
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+}
         .chat-area { max-height: 75vh; }
         .message-header { font-size: 0.8rem; color: var(--light-text-secondary); margin-bottom: 4px; font-weight: bold; }
         body.dark-mode .message-header { color: var(--dark-text-secondary); }

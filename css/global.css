@@ -17,6 +17,12 @@ body {
     margin: 0;
     padding: 0;
 }
+/* Garante que em telas >= 769px o header SEMPRE apareça */
+@media (min-width: 769px) {
+  body.chat-open > header {
+    display: flex !important;
+  }
+}
 
 body.light-mode {
     --primary-color: #ffffff;

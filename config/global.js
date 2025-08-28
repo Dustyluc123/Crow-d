@@ -112,4 +112,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+// === GUARDA GLOBAL DO HEADER (evita sumir no desktop/fora de mensagens) ===
+function setupHeaderGuard() {
+  const isMessagesPage = document.body.classList.contains('mensagens-page');
+
+  // Em qualquer página que não seja mensagens, não deixamos chat-open ficar.
+  if (!isMessagesPage) {
+    document.body.classList.remove('chat-open');
+  }
+
+  // Em viewport >= 769px o header deve sempre aparecer.
+  const fixOnResize = () => {
+    if (window.innerWidth >= 769) {
+      document.body.classList.remove('chat-open');
+    }
+  };
+
+  window.addEventListener('resize', fixOnResize);
+  // roda uma vez ao carregar
+  fixOnResize();
+}
+
+// Garante que a função rode quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', setupHeaderGuard);
+
 });

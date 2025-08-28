@@ -176,3 +176,34 @@ body.dark-mode ::-webkit-scrollbar-thumb{ background-color:#555; }
   .mobile-nav-item{ background:none; border:none; color:var(--text-primary); font-size:1.4rem; padding:8px; border-radius:50%; }
   .mobile-nav-item.active, .mobile-nav-item:hover{ color:var(--primary-color); }
 }
+/* Mobile: quando um chat está aberto, esconda o header do site e use a altura cheia */
+@media (max-width: 768px) {
+  body.chat-open {
+    padding-top: 0 !important;         /* o header fixo some, tira o espaço */
+  }
+  body.chat-open > header {
+    display: none !important;          /* esconde APENAS o header global */
+  }
+  body.chat-open .messages-container {
+    height: calc(100vh - 60px);        /* 60px = bottom nav */
+  }
+}
+
+/* Esconde o header SOMENTE na página de mensagens e SOMENTE no mobile */
+@media (max-width: 768px) {
+  body.mensagens-page.chat-open > header {
+    display: none !important;
+  }
+}
+/* === Mensagens: esconder o header no MOBILE, sempre, nesta página === */
+@media (max-width: 768px) {
+  body.mensagens-page > header {
+    display: none !important;
+  }
+  body.mensagens-page {
+    padding-top: 0 !important;         /* já que o header some, zera o espaço */
+  }
+  body.mensagens-page .messages-container {
+    height: calc(100vh - 60px) !important; /* 60px = mobile bottom nav */
+  }
+}

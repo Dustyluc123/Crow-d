@@ -21,6 +21,28 @@
     padding: 0;
     box-sizing: border-box;
 }
+/* Estilo para destacar os cards de republicação */
+.repost-card {
+    background-color: var(--light-bg-secondary); /* Um fundo sutilmente diferente */
+    border-left: 3px solid var(--primary-color); /* Uma borda colorida à esquerda */
+    padding-top: 10px; /* Mais espaço para o cabeçalho "republicou" */
+}
+
+/* Garante que o fundo mude no modo escuro também */
+html.dark-mode .repost-card {
+    background-color: var(--dark-bg-tertiary);
+}
+
+.repost-header {
+    font-size: 0.9rem;
+    color: var(--light-text-secondary);
+    margin-bottom: 10px;
+    padding-left: 15px;
+}
+
+html.dark-mode .repost-header {
+    color: var(--dark-text-secondary);
+}
 
 body {
     

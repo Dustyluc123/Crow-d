@@ -1,26 +1,27 @@
-// mensagens/script.js — conversa 1:1, mobile slide, sugestões, emoji, delete, toasts (Firebase compat)
+// mensagens/script.js — conversas 1:1, sugestões, chat em tempo real, emoji, excluir, toasts
+// + FIX header mobile: esconde header global só quando chat estiver aberto no mobile
+// + FIX nulls: reconsulta elementos do header do chat sempre que abrir conversa
 
 (function(){
-  // ---------------------- DOM ----------------------
+  // ---------------------- DOM helpers ----------------------
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
 
-  const feedEl                 = $('#feed');
-  const listEl                 = $('#conversations-items');
-  const suggestionsContainer   = $('#suggestions-container');
-  const suggestionsList        = $('#suggestions-list');
+  // containers principais
+  const feedEl               = $('#feed');
+  const listEl               = $('#conversations-items');
+  const suggestionsContainer = $('#suggestions-container');
+  const suggestionsList      = $('#suggestions-list');
 
-  const chatMessagesEl         = $('#chatMessages');
-  const chatInput              = $('#chatInput');
-  const sendBtn                = $('#sendBtn');
-  const emojiBtn               = $('#emojiBtn');
-  const emojiPicker            = $('#emojiPicker');
+  // entrada de mensagem / ações
+  const chatInput   = $('#chatInput');
+  const sendBtn     = $('#sendBtn');
+  const emojiBtn    = $('#emojiBtn');
+  const emojiPicker = $('#emojiPicker');
 
-  const chatNameEl             = $('#chatName');
-  const chatAvatarEl           = $('#chatAvatar');
-  const chatStatusEl           = $('#chatStatus');
-  const backBtn                = $('#backBtn');
-  const logoutButton           = $('#logout-btn'); // <— seu id no HTML
+  // navegação
+  const backBtn   = $('#backBtn');
+  const logoutBtn = $('#logout-btn');
 
   // ---------------------- Toast (sem alert) ----------------------
   function ensureToastContainer(){
@@ -36,7 +37,7 @@
     }
     return c;
   }
-  function toast(msg, type='info', ms=2500){
+  function toast(msg, type='info', ms=2200){
     const cont = ensureToastContainer();
     const t = document.createElement('div');
     t.textContent = msg;
@@ -76,7 +77,30 @@
       return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
     } catch { return ''; }
   }
-  function scrollToBottom(){ chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight; }
+  function scrollToBottom(){
+    const { chatMessagesEl } = getChatHeaderEls();
+    if (chatMessagesEl) chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  }
+
+  // reconsulta sempre os elementos do header do chat
+  function getChatHeaderEls() {
+    return {
+      chatNameEl:     document.getElementById('chatName'),
+      chatAvatarEl:   document.getElementById('chatAvatar'),
+      chatStatusEl:   document.getElementById('chatStatus'),
+      chatMessagesEl: document.getElementById('chatMessages'),
+    };
+  }
+
+  // ---- FIX header mobile ----
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+  function setChatOpen(open){
+    if (open && isMobile()) document.body.classList.add('chat-open');
+    else document.body.classList.remove('chat-open');
+  }
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 769) setChatOpen(false);
+  });
 
   async function getUserProfile(uid){
     if (userCache.has(uid)) return userCache.get(uid);
@@ -97,7 +121,9 @@
   }
 
   async function loadConversations(){
-    listEl.innerHTML = '<div class="loading-conversations"><i class="fas fa-spinner fa-spin"></i> Carregando conversas...</div>';
+    if (listEl) {
+      listEl.innerHTML = '<div class="loading-conversations"><i class="fas fa-spinner fa-spin"></i> Carregando conversas...</div>';
+    }
     const { db } = ensureFirebase();
 
     try {
@@ -106,16 +132,16 @@
         .get();
 
       if (q.empty) {
-        listEl.innerHTML = '<div class="no-conversations">Sem conversas. Inicie uma abaixo 👇</div>';
+        if (listEl) listEl.innerHTML = '<div class="no-conversations">Sem conversas. Inicie uma abaixo 👇</div>';
         if (suggestionsContainer) suggestionsContainer.style.display = 'block';
-        await showUserSuggestions(); // <— seu nome original
+        await showUserSuggestions();
         return;
       }
 
       const items = q.docs.map(d => ({ id: d.id, ...d.data() }));
       items.sort((a,b) => (b.lastMessageAt?.toMillis?.() || 0) - (a.lastMessageAt?.toMillis?.() || 0));
 
-      listEl.innerHTML = '';
+      if (listEl) listEl.innerHTML = '';
       for (const it of items) {
         const otherUid = otherParticipant(it.participants, currentUser.uid);
         const prof = await getUserProfile(otherUid);
@@ -130,22 +156,19 @@
             <p class="conversation-last-message">${htmlEscape(it.lastMessage || '')}</p>
           </div>
           <div class="conversation-time">${it.lastMessageAt ? fmtTime(it.lastMessageAt) : ''}</div>
-          <!-- se você tiver um botão de excluir por conversa, deixe algo assim no HTML:
-               <button class="delete-btn" data-conversation-id="${htmlEscape(it.id)}" title="Excluir conversa">🗑️</button> -->
         `;
         el.addEventListener('click', (ev) => {
-          // evita abrir a conversa se clicou no delete dentro do item
-          if (ev.target.closest('.delete-btn')) return;
+          if (ev.target.closest('.delete-btn')) return; // evita abrir se clicar em deletar
           openConversation(it.id, otherUid, prof);
         });
-        listEl.appendChild(el);
+        if (listEl) listEl.appendChild(el);
       }
 
       if (suggestionsContainer) suggestionsContainer.style.display = 'block';
       await showUserSuggestions();
     } catch (e) {
       console.error(e);
-      listEl.innerHTML = '<div class="error-message">Erro ao carregar conversas.</div>';
+      if (listEl) listEl.innerHTML = '<div class="error-message">Erro ao carregar conversas.</div>';
       if (suggestionsContainer) suggestionsContainer.style.display = 'none';
     }
   }
@@ -158,26 +181,41 @@
     selectedConversationId = conversationId;
     markActiveConversation(conversationId);
 
-    // header
-    chatNameEl.textContent = peerProfile?.displayName || 'Conversando';
-    chatAvatarEl.src = peerProfile?.photoURL || '../img/Design sem nome2.png';
-    chatStatusEl.innerHTML = `<span class="status-badge"></span> disponível`;
+    // garante perfil (se não veio)
+    if (!peerProfile && peerUid) {
+      try { peerProfile = await getUserProfile(peerUid); } catch {}
+    }
 
-    // mobile: mostra chat
-    feedEl.classList.add('chat-active');
+    // (re)pega os elementos do header do chat AGORA
+    const { chatNameEl, chatAvatarEl, chatStatusEl, chatMessagesEl } = getChatHeaderEls();
+
+    // header do chat (só se existirem no DOM)
+    if (chatNameEl)   chatNameEl.textContent = (peerProfile?.displayName || 'Conversando');
+    if (chatAvatarEl) chatAvatarEl.src = (peerProfile?.photoURL || '../img/Design sem nome2.png');
+    if (chatStatusEl) chatStatusEl.innerHTML = `<span class="status-badge"></span> disponível`;
+
+    // mobile: mostra chat e esconde header global (via body.chat-open)
+    if (feedEl) feedEl.classList.add('chat-active');
+    setChatOpen(true);
 
     // limpa listener anterior
-    if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
+    if (typeof messagesUnsub === 'function' && messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
 
     // ler mensagens em tempo real
     const { db } = ensureFirebase();
     const msgRef = db.collection('conversations').doc(conversationId).collection('messages').orderBy('createdAt','asc');
 
-    chatMessagesEl.innerHTML = '<div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    if (chatMessagesEl) {
+      chatMessagesEl.innerHTML = '<div class="loading-messages"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    }
 
     messagesUnsub = msgRef.onSnapshot((snap) => {
+      // revalida o container a cada tick (em caso de hot-swap de DOM)
+      const { chatMessagesEl: container } = getChatHeaderEls();
+      if (!container) return;
+
       if (snap.empty) {
-        chatMessagesEl.innerHTML = '<div class="no-messages">Sem mensagens ainda. Diga um oi!</div>';
+        container.innerHTML = '<div class="no-messages">Sem mensagens ainda. Diga um oi!</div>';
         return;
       }
       const frags = [];
@@ -188,16 +226,15 @@
           <div class="message ${isMine ? 'message-sent' : 'message-received'}" data-message-id="${doc.id}">
             <div class="message-content">${htmlEscape(m.text || '')}</div>
             <span class="message-time">${m.createdAt ? fmtTime(m.createdAt) : ''}</span>
-            <!-- Se você já tem um botão de excluir mensagem no seu HTML/CSS, algo assim:
-                 <button class="delete-btn" data-message-id="${doc.id}" title="Excluir mensagem">🗑️</button> -->
           </div>
         `);
       });
-      chatMessagesEl.innerHTML = frags.join('');
+      container.innerHTML = frags.join('');
       scrollToBottom();
     }, (err) => {
       console.error(err);
-      chatMessagesEl.innerHTML = '<div class="error-message">Erro ao ler mensagens.</div>';
+      const { chatMessagesEl: container } = getChatHeaderEls();
+      if (container) container.innerHTML = '<div class="error-message">Erro ao ler mensagens.</div>';
     });
   }
 
@@ -205,7 +242,7 @@
   async function startOrOpenConversationWith(otherUid){
     const { db } = ensureFirebase();
 
-    // Tenta achar conversa existente (participantes == [me, ele] em qualquer ordem)
+    // procura conversa existente
     const snap = await db.collection('conversations')
       .where('participants','array-contains', currentUser.uid)
       .get();
@@ -220,7 +257,7 @@
     });
 
     if (!found) {
-      // cria nova conversa
+      // cria nova
       const ref = await db.collection('conversations').add({
         participants: [currentUser.uid, otherUid],
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -236,7 +273,7 @@
 
   // ====================== Enviar ======================
   async function sendMessage(){
-    const text = chatInput.value.trim();
+    const text = chatInput?.value.trim();
     if (!text || !selectedConversationId) return;
 
     const { db } = ensureFirebase();
@@ -309,7 +346,7 @@
     const { db } = ensureFirebase();
 
     try {
-      // carrega amigos do usuário atual
+      // amigos do usuário
       const fSnap = await db.collection('users').doc(currentUser.uid).collection('friends').get();
 
       const myHobbies = await getUserHobbies(db, currentUser.uid);
@@ -329,11 +366,11 @@
         items.push({ uid: friendUid, name: profile.displayName, photo: profile.photoURL, common });
       }
 
-      // Ordena por hobbies em comum desc
+      // Ordena por hobbies em comum
       items.sort((a,b) => b.common - a.common);
 
       // Render
-      suggestionsList.innerHTML = '';
+      if (suggestionsList) suggestionsList.innerHTML = '';
       const tpl = $('#suggestion-template');
       items.slice(0, 8).forEach(it => {
         const node = tpl.content.cloneNode(true);
@@ -343,27 +380,26 @@
         const sub  = $('.suggestion-sub', node);
         const btn  = $('.start-chat-btn', node);
 
-        img.src = it.photo || '../img/Design sem nome2.png';
-        name.textContent = it.name || 'Usuário';
-        sub.textContent  = `${it.common} ${it.common===1?'hobby em comum':'hobbies em comum'}`;
+        if (img)  img.src = it.photo || '../img/Design sem nome2.png';
+        if (name) name.textContent = it.name || 'Usuário';
+        if (sub)  sub.textContent  = `${it.common} ${it.common===1?'hobby em comum':'hobbies em comum'}`;
 
         const open = (e) => { e.preventDefault(); startOrOpenConversationWith(it.uid); };
-        link.addEventListener('click', open);
-        btn.addEventListener('click', open);
+        if (link) link.addEventListener('click', open);
+        if (btn)  btn.addEventListener('click', open);
 
-        suggestionsList.appendChild(node);
+        if (suggestionsList) suggestionsList.appendChild(node);
       });
 
-      if (!items.length) {
+      if (!items.length && suggestionsList) {
         suggestionsList.innerHTML = '<div class="no-conversations">Sem sugestões por enquanto.</div>';
       }
     } catch (e) {
       console.error(e);
-      suggestionsList.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
+      if (suggestionsList) suggestionsList.innerHTML = '<div class="error-message">Erro ao carregar sugestões.</div>';
     }
   }
 
-  // wrapper com o NOME que seu código chamava (evita ReferenceError)
   async function showUserSuggestions(){
     if (suggestionsContainer) suggestionsContainer.style.display = 'block';
     await loadSuggestions();
@@ -373,16 +409,18 @@
   async function deleteConversation(conversationId){
     const { db } = ensureFirebase();
     try {
-      // apaga doc de conversa; mensagens podem ser limpas por Cloud Function.
       await db.collection('conversations').doc(conversationId).delete();
       toast('Conversa excluída.', 'success');
       if (selectedConversationId === conversationId) {
-        feedEl.classList.remove('chat-active');
+        if (feedEl) feedEl.classList.remove('chat-active');
+        setChatOpen(false);
         selectedConversationId = null;
         if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-        chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
-        chatNameEl.textContent = 'Selecione uma conversa';
-        chatAvatarEl.src = '../img/Design sem nome2.png';
+        const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+        if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
+        if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
+        const avatar = document.getElementById('chatAvatar');
+        if (avatar) avatar.src = '../img/Design sem nome2.png';
       }
       await loadConversations();
     } catch (e) {
@@ -398,14 +436,13 @@
       await db.collection('conversations').doc(selectedConversationId)
               .collection('messages').doc(messageId).delete();
       toast('Mensagem excluída.', 'success');
-      // mensagem some pelo onSnapshot
     } catch (e) {
       console.error(e);
       toast('Não foi possível excluir a mensagem.', 'error');
     }
   }
 
-  // Event delegation: qualquer .delete-btn na página
+  // Delegação: qualquer .delete-btn
   document.addEventListener('click', (e) => {
     const del = e.target.closest('.delete-btn');
     if (!del) return;
@@ -417,12 +454,15 @@
 
   // ====================== UI / Mobile ======================
   backBtn?.addEventListener('click', () => {
-    feedEl.classList.remove('chat-active');
+    if (feedEl) feedEl.classList.remove('chat-active');
+    setChatOpen(false);
     selectedConversationId = null;
     if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-    chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
-    chatNameEl.textContent = 'Selecione uma conversa';
-    chatAvatarEl.src = '../img/Design sem nome2.png';
+    const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+    if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
+    if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
+    const avatar = document.getElementById('chatAvatar');
+    if (avatar) avatar.src = '../img/Design sem nome2.png';
   });
 
   // emojis
@@ -433,8 +473,9 @@
   emojiPicker?.addEventListener('emoji-click', (ev) => {
     const emoji = ev.detail?.unicode || ev.detail?.emoji?.unicode || '';
     if (!emoji) return;
-    const start = chatInput.selectionStart || chatInput.value.length;
-    const end   = chatInput.selectionEnd || chatInput.value.length;
+    if (!chatInput) return;
+    const start = chatInput.selectionStart ?? chatInput.value.length;
+    const end   = chatInput.selectionEnd ?? chatInput.value.length;
     chatInput.value = chatInput.value.slice(0, start) + emoji + chatInput.value.slice(end);
     chatInput.focus();
     chatInput.selectionStart = chatInput.selectionEnd = start + emoji.length;
@@ -447,7 +488,7 @@
   });
 
   // logout
-  logoutButton?.addEventListener('click', async (e) => {
+  logoutBtn?.addEventListener('click', async (e) => {
     e.preventDefault();
     try { const { auth } = ensureFirebase(); await auth.signOut(); location.reload(); }
     catch (err) { console.error(err); toast('Erro ao sair.', 'error'); }
@@ -459,8 +500,9 @@
       const { auth } = ensureFirebase();
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
-          listEl.innerHTML = '<div class="no-conversations">Faça login para ver suas conversas.</div>';
+          if (listEl) listEl.innerHTML = '<div class="no-conversations">Faça login para ver suas conversas.</div>';
           if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+          setChatOpen(false);
           return;
         }
         currentUser = user;
@@ -473,8 +515,9 @@
       });
     } catch (e) {
       console.error(e);
-      listEl.innerHTML = '<div class="error-message">Firebase não inicializado.</div>';
+      if (listEl) listEl.innerHTML = '<div class="error-message">Firebase não inicializado.</div>';
       if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+      setChatOpen(false);
     }
   });
 })();
