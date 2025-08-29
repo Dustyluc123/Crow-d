@@ -1,0 +1,464 @@
+
+
+/* HEADER / MENU DE NAVEGAÇÃO */
+header {
+    background-color: var(--light-text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: var(--box-shadow);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 999;
+    height: 60px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode header {
+    background-color: var(--dark-bg-secondary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--dark-text);
+    transition: color 0.3s;
+    flex-shrink: 0;
+}
+
+body.dark-mode .logo {
+    color: var(--light-text);
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
+}
+
+/* Navegação principal */
+.main-nav {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    min-width: 0;
+}
+
+.main-nav a {
+    text-decoration: none;
+    color: var(--dark-text);
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode .main-nav a {
+    color: var(--light-text);
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+    background-color: var(--light-bg);
+    color: var(--primary-color);
+}
+
+body.dark-mode .main-nav a:hover,
+body.dark-mode .main-nav a.active {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--primary-hover);
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logout-btn {
+    text-decoration: none;
+    color: var(--dark-text);
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: var(--border-radius);
+    transition: all 0.3s;
+}
+
+body.dark-mode .logout-btn {
+    color: var(--light-text);
+}
+
+.logout-btn:hover {
+    background-color: #ffeeee;
+    color: #d32f2f;
+}
+
+body.dark-mode .logout-btn:hover {
+    background-color: rgba(211, 47, 47, 0.2);
+    color: #ff6b6b;
+}
+
+/* BASE / BODY */
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    margin: 0;
+    padding-top: 60px; /* Espaço para o header fixo */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+    background-color: var(--dark-bg);
+    color: var(--light-text);
+}
+
+/* Scrollbar (modo escuro) */
+body.dark-mode ::-webkit-scrollbar {
+    width: 8px;
+}
+body.dark-mode ::-webkit-scrollbar-track {
+    background: var(--dark-bg-secondary);
+}
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background-color: #4a4b50;
+    border-radius: 4px;
+    border: 2px solid var(--dark-bg-secondary);
+}
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-hover);
+}
+
+/* LAYOUT PRINCIPAL */
+.main-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+/* BARRAS LATERAIS */
+.sidebar {
+    flex: 0 0 250px;
+    background-color: var(--light-text);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    height: fit-content;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+body.dark-mode .sidebar {
+    background-color: var(--dark-bg-secondary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar da sidebar no dark */
+body.dark-mode .sidebar::-webkit-scrollbar-track {
+    background: var(--dark-bg-secondary);
+}
+body.dark-mode .sidebar::-webkit-scrollbar-thumb {
+    background-color: var(--dark-border);
+    border-radius: 4px;
+}
+body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-hover);
+}
+
+.sidebar-section {
+    margin-bottom: 25px;
+}
+.sidebar-section:last-child {
+    margin-bottom: 0;
+}
+.sidebar-section h3 {
+    margin-bottom: 15px;
+    color: var(--dark-text);
+    font-size: 1.1rem;
+    transition: color 0.3s;
+}
+body.dark-mode .sidebar-section h3 {
+    color: var(--light-text);
+}
+
+.section-subtitle {
+    font-size: 0.9rem;
+    color: var(--light-text-secondary);
+    margin-bottom: 15px;
+    transition: color 0.3s;
+}
+body.dark-mode .section-subtitle {
+    color: var(--dark-text-secondary);
+}
+
+.sidebar ul {
+    list-style: none;
+}
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+.sidebar ul li a {
+    text-decoration: none;
+    color: var(--dark-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--border-radius);
+    transition: background-color 0.3s, color 0.3s;
+}
+body.dark-mode .sidebar ul li a {
+    color: var(--light-text);
+}
+.sidebar ul li a:hover {
+    background-color: var(--light-bg);
+    color: var(--primary-color);
+}
+body.dark-mode .sidebar ul li a:hover {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--primary-hover);
+}
+
+/* CONTEÚDO CENTRAL */
+.feed {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* Título da página */
+.page-title {
+    margin-bottom: 20px;
+    color: var(--dark-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.3s;
+}
+body.dark-mode .page-title {
+    color: var(--light-text);
+}
+
+/* MODAL (usado na área de perigo) */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: var(--light-text);
+    color: var(--dark-text);
+    margin: auto;
+    padding: 0;
+    border-radius: var(--border-radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    animation: fadeIn 0.3s;
+}
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--light-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+.close-modal {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #aaa;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.modal-body {
+    padding: 20px;
+    line-height: 1.5;
+}
+.modal-actions {
+    padding: 15px 20px;
+    text-align: right;
+    border-top: 1px solid var(--light-border);
+}
+.primary-btn {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+/* Dark Mode para o Modal */
+body.dark-mode .modal-content {
+    background-color: var(--dark-bg-secondary);
+    color: var(--light-text);
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-actions {
+    border-color: var(--dark-border);
+}
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* BADGE de notificação no header/atalhos */
+.notification-badge {
+    height: 10px;
+    width: 10px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    border: 2px solid var(--light-text);
+}
+body.dark-mode .notification-badge {
+    border-color: var(--dark-bg-secondary);
+}
+
+/* ÁREA DE PERIGO (botão excluir conta) */
+.danger-zone {
+    border: 2px solid #dc3545;
+}
+.danger-zone h2 {
+    color: #dc3545;
+}
+.danger-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+.danger-btn:hover {
+    background-color: #c82333;
+}
+
+/* NAVEGAÇÃO MOBILE INFERIOR (presente no HTML) */
+#mobile-bottom-nav {
+    display: none;
+}
+@media (max-width: 768px) {
+    .main-nav {
+        display: none;
+    }
+    #mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: var(--light-text);
+        box-shadow: 0 -2px 5px rgba(55, 13, 13, 0.1);
+        z-index: 1000;
+    }
+    body.dark-mode #mobile-bottom-nav {
+        background-color: var(--dark-bg-secondary);
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    }
+    .mobile-nav-item {
+        background: none;
+        border: none;
+        color: var(--dark-text);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%;
+        transition: color 0.3s;
+    }
+    body.dark-mode .mobile-nav-item {
+        color: var(--light-text);
+    }
+    .mobile-nav-item.active,
+    .mobile-nav-item:hover {
+        color: var(--primary-color);
+    }
+    body.dark-mode .mobile-nav-item.active,
+    body.dark-mode .mobile-nav-item:hover {
+        color: var(--primary-hover);
+    }
+
+    /* Sidebars viram drawers no mobile (o HTML possui left/right) */
+    .left-sidebar, .right-sidebar {
+        display: flex;
+        position: fixed;
+        top: 0;
+        height: 100%;
+        width: 280px;
+        z-index: 1001;
+        background-color: var(--light-text);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        overflow-y: auto;
+        transition: transform 0.3s ease-in-out;
+        padding-top: 20px;
+    }
+    body.dark-mode .left-sidebar,
+    body.dark-mode .right-sidebar {
+        background-color: var(--dark-bg-secondary);
+    }
+    .left-sidebar { left: 0; transform: translateX(-100%); }
+    .right-sidebar { right: 0; transform: translateX(100%); }
+    .left-sidebar.open { transform: translateX(0); }
+    .right-sidebar.open { transform: translateX(0); }
+}
+
+/* Responsividade geral usada pela página */
+@media (max-width: 992px) {
+    .main-container {
+        flex-direction: column;
+        padding: 0 15px;
+        margin-top: 15px;
+    }
+    .sidebar {
+        width: 100%;
+        position: static;
+        order: 3;
+    }
+    .feed { order: 2; }
+    .left-sidebar { order: 1; }
+}
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px;
+    }
+    header {
+        height: 70px;
+        padding: 0 15px;
+    }
+    .logo-img { height: 60px; }
+    .logo span { display: none; }
+    .main-nav a { padding: 8px; }
+    .main-nav a i {
+        font-size: 1.3rem;
+        margin: 0 5px;
+    }
+}
