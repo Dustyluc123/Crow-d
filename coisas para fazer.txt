@@ -1,7 +1,5 @@
-sugestoes de com quem conversar no mensagem.html
 resolver bugs
 definir quais bugs estao acontecendo 
-Notas na paginas de amigos
 Emoji facil no home
 fazer os hobbies que funciona igual # no post do indez 
 Resolver os problemas do Firebase plano basico

@@ -85,39 +85,18 @@ function clearPostImage() {
 if (removeImageBtn) {
     removeImageBtn.addEventListener('click', clearPostImage);
 }
-// --- FIM DA LÓGICA DE UPLOAD DE IMAGEM PARA POSTS ---
-  // Em home/scripts.js
+async function sharePost(postId) {
+    const cleanUrl = window.location.href.split('?')[0].split('#')[0];
+    const postUrl = `${cleanUrl}?post=${postId}`;
 
-
- // Função para compartilhar um post (copiar o link) - VERSÃO CORRIGIDA
- async function sharePost(postId) {
-   // Pega a URL da página atual e remove quaisquer parâmetros antigos (? e #)
-   const cleanUrl = window.location.href.split('?')[0].split('#')[0];
-  
-   // Cria a nova URL com o parâmetro do post
-   const postUrl = `${cleanUrl}?post=${postId}`;
-
-
-   try {
-     // Usa a API de Clipboard do navegador para copiar a URL
-     await navigator.clipboard.writeText(postUrl);
-    
-     // Mostra uma notificação de sucesso
-     showToast("Link da publicação copiado!", "success");
-
-
-   } catch (error) {
-     console.error("Erro ao copiar o link:", error);
-    
-     // Se a cópia automática falhar, mostra um alerta com o link para cópia manual
-     showCustomAlert(`Não foi possível copiar o link. Copie manualmente: ${postUrl}`);
-   }
- }
-
-
-
-
-// Nova função para desligar o listener do feed de forma segura
+    try {
+        await navigator.clipboard.writeText(postUrl);
+        showToast("Link da publicação copiado!", "success");
+    } catch (error) {
+        console.error("Erro ao copiar o link:", error);
+        showCustomAlert(`Não foi possível copiar o link. Copie manualmente: ${postUrl}`);
+    }
+}
 function detachPostsListener() {
    if (postsListener) {
        postsListener(); // Executa a função de 'unsubscribe' retornada pelo onSnapshot
@@ -125,56 +104,39 @@ function detachPostsListener() {
    }
 }
 
-
- // --- FUNÇÃO PARA BUSCAR, ROLAR E DESTACAR O POST DA URL ---
-
-
- // Função para formatar timestamp
  function formatTimestamp(date) {
    // Verificar se date é um objeto Date válido
    if (!(date instanceof Date) || isNaN(date)) {
      return "Agora mesmo";
    }
 
-
    const now = new Date();
    const diff = now - date;
 
-
-   // Menos de 1 minuto
    if (diff < 60 * 1000) {
      return "Agora mesmo";
    }
 
-
-   // Menos de 1 hora
    if (diff < 60 * 60 * 1000) {
      const minutes = Math.floor(diff / (60 * 1000));
      return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
    }
 
-
-   // Menos de 1 dia
    if (diff < 24 * 60 * 60 * 1000) {
      const hours = Math.floor(diff / (60 * 60 * 1000));
      return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
    }
 
-
-   // Menos de 7 dias
    if (diff < 7 * 24 * 60 * 60 * 1000) {
      const days = Math.floor(diff / (24 * 60 * 60 * 1000));
      return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
    }
 
-
-   // Formato de data completo
    const day = date.getDate().toString().padStart(2, "0");
    const month = (date.getMonth() + 1).toString().padStart(2, "0");
    const year = date.getFullYear();
    const hours = date.getHours().toString().padStart(2, "0");
    const minutes = date.getMinutes().toString().padStart(2, "0");
-
 
    return `${day}/${month}/${year} às ${hours}:${minutes}`;
  }
@@ -195,30 +157,11 @@ async function prependPostById(docId) {
     console.error('Falha ao inserir novo post no topo:', e);
   }
 }
-
-
- // Verificar autenticação do usuário
-// Verificar autenticação do usuário
-// Em home/scripts.js
-
-
-// Em scripts.js
-
-
-// Em Crow-d/home/scripts.js
-
-// Dentro da função auth.onAuthStateChanged, substitua o bloco que atualiza o link de perfil por este:
-
 auth.onAuthStateChanged(async function (user) {
  if (user) {
    currentUser = user;
    await loadUserProfile(user.uid);
-   
-   // ==========================================================
-   //      INÍCIO DA CORREÇÃO
-   // ==========================================================
-  
-   // Encontra TODOS os links de perfil (desktop e mobile)
+
    const profileLinks = document.querySelectorAll('.profile-link');
    if (profileLinks.length > 0) {
        profileLinks.forEach(link => {
@@ -226,10 +169,6 @@ auth.onAuthStateChanged(async function (user) {
            link.href = `pages/user.html?uid=${user.uid}`;
        });
    }
-
-   // ==========================================================
-   //      FIM DA CORREÇÃO
-   // ==========================================================
 
    const urlParams = new URLSearchParams(window.location.search);
    const postIdFromUrl = urlParams.get('post');
@@ -251,7 +190,6 @@ auth.onAuthStateChanged(async function (user) {
    window.location.href = "login/login.html";
  }
 });
- // Event listener para o botão de logout
  if (logoutButton) {
    logoutButton.addEventListener("click", function (e) {
      e.preventDefault();
@@ -266,21 +204,13 @@ auth.onAuthStateChanged(async function (user) {
    });
  }
 
-
- // Event listener para o botão de publicar
-// Em scripts.js, substitua este event listener
-
-// Event listener para o botão de publicar
 if (postButton && postInput) {
   postButton.addEventListener("click", function () {
     const content = postInput.value.trim();
-    // ✨ CORREÇÃO APLICADA AQUI ✨
-    // Agora a função createPost é chamada mesmo se o texto estiver vazio,
-    // pois a própria função irá verificar se há uma imagem.
+
     createPost(content);
   });
 
-  // Permitir publicar com Enter
   postInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") {
       const content = postInput.value.trim();
@@ -290,12 +220,6 @@ if (postButton && postInput) {
   });
 }
 
-
- // Função para carregar o perfil do usuário
- // Em scripts.js
-
-
-// SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA
 async function loadUserProfile(userId) {
  try {
    const doc = await db.collection("users").doc(userId).get();
@@ -304,19 +228,13 @@ async function loadUserProfile(userId) {
    if (doc.exists) {
      currentUserProfile = doc.data();
 
-
-     // Atualizar foto do usuário
      if (userPhotoElement && currentUserProfile.photoURL) {
        userPhotoElement.src = currentUserProfile.photoURL;
      }
 
-
-     // Carregar hobbies do usuário
      if (userHobbiesContainer) {
        userHobbiesContainer.innerHTML = "";
 
-
-       // Adicionar hobbies padrão
        if (currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
          currentUserProfile.hobbies.forEach((hobby) => {
            const hobbyTag = document.createElement("span");
@@ -325,9 +243,6 @@ async function loadUserProfile(userId) {
            userHobbiesContainer.appendChild(hobbyTag);
          });
        }
-
-
-       // Adicionar hobbies personalizados
        if (
          currentUserProfile.customHobbies &&
          currentUserProfile.customHobbies.length > 0
@@ -341,8 +256,7 @@ async function loadUserProfile(userId) {
        }
      }
    } else {
-     // O perfil não foi encontrado, mas agora não fazemos mais o redirecionamento.
-     // Apenas avisamos no console.
+
      console.warn(`Aviso: Perfil para o usuário ${userId} não foi encontrado no Firestore.`);
    }
  } catch (error) {
@@ -350,23 +264,9 @@ async function loadUserProfile(userId) {
  }
 }
 
-// Em home/scripts.js, substitua a função inteira
-
-
-
-
-// ========= Helpers do feed =========
 let _lastVisible = null;
 let _isLoading   = false;
-
-
-
-// ========= Carregamento inicial =========
-
-// ========= Paginação (scroll) =========
-// ===== Helpers do feed =====
 let _cursor = null;
-
 let _hasMore = true;
 let _io = null;
 let _sentinel = null;
@@ -554,35 +454,34 @@ function initFeed() {
 firebase.auth().onAuthStateChanged((user) => {
   if (user) initFeed();
 });
-
-
-
-
-/**
-/**
- * Exclui uma publicação do Firestore.
- * @param {string} postId O ID da publicação a ser excluída.
- */
 async function deletePost(postId) {
+    // Pede confirmação ao usuário antes de prosseguir
     const confirmed = await showConfirmationModal(
         "Excluir Publicação", 
-        "Tem a certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.",
+        "Tem certeza que deseja excluir esta publicação? Esta ação não pode ser desfeita.",
         "Sim, Excluir",
         "Cancelar"
     );
 
     if (confirmed) {
         try {
+            // Acessa o documento do post no Firestore e o exclui
             await db.collection('posts').doc(postId).delete();
+            
             showToast("Publicação excluída com sucesso.", "success");
-            // O onSnapshot do feed cuidará de remover o post da tela.
+            
+            // Remove o post da tela imediatamente para o usuário não precisar recarregar
+            const postElement = document.querySelector(`.post[data-post-id="${postId}"]`);
+            if (postElement) {
+                postElement.remove();
+            }
+
         } catch (error) {
             console.error("Erro ao excluir publicação:", error);
             showCustomAlert("Ocorreu um erro ao excluir a publicação.");
         }
     }
 }
-
 /**
  * Exclui um comentário de uma publicação.
  * @param {string} postId O ID da publicação pai.
@@ -689,62 +588,45 @@ function handleScroll() {
 
 // Garanta que o listener do botão de voltar seja adicionado aqui.
 backToFeedBtn.addEventListener('click', hideSinglePostView);
+// home/scripts.js
 
-
-// Em home/scripts.js
-/**
- * Cria o elemento HTML de um post e o adiciona ao feed.
- * @param {object} post - O objeto do post vindo do Firebase.
- * @param {boolean} isSingleView - Indica se está na visão de post único.
- * @param {boolean} prepend - Se verdadeiro, adiciona no topo; senão, no final.
- */
-function addPostToDOM(post, isSingleView = false, prepend = false) {
-    // 1. Verificações de Segurança Iniciais
-    if (!postsContainer || !postTemplate) {
-        console.error("Container de posts ou template não foi encontrado.");
-        return; // Para a execução para evitar erros
+function addPostToDOM(post, isSingleView = false) {
+    if (!postTemplate) {
+        console.error("Template de post não encontrado.");
+        return null;
     }
 
     const postClone = document.importNode(postTemplate.content, true);
     const postElement = postClone.querySelector(".post");
-    
-    // 2. Lógica Central: 'basePost' sempre se refere ao post original
-    const basePost = post.isRepost ? (post.originalPost || post) : post;
+    if (!postElement) return null;
+
+    const basePost = post.isRepost ? (post.originalPost || {}) : post;
     const baseId = post.originalPostId || post.id;
+    
+    postElement.dataset.postId = post.id;
+    postElement.dataset.basePostId = baseId;
 
-    // --- Seletores dos Botões e Elementos ---
-    const likeBtn = postElement.querySelector(".like-btn");
-    const commentBtn = postElement.querySelector(".comment-btn");
-    const repostBtn = postElement.querySelector(".repost-btn");
-    const saveBtn = postElement.querySelector(".save-btn");
-    const deleteBtn = postElement.querySelector('.post-delete-btn');
-    const shareBtn = postElement.querySelector(".share-btn");
+    const actionsContainer = postElement.querySelector('.post-actions');
 
-    // --- RENDERIZAÇÃO E LÓGICA DE BOTÕES ---
     if (post.isRepost) {
         postElement.classList.add('repost-card');
-        
-        // Esconde TODOS os botões de ação em republicações
-        if (likeBtn) likeBtn.style.display = 'none';
-        if (commentBtn) commentBtn.style.display = 'none';
-        if (repostBtn) repostBtn.style.display = 'none';
-        if (saveBtn) saveBtn.style.display = 'none';
-        if (shareBtn) shareBtn.style.display = 'none';
-
         const repostHeader = document.createElement('div');
         repostHeader.className = 'repost-header';
-        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
+        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou`;
         postElement.prepend(repostHeader);
-    } else {
-        // Garante que o botão de republicar esteja visível em posts originais
-         if (repostBtn) repostBtn.style.display = 'inline-flex';
+        
+        if (actionsContainer) {
+            actionsContainer.remove();
+        }
     }
 
-    // Preenchimento seguro dos dados
-    postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
     postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
+    postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
     postElement.querySelector(".post-text").textContent = basePost.content || '';
-    
+    if (basePost.timestamp?.toDate) {
+        postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
+    }
+
     const mediaContainer = postElement.querySelector(".post-media");
     if (basePost.imageURL) {
         postElement.querySelector(".post-image").src = basePost.imageURL;
@@ -752,110 +634,130 @@ function addPostToDOM(post, isSingleView = false, prepend = false) {
     } else {
         mediaContainer.style.display = 'none';
     }
-
-    if (basePost.timestamp) {
-        const date = basePost.timestamp.toDate ? basePost.timestamp.toDate() : new Date();
-        postElement.querySelector(".post-timestamp").textContent = formatTimestamp(date);
-    }
     
-    // --- LÓGICA DE INTERAÇÕES (CURTIR, COMENTAR, ETC.) ---
+    if (!post.isRepost) {
+        const likeBtn = postElement.querySelector(".like-btn");
+        const repostBtn = postElement.querySelector(".repost-btn");
+        const saveBtn = postElement.querySelector(".save-btn");
+        const shareBtn = postElement.querySelector(".share-btn");
+        const deleteBtn = postElement.querySelector('.post-delete-btn');
 
-    if (likeBtn) {
+        const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
         likeBtn.querySelector('span').textContent = basePost.likes || 0;
-        likeBtn.classList.toggle('liked', basePost.likedBy && basePost.likedBy.includes(currentUser.uid));
-        likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId); });
-    }
+        likeBtn.classList.toggle('liked', isLiked);
+        likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
 
-    if (repostBtn && !post.isRepost) { // Só adiciona o listener se for um post original
-        const hasReposted = basePost.repostedBy && basePost.repostedBy.includes(currentUser.uid);
+        // *** CORREÇÃO DEFINITIVA DO BOTÃO SALVAR ***
+        const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
+        saveBtn.classList.toggle('saved', isSaved);
+        saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
+        saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
+        
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
+
+        // *** CORREÇÃO DEFINITIVA DO BOTÃO REPUBLICAR ***
+        const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
         repostBtn.classList.toggle('reposted', hasReposted);
         repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
         repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
+
+        if (post.authorId === currentUser?.uid) {
+            deleteBtn.style.display = 'block';
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
+        }
     }
 
-    if (deleteBtn && !post.isRepost && post.authorId === currentUser.uid) {
-        deleteBtn.style.display = 'block';
-        deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
-    }
-    
-    // Lógica de comentários
+    // Lógica dos comentários (sem alterações)
     const commentsSection = postElement.querySelector('.post-comments');
-    if (commentBtn && commentsSection) {
+    const commentBtn = postElement.querySelector(".comment-btn");
+    
+    if (commentBtn) {
         commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
         commentBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            commentsSection.classList.toggle('active');
-            if (commentsSection.classList.contains('active')) {
+            const isActive = commentsSection.classList.toggle('active');
+            const postId = postElement.dataset.basePostId;
+            if (isActive) {
+                if (activeCommentListeners[postId]) {
+                    activeCommentListeners[postId](); 
+                }
                 const commentsList = commentsSection.querySelector('.comments-list');
-                if (commentsList) loadComments(baseId, commentsList);
+                activeCommentListeners[postId] = loadComments(postId, commentsList);
+            } else {
+                if (activeCommentListeners[postId]) {
+                    activeCommentListeners[postId](); 
+                    delete activeCommentListeners[postId];
+                }
             }
         });
     }
 
-    // --- ADIÇÃO DO POST AO FEED ---
-    // Adiciona o post na ordem correta, usando o parâmetro 'prepend'
-    if (prepend) {
-        postsContainer.prepend(postClone);
+    const commentInput = postElement.querySelector(".comment-text");
+    const sendCommentBtn = postElement.querySelector(".send-comment-btn");
+
+    sendCommentBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const content = commentInput.value.trim();
+        if (content) {
+            addComment(baseId, content);
+            commentInput.value = "";
+        }
+    });
+    
+    commentInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendCommentBtn.click();
+        }
+    });
+
+    if (!isSingleView) {
+        postElement.addEventListener('click', (e) => {
+            if (e.target.closest('a, button, input, .post-actions, .comment-input, .comment-text')) {
+                return;
+            }
+            showSinglePostView(baseId);
+        });
+    }
+    
+    return postElement;
+}
+async function showSinglePostView(postId) {
+    detachPostsListener();
+    feedView.style.display = 'none';
+    singlePostView.style.display = 'block';
+    window.scrollTo(0, 0);
+
+    const url = new URL(window.location);
+    url.searchParams.set('post', postId);
+    history.pushState({}, '', url);
+
+    focusedPostContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    
+    const postRef = db.collection("posts").doc(postId);
+    const doc = await postRef.get();
+
+    if (doc.exists) {
+        const postData = { id: doc.id, ...doc.data() };
+        focusedPostContainer.innerHTML = '';
+        
+        // CORREÇÃO: Pega o elemento retornado pela função
+        const postElement = addPostToDOM(postData, true);
+
+        if (postElement) {
+            // Abre a seção de comentários por padrão
+            const commentsSection = postElement.querySelector('.post-comments');
+            const commentsList = postElement.querySelector('.comments-list');
+            commentsSection.classList.add('active');
+            loadComments(postId, commentsList);
+
+            // Adiciona o elemento ao container do post focado
+            focusedPostContainer.appendChild(postElement);
+        }
     } else {
-        postsContainer.appendChild(postClone);
+        focusedPostContainer.innerHTML = '<div class="error-message">Esta publicação não foi encontrada ou foi removida.</div>';
     }
 }
-
-async function showSinglePostView(postId) {
-   detachPostsListener();
-   feedView.style.display = 'none';
-   singlePostView.style.display = 'block';
-   window.scrollTo(0, 0);
-
-
-   // 2. Atualiza a URL do navegador
-   const url = new URL(window.location);
-   url.searchParams.set('post', postId);
-   history.pushState({}, '', url);
-
-
-   // 3. Mostra o indicador de carregamento
-   focusedPostContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-  
-   // 4. Busca o post específico no Firestore
-   const postRef = db.collection("posts").doc(postId);
-   const doc = await postRef.get();
-
-
-   if (doc.exists) {
-       // 5. Se o post existe, limpa o "carregando" e desenha o post na tela
-       const postData = { id: doc.id, ...doc.data() };
-       focusedPostContainer.innerHTML = '';
-      
-       // 6. Reutiliza a função addPostToDOM para criar o elemento HTML
-       const postElement = addPostToDOM(postData, true); // O 'true' avisa para não adicionar o evento de clique de novo
-
-
-    // 7. Encontra a seção de comentários dentro do post que acabamos de criar
-       const commentsSection = postElement.querySelector('.post-comments');
-       if (commentsSection) {
-           // Adiciona a classe 'active' para torná-la visível
-           commentsSection.classList.add('active');
-          
-           // Encontra a <div> específica da lista de comentários
-           const commentsList = commentsSection.querySelector('.comments-list');
-           if (commentsList) {
-               // Chama a função com os dois argumentos necessários
-               loadComments(postId, commentsList);
-           }
-       }
-    
-       // 8. Adiciona o post (já com a área de comentários ativa) à página
-       focusedPostContainer.appendChild(postElement);
-
-
-   } else {
-       // Se o post não for encontrado
-       focusedPostContainer.innerHTML = '<div class="error-message">Esta publicação não foi encontrada ou foi removida.</div>';
-   }
-}
-// Função que fica "escutando" por notificações não lidas em tempo real
-
 function hideSinglePostView() {
    // 1. Faz o processo inverso: esconde a área do post e mostra o feed
   
@@ -893,18 +795,23 @@ async function createPost(content) {
             authorName: currentUserProfile.nickname || "Usuário",
             authorPhoto: currentUserProfile.photoURL || null,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            likes: 0, likedBy: [], commentCount: 0,
+            likes: 0,
+            likedBy: [],
+            commentCount: 0,
             imageURL: postImageBase64
         };
 
         const docRef = await db.collection("posts").add(postData);
-
         const newPostDoc = await docRef.get();
         const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
         
-        // ▼▼▼ GARANTE QUE A CHAMADA SEJA FEITA CORRETAMENTE ▼▼▼
-        // Adiciona o novo post no topo do feed, passando 'true'
-        addPostToDOM(newPostData, false, true); 
+        // Cria o elemento do post com a função já corrigida
+        const postElement = addPostToDOM(newPostData);
+
+        if (postElement) {
+            // Usa prepend para adicionar no topo do container de posts
+            postsContainer.prepend(postElement);
+        }
 
         postInput.value = "";
         clearPostImage();
@@ -919,252 +826,192 @@ async function createPost(content) {
         }
     }
 }
- // Função para redirecionar para o perfil do usuário
  function redirectToUserProfile(userId) {
    window.location.href = `pages/user.html?uid=${userId}`;
  }
- async function toggleSavePost(postId, buttonElement) {
-   if (!currentUser) {
-       showCustomAlert("Você precisa estar logado para salvar publicações.");
-       return;
-   }
+async function toggleLike(postId, buttonElement) {
+    try {
+        if (likeInProgress[postId]) return;
+        likeInProgress[postId] = true;
 
+        if (!currentUser) {
+            showCustomAlert("Você precisa estar logado para curtir.");
+            return;
+        }
 
-   const postRef = db.collection("posts").doc(postId);
-   try {
-       const doc = await postRef.get();
-       if (!doc.exists) return;
+        const postRef = db.collection("posts").doc(postId);
+        const postDoc = await postRef.get();
+        if (!postDoc.exists) return;
 
-
-       const postData = doc.data();
-       const savedBy = postData.savedBy || [];
-       const isSaved = savedBy.includes(currentUser.uid);
-
-
-       const saveButtonUI = buttonElement || document.querySelector(`.post[data-post-id="${postId}"] .save-btn`);
-
-
-       if (isSaved) {
-           // --- AÇÃO: REMOVER DOS SALVOS ---
-           await postRef.update({
-               savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-           });
-           if (saveButtonUI) {
-               saveButtonUI.classList.remove('saved');
-               saveButtonUI.innerHTML = `<i class="far fa-bookmark"></i> Salvar`;
-           }
-          
-       } else {
-           // --- AÇÃO: SALVAR O POST ---
-           await postRef.update({
-               savedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-           });
-           if (saveButtonUI) {
-               saveButtonUI.classList.add('saved');
-               saveButtonUI.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
-           }
-       
-       }
-   } catch (error) {
-       console.error("Erro ao salvar/remover post:", error);
-       showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
-   }
-}
-
-
- // Função para alternar curtida em um post
- async function toggleLike(postId) {
-   try {
-     // Verificar se já há uma operação de like em andamento para este post
-     if (likeInProgress[postId]) {
-       return;
-     }
-
-
-     // Marcar como em andamento
-     likeInProgress[postId] = true;
-
-
-     // Verificar se o usuário está autenticado
-     if (!currentUser) {
-           showCustomAlert("Você precisa estar logado para curtir.");
-       likeInProgress[postId] = false;
-       return;
-     }
-
-
-     // Obter referência ao post
-     const postRef = db.collection("posts").doc(postId);
-     const postDoc = await postRef.get();
-
-
-     if (!postDoc.exists) {
-       console.error("Post não encontrado.");
-       likeInProgress[postId] = false;
-       return;
-     }
-
-
-     const postData = postDoc.data();
-     const likedBy = postData.likedBy || [];
-     const isLiked = likedBy.includes(currentUser.uid);
-
-
-     // Atualizar UI imediatamente para feedback rápido
-     const likeButton = document.querySelector(
-       `.post[data-post-id="${postId}"] .like-btn`
-     );
-     const likeIcon = likeButton.querySelector("i");
-     const likeCountElement = document.querySelector(
-       `.post[data-post-id="${postId}"] .like-count`
-     );
-
-
-     if (isLiked) {
-       // Remover curtida
-       await postRef.update({
-         likes: firebase.firestore.FieldValue.increment(-1),
-         likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
-       });
-
-
-       // Atualizar UI
-       likeButton.classList.remove("liked");
-       likeIcon.className = "far fa-heart";
-       likeCountElement.textContent = Math.max(
-         0,
-         parseInt(likeCountElement.textContent) - 1
-       );
-     } else {
-       // Adicionar curtida
-       await postRef.update({
-         likes: firebase.firestore.FieldValue.increment(1),
-         likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-       });
-
-
-       // Atualizar UI
-       likeButton.classList.add("liked");
-       likeIcon.className = "fas fa-heart";
-       likeCountElement.textContent =
-         parseInt(likeCountElement.textContent) + 1;
-
-
-       // Criar notificação para o autor do post (se não for o próprio usuário)
-       if (postData.authorId !== currentUser.uid) {
-         await db
-           .collection("users")
-           .doc(postData.authorId)
-           .collection("notifications")
-           .add({
-             type: "like",
-             postId,
-             fromUserId: currentUser.uid,
-             fromUserName: currentUserProfile.nickname || "Usuário",
-             fromUserPhoto: currentUserProfile.photoURL || null,
-             content: "curtiu sua publicação",
-             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-             read: false,
-           });
-       }
-     }
-
-
-     // Marcar como concluído
-     likeInProgress[postId] = false;
-   } catch (error) {
-     console.error("Erro ao curtir post:", error);
-     likeInProgress[postId] = false;
-   }
- }
-
-
- // Função para carregar comentários em tempo real
- // Em scripts.js
-
-
-// ALTERAÇÃO 1: A função agora recebe o elemento da lista de comentários diretamente
-// Em home/scripts.js
-
-
-// SUBSTITUA SUA FUNÇÃO ANTIGA POR ESTA VERSÃO CORRIGIDA
-function loadComments(postId, commentsListElement) {
- if (!commentsListElement) {
-     console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
-     return;
- }
-
-
- // Mostra o "Carregando..." apenas se a lista estiver vazia
- if (commentsListElement.innerHTML === '') {
-     commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
- }
-
-
- return db
-   .collection("posts")
-   .doc(postId)
-   .collection("comments")
-   .orderBy("timestamp", "desc") 
-   .onSnapshot((snapshot) => {
-     // Remove o indicador de "carregando" ou "nenhum comentário" se existirem
-     const initialMessage = commentsListElement.querySelector('.loading-comments, .no-comments');
-     if (initialMessage) {
-         initialMessage.remove();
-     }
-
-
-     // ESTA É A MUDANÇA PRINCIPAL:
-     // Em vez de apagar tudo, vamos processar apenas as alterações.
-     snapshot.docChanges().forEach((change) => {
-         const commentData = { id: change.doc.id, ...change.doc.data() };
+        const postData = postDoc.data();
+        const isLiked = (postData.likedBy || []).includes(currentUser.uid);
         
-         if (change.type === "added") {
-             // Se um novo comentário foi ADICIONADO, nós o criamos e o adicionamos ao final da lista
-             // Isso não afeta o que outros usuários estão digitando
-             addCommentToDOM(postId, commentData, commentsListElement);
-         }
-         if (change.type === "modified") {
-             // Se um comentário foi MODIFICADO (ex: curtida), encontramos o elemento e o atualizamos
-             const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-             if (commentElement) {
-                 // Exemplo: atualizar a contagem de curtidas
-                 const likeCount = commentElement.querySelector('.comment-like-count');
-                 const likeButton = commentElement.querySelector('.comment-like-btn');
-                 if(likeCount) likeCount.textContent = commentData.likes || 0;
-                 if(likeButton) {
-                     if(commentData.likedBy && commentData.likedBy.includes(currentUser.uid)) {
-                         likeButton.classList.add('liked');
-                     } else {
-                         likeButton.classList.remove('liked');
-                     }
-                 }
-             }
-         }
-         if (change.type === "removed") {
-             // Se um comentário foi REMOVIDO, nós o encontramos e o removemos da tela
-             const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-             if (commentElement) {
-                 commentElement.remove();
-             }
-         }
-     });
+        // Atualização da UI imediata
+        const likeCountElement = buttonElement.querySelector(".like-count");
+        let currentLikes = parseInt(likeCountElement.textContent);
 
-
-     // Se após processar as mudanças a lista estiver vazia, mostramos a mensagem
-     if (commentsListElement.children.length === 0) {
-         commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
-     }
-
-
-   }, (error) => {
-     console.error("Erro ao escutar comentários:", error);
-     commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
-   });
+        if (isLiked) {
+            await postRef.update({
+                likes: firebase.firestore.FieldValue.increment(-1),
+                likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+            });
+            buttonElement.classList.remove("liked");
+            likeCountElement.textContent = Math.max(0, currentLikes - 1);
+        } else {
+            await postRef.update({
+                likes: firebase.firestore.FieldValue.increment(1),
+                likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+            });
+            buttonElement.classList.add("liked");
+            likeCountElement.textContent = currentLikes + 1;
+            // Lógica de notificação (opcional)
+        }
+    } catch (error) {
+        console.error("Erro ao curtir post:", error);
+    } finally {
+        likeInProgress[postId] = false;
+    }
 }
 
-// Em scripts.js, substitua sua função por esta versão completa
+async function toggleSavePost(postId, buttonElement) {
+    if (!currentUser) {
+        showCustomAlert("Você precisa estar logado para salvar publicações.");
+        return;
+    }
 
+    const postRef = db.collection("posts").doc(postId);
+    try {
+        const doc = await postRef.get();
+        if (!doc.exists) return;
+
+        const isSaved = (doc.data().savedBy || []).includes(currentUser.uid);
+
+        if (isSaved) {
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+            buttonElement.classList.remove('saved');
+            buttonElement.innerHTML = `<i class="far fa-bookmark"></i> Salvar`;
+        } else {
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            buttonElement.classList.add('saved');
+            buttonElement.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
+        }
+    } catch (error) {
+        console.error("Erro ao salvar/remover post:", error);
+        showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
+    }
+}
+async function toggleLike(postId, buttonElement) {
+    try {
+        if (likeInProgress[postId]) return;
+        likeInProgress[postId] = true;
+
+        if (!currentUser) {
+            showCustomAlert("Você precisa estar logado para curtir.");
+            return;
+        }
+
+        const postRef = db.collection("posts").doc(postId);
+        const postDoc = await postRef.get();
+        if (!postDoc.exists) return;
+
+        const postData = postDoc.data();
+        const isLiked = (postData.likedBy || []).includes(currentUser.uid);
+        
+        // Atualização da UI imediata
+        const likeCountElement = buttonElement.querySelector(".like-count");
+        let currentLikes = parseInt(likeCountElement.textContent);
+
+        if (isLiked) {
+            await postRef.update({
+                likes: firebase.firestore.FieldValue.increment(-1),
+                likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+            });
+            buttonElement.classList.remove("liked");
+            likeCountElement.textContent = Math.max(0, currentLikes - 1);
+        } else {
+            await postRef.update({
+                likes: firebase.firestore.FieldValue.increment(1),
+                likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+            });
+            buttonElement.classList.add("liked");
+            likeCountElement.textContent = currentLikes + 1;
+            // Lógica de notificação (opcional)
+        }
+    } catch (error) {
+        console.error("Erro ao curtir post:", error);
+    } finally {
+        likeInProgress[postId] = false;
+    }
+}
+
+async function toggleSavePost(postId, buttonElement) {
+    if (!currentUser) {
+        showCustomAlert("Você precisa estar logado para salvar publicações.");
+        return;
+    }
+
+    const postRef = db.collection("posts").doc(postId);
+    try {
+        const doc = await postRef.get();
+        if (!doc.exists) return;
+
+        const isSaved = (doc.data().savedBy || []).includes(currentUser.uid);
+
+        if (isSaved) {
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+            buttonElement.classList.remove('saved');
+            buttonElement.innerHTML = `<i class="far fa-bookmark"></i> Salvar`;
+        } else {
+            await postRef.update({
+                savedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+            });
+            buttonElement.classList.add('saved');
+            buttonElement.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
+        }
+    } catch (error) {
+        console.error("Erro ao salvar/remover post:", error);
+        showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
+    }
+}
+// home/scripts.js
+
+function loadComments(postId, commentsListElement) {
+    if (!commentsListElement) {
+        console.error("Elemento da lista de comentários não fornecido.");
+        return () => {}; // Retorna uma função vazia para não quebrar o código
+    }
+
+    // Limpa a lista antes de carregar e mostra o indicador de carregamento
+    commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+
+    const query = db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc");
+
+    // Retorna a função de unsubscribe para ser chamada mais tarde
+    return query.onSnapshot(snapshot => {
+        commentsListElement.innerHTML = ''; // Limpa novamente para garantir
+
+        if (snapshot.empty) {
+            commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda. Seja o primeiro!</div>';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const commentData = { id: doc.id, ...doc.data() };
+            // A função que desenha o comentário individual (sem alterações necessárias)
+            addCommentToDOM(postId, commentData, commentsListElement);
+        });
+
+    }, error => {
+        console.error("Erro ao carregar comentários:", error);
+        commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+    });
+}
 function addCommentToDOM(postId, comment, commentsList) {
     if (!commentTemplate || !commentsList) return;
 
@@ -1217,7 +1064,6 @@ function addCommentToDOM(postId, comment, commentsList) {
         likeButton.classList.add("liked");
     }
 
-    // ✨ NOVO: Mostra o botão de excluir apenas para o autor do comentário
     if (comment.authorId === currentUser.uid) {
         deleteCommentBtn.style.display = 'block';
         deleteCommentBtn.addEventListener('click', () => {
@@ -1225,86 +1071,58 @@ function addCommentToDOM(postId, comment, commentsList) {
         });
     }
 
-    // Adiciona o comentário no topo da lista
     commentsList.insertBefore(commentClone, commentsList.firstChild);
 } 
-
-
-// Em scripts.js
-// Função para adicionar um comentário a um post
 async function addComment(postId, content) {
-  try {
-    // Verificar se o usuário está autenticado
-    if (!currentUser || !currentUserProfile) {
-          showCustomAlert("Você precisa estar logado para comentar.");
-      return;
-    }
+    try {
+        if (!currentUser || !currentUserProfile) {
+            showCustomAlert("Você precisa estar logado para comentar.");
+            return;
+        }
 
-    // Criar objeto de comentário
-    const commentData = {
-      content,
-      authorId: currentUser.uid,
-      authorName: currentUserProfile.nickname || "Usuário",
-      authorPhoto: currentUserProfile.photoURL || null,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      likes: 0,
-      likedBy: [],
-    };
+        const commentData = {
+            content,
+            authorId: currentUser.uid,
+            authorName: currentUserProfile.nickname || "Usuário",
+            authorPhoto: currentUserProfile.photoURL || null,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: 0,
+            likedBy: [],
+        };
 
-    // Adicionar comentário ao Firestore
-    const commentRef = await db
-      .collection("posts")
-      .doc(postId)
-      .collection("comments")
-      .add(commentData);
+        const commentRef = await db.collection("posts").doc(postId).collection("comments").add(commentData);
 
-    // Incrementar contagem de comentários no post (no banco de dados)
-    await db
-      .collection("posts")
-      .doc(postId)
-      .update({
-        commentCount: firebase.firestore.FieldValue.increment(1),
-      });
-    
-    // ✨ CORREÇÃO APLICADA AQUI ✨
-    // Atualiza a contagem de comentários na tela imediatamente.
-    const commentCountElement = document.querySelector(`.post[data-post-id="${postId}"] .comment-count`);
-    if (commentCountElement) {
-        const currentCount = parseInt(commentCountElement.textContent) || 0;
-        commentCountElement.textContent = currentCount + 1;
-    }
-    // Fim da correção
-
-    // Obter dados do post para notificação
-    const postDoc = await db.collection("posts").doc(postId).get();
-    const postData = postDoc.data();
-
-    // Criar notificação para o autor do post (se não for o próprio usuário)
-    if (postData && postData.authorId !== currentUser.uid) {
-      await db
-        .collection("users")
-        .doc(postData.authorId)
-        .collection("notifications")
-        .add({
-          type: "comment",
-          postId,
-          commentId: commentRef.id,
-          fromUserId: currentUser.uid,
-          fromUserName: currentUserProfile.nickname || "Usuário",
-          fromUserPhoto: currentUserProfile.photoURL || null,
-          content: "comentou em sua publicação",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          read: false,
+        await db.collection("posts").doc(postId).update({
+            commentCount: firebase.firestore.FieldValue.increment(1),
         });
-    }
-  } catch (error) {
-    console.error("Erro ao adicionar comentário:", error);
+
+        const commentCountElement = document.querySelector(`.post[data-post-id="${postId}"] .comment-count`);
+        if (commentCountElement) {
+            const currentCount = parseInt(commentCountElement.textContent) || 0;
+            commentCountElement.textContent = currentCount + 1;
+        }
+
+        const postDoc = await db.collection("posts").doc(postId).get();
+        const postData = postDoc.data();
+
+        if (postData && postData.authorId !== currentUser.uid) {
+            await db.collection("users").doc(postData.authorId).collection("notifications").add({
+                type: "comment",
+                postId,
+                commentId: commentRef.id,
+                fromUserId: currentUser.uid,
+                fromUserName: currentUserProfile.nickname || "Usuário",
+                fromUserPhoto: currentUserProfile.photoURL || null,
+                content: "comentou em sua publicação",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false,
+            });
+        }
+    } catch (error) {
+        console.error("Erro ao adicionar comentário:", error);
         showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
-  }
+    }
 }
-
-
- // Função para alternar curtida em um comentário
 async function toggleCommentLike(postId, commentId) {
    try {
      const commentKey = `${postId}_${commentId}`;
@@ -1676,10 +1494,7 @@ async function loadUpcomingEvents() {
        upcomingEventsContainer.innerHTML = '<p>Erro ao carregar eventos.</p>';
    }
 }
-/**
-* Verifica os eventos em que o utilizador está inscrito e cria uma notificação
-* se o evento estiver a menos de 24 horas de distância e se ainda não foi notificado.
-*/
+
 async function checkUpcomingEventNotifications() {
    if (!currentUser || !currentUser.uid) return;
 
