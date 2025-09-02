@@ -304,67 +304,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Em eventos.js
-    async function createEvent(e) {
-        e.preventDefault();
+  // Em eventos.js
+async function createEvent(e) {
+    e.preventDefault();
 
-        // 1. Pega os valores dos campos
-        const eventName = document.getElementById('eventName').value;
-        const eventLocation = document.getElementById('eventLocation').value;
-        const eventDate = document.getElementById('eventDate').value;
-        const eventTime = document.getElementById('eventTime').value;
-        const description = document.getElementById('eventDescription').value;
+    // 1. Pega todos os valores dos campos
+    const eventName = document.getElementById('eventName').value;
+    const eventLocation = document.getElementById('eventLocation').value;
+    const eventDate = document.getElementById('eventDate').value;
+    const eventTime = document.getElementById('eventTime').value;
+    const description = document.getElementById('eventDescription').value;
+    const selectedCheckboxes = document.querySelectorAll('#createEventModal input[name="event-tags"]:checked');
+    const tags = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
 
-        // --- INÍCIO DA CORREÇÃO ---
-        // Pega todas as checkboxes de tags que estão marcadas
-        const selectedCheckboxes = document.querySelectorAll('#createEventModal input[name="event-tags"]:checked');
-        // Cria um array com os valores (os nomes das tags) das checkboxes selecionadas
-        const tags = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
-        // --- FIM DA CORREÇÃO ---
-
-        // 2. Faz todas as verificações
-        if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
-            showCustomAlert("Por favor, preencha todos os campos obrigatórios.");
-            return;
-        }
-        // Adiciona uma verificação para as tags
-        if (tags.length === 0) {
-            showCustomAlert("Por favor, selecione pelo menos uma tag para o evento.");
-            return;
-        }
-        if (eventName.length > 20) {
-            showCustomAlert("O nome do evento não pode ter mais de 20 caracteres.");
-            return;
-        }
-        if (eventLocation.length > 40) {
-            showCustomAlert("A localização do evento não pode ter mais de 40 caracteres.");
-            return;
-        }
-
-        // 3. Continua com a criação do evento se tudo estiver correto
-        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
-
-        try {
-            await db.collection('events').add({
-                eventName,
-                eventLocation,
-                eventDateTime,
-                description,
-                tags, // Usa o novo array de tags
-                creatorId: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                participants: [currentUser.uid]
-            });
-
-            createEventModal.style.display = 'none';
-            createEventForm.reset();
-            showToast("Evento criado com sucesso!", "success");
-            loadEvents();
-
-        } catch (error) {
-            console.error("Erro ao criar evento: ", error);
-            showCustomAlert("Ocorreu um erro ao criar o evento.");
-        }
+    // 2. Faz todas as verificações
+    if (!eventName || !eventLocation || !eventDate || !eventTime || !description || tags.length === 0) {
+        showCustomAlert("Por favor, preencha todos os campos e selecione pelo menos uma tag.");
+        return;
     }
+    if (eventName.length > 20 || eventLocation.length > 40) {
+        showCustomAlert("O nome ou a localização do evento excedem o limite de caracteres.");
+        return;
+    }
+
+    // --- INÍCIO DA NOVA VALIDAÇÃO ---
+    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+    const now = new Date();
+
+    if (eventDateTime < now) {
+        showCustomAlert("Não é possível criar eventos em uma data ou hora que já passou.");
+        return; // Impede a criação do evento
+    }
+    // --- FIM DA NOVA VALIDAÇÃO ---
+
+    // 3. Continua com a criação do evento se tudo estiver correto
+    try {
+        await db.collection('events').add({
+            eventName,
+            eventLocation,
+            eventDateTime,
+            description,
+            tags,
+            creatorId: currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            participants: [currentUser.uid]
+        });
+
+        createEventModal.style.display = 'none';
+        createEventForm.reset();
+        showToast("Evento criado com sucesso!", "success");
+        loadEvents();
+        
+    } catch (error) {
+        console.error("Erro ao criar evento: ", error);
+        showCustomAlert("Ocorreu um erro ao criar o evento.");
+    }
+}
     if (createEventBtn) {
         createEventBtn.addEventListener('click', () => { createEventModal.style.display = 'flex'; });
     }

@@ -16,6 +16,60 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <style>
+        /* Em eventos.html, dentro da tag <style> */
+
+/* Estilo para o container das tags */
+.tag-selection-container {
+    max-height: 150px; /* Define uma altura máxima */
+    overflow-y: auto; /* Adiciona uma barra de rolagem vertical se necessário */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    background-color: var(--light-bg);
+}
+
+body.dark-mode .tag-selection-container {
+    background-color: var(--dark-bg);
+}
+
+/* Estilo para cada opção de tag (hobby-option) */
+.hobby-option {
+    display: inline-block;
+    margin: 5px;
+    background-color: var(--light-bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+body.dark-mode .hobby-option {
+    background-color: var(--dark-bg-secondary);
+}
+
+.hobby-option:hover {
+    background-color: var(--border-color);
+}
+
+/* Esconde a bolinha do checkbox */
+.hobby-option input[type="checkbox"] {
+    display: none;
+}
+
+/* Estilo para o texto da tag */
+.hobby-option .hobby-name {
+    display: inline-block;
+    padding: 8px 15px;
+    font-size: 0.9em;
+}
+
+/* Estilo para a tag quando o checkbox está selecionado */
+.hobby-option input[type="checkbox"]:checked + .hobby-name {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    border-color: var(--primary-color);
+}
     /* Adiciona o espaço que pediu entre as tags e o botão */
     .event-tags {
         margin-bottom: 15px;
