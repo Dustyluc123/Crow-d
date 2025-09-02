@@ -11,53 +11,50 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
-        /* ESTILOS FINAIS E COMBINADOS PARA A PÁGINA DE CHAT */
-
+        /* VERSÃO FINAL: Lixeira Sempre Visível */
+    
         html, body {
             height: 100%;
             overflow: hidden;
         }
-
+    
         .main-container {
             max-width: 1200px;
-            margin: 16px auto;
-            padding: 0 16px;
-            height: 100%; /* Ocupa a altura toda */
+            margin: 0 auto;
+            padding: 16px;
+            height: 100%;
             display: flex;
             flex-direction: column;
+            box-sizing: border-box;
         }
-
+    
         .feed {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             gap: 16px;
             position: relative;
-            overflow: hidden;
-            height: 100%;
+            min-height: 0;
         }
-
+    
         .page-title {
             display: flex;
             align-items: center;
             gap: 8px;
             margin: 0;
-            flex-shrink: 0; /* Impede que o título encolha */
+            flex-shrink: 0;
         }
-
-        /* Container principal com espaçamento inferior */
+        
         .messages-container {
             flex-grow: 1;
             display: flex;
-            flex-direction: row;
-            height: calc(100vh - 200px); /* Altura calculada para dar espaço */
             background: var(--light-text);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: var(--box-shadow);
-            position: relative;
+            min-height: 0;
         }
-
+    
         .chat-area {
             flex: 1;
             display: flex;
@@ -71,81 +68,44 @@
         }
         
         .chat-input-area {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 14px;
-            border-top: 1px solid var(--light-border);
-            background: var(--light-bg-secondary);
-            position: relative;
+            display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+            border-top: 1px solid var(--light-border); background: var(--light-bg-secondary);
         }
         
         .chat-input {
-            flex: 1;
-            padding: 12px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            outline: none;
+            flex: 1; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 20px;
+            background: var(--bg-primary); color: var(--text-primary); outline: none;
         }
         
         .chat-send-btn {
-            background: var(--primary-color);
-            color: #fff;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: var(--primary-color); color: #fff; border: none; width: 40px; height: 40px;
+            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-
-        /* Estilos das mensagens */
-        .message { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px;}
+    
+        /* Estilos dos balões de mensagem */
+        .message { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; position: relative;}
         .message-avatar { width: 40px; height: 40px; border-radius: 50%; }
-        .message-content { max-width: 80%; background-color: var(--light-bg-secondary); padding: 10px 15px; border-radius: 12px; position: relative;}
-        .message.sent { flex-direction: row-reverse; align-self: flex-end; }
+        .message-content { max-width: 80%; background-color: var(--light-bg-secondary); padding: 10px 15px; border-radius: 12px; }
+        .message.sent { flex-direction: row-reverse; }
         .message.sent .message-content { background-color: var(--primary-color); color: white; }
         .message-header { font-size: 0.8rem; color: var(--light-text-secondary); margin-bottom: 4px; font-weight: bold; }
         
-        /* === ESTILOS PARA A CAIXA DE MEMBROS FLUTUANTE === */
+        /* CAIXA DE MEMBROS FLUTUANTE */
         #toggle-members-btn {
             background: none; border: none; color: var(--dark-text); font-size: 1.2rem;
             cursor: pointer; margin-left: 15px;
         }
         .members-sidebar {
-            position: absolute;
-            top: 55px; /* Posição abaixo do título */
-            left: 10px;
-            width: 280px;
-            max-height: 350px;
-            background-color: var(--light-text);
-            border: 1px solid var(--light-border);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 15px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            opacity: 0; transform: translateY(-10px); pointer-events: none;
-            transition: opacity 0.2s, transform 0.2s;
+            position: absolute; top: 55px; left: 0; width: 280px; max-height: 350px;
+            background-color: var(--light-text); border: 1px solid var(--light-border);
+            border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 15px; z-index: 100;
+            display: flex; flex-direction: column; gap: 10px;
+            opacity: 0; transform: translateY(-10px); pointer-events: none; transition: opacity 0.2s, transform 0.2s;
         }
-        .members-sidebar.active {
-            opacity: 1; transform: translateY(0); pointer-events: auto;
-        }
-        .members-sidebar h3 {
-            margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 1px solid var(--light-border);
-        }
-        #members-list {
-            overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
-        }
-        .member-item {
-            display: flex; align-items: center; padding: 8px; border-radius: var(--border-radius); transition: background-color 0.2s;
-        }
+        .members-sidebar.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .members-sidebar h3 { margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 1px solid var(--light-border); }
+        #members-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .member-item { display: flex; align-items: center; padding: 8px; border-radius: var(--border-radius); transition: background-color 0.2s; }
         .member-item:hover { background-color: var(--light-bg-secondary); }
         .member-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
         .member-item p { margin: 0; font-weight: 600; flex: 1; color: var(--dark-text); }
@@ -155,8 +115,8 @@
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
         .kick-btn:hover { background-color: #ff4d4d20; color: #ff4d4d; }
-
-        /* === MODO ESCURO COMPLETO === */
+    
+        /* MODO ESCURO COMPLETO */
         body.dark-mode .page-title,
         body.dark-mode #toggle-members-btn { color: var(--light-text); }
         body.dark-mode .messages-container { background: var(--dark-bg-secondary); }
@@ -168,9 +128,49 @@
         body.dark-mode .member-item:hover { background-color: var(--dark-bg-tertiary); }
         body.dark-mode .member-item p { color: var(--light-text); }
         body.dark-mode .kick-btn { color: var(--dark-text-secondary); }
+    
+        /* === LIXEIRA SEMPRE VISÍVEL === */
+        .message-delete-btn {
+            position: absolute;
+            left: -35px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: transparent; /* Fundo transparente por padrão */
+            border: none; /* Sem borda por padrão */
+            color: var(--light-text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.9rem; /* Tamanho do ícone um pouco maior */
+            opacity: 0.5; /* Fica sempre visível, mas com transparência */
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    
+        /* Remove o hover da linha da mensagem, já que o botão está sempre visível */
+        .message.sent:hover .message-delete-btn {
+            opacity: 1; /* Apenas remove a transparência no hover */
+        }
+    
+        .message-delete-btn:hover {
+            background-color: #ff4d4d;
+            color: white;
+        }
+    
+        /* Ajustes para a lixeira no modo escuro */
+        body.dark-mode .message-delete-btn {
+            color: var(--dark-text-secondary);
+        }
+        body.dark-mode .message-delete-btn:hover {
+            background-color: #ff4d4d;
+            color: white;
+        }
     </style>
 </head>
-<body class="mensagens-page">
+<body>
 
     <header>
         <div class="logo">
