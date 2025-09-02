@@ -1,4 +1,4 @@
-// scripts.js — Amigos (corrigido + Instagram Notes - Apenas Texto + Realtime integrado)
+// scripts.js — Amigos (corrigido + Instagram Notes - Apenas Texto + Realtime integrado e filtrado)
 (function () {
   // ---------------------- Utilidades ----------------------
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -70,9 +70,8 @@
   let isFetchingFriends = false;
   const FRIENDS_PER_PAGE = 4;
   
-  // ---> ADIÇÃO: Variáveis para o controle do listener em tempo real
-  let noteListeners = []; // Armazena as funções para cancelar os listeners
-  let activeNotesCache = {}; // Cache local para guardar as notas e evitar buscas repetidas
+  let noteListeners = [];
+  let activeNotesCache = {};
 
   // ---------------------- Hobbies helpers ----------------------
   const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
@@ -134,7 +133,7 @@ async function loadFriendsList(auth, db) {
         if (loadingIndicator) loadingIndicator.remove();
         
         if (acceptedFriendIds.length === 0) {
-            _friendsCache = []; // Limpa o cache se não tiver amigos
+            _friendsCache = [];
             grid.innerHTML = `<div class="no-friends">Nenhum amigo encontrado.</div>`;
             return;
         }
@@ -142,7 +141,7 @@ async function loadFriendsList(auth, db) {
         const friendPromises = acceptedFriendIds.map(id => db.collection("users").doc(id).get());
         const friendDocs = await Promise.all(friendPromises);
         
-        _friendsCache = []; // Reseta o cache antes de preencher
+        _friendsCache = [];
         friendDocs.forEach(udoc => {
             if (!udoc.exists) return;
             const u = udoc.data() || {};
@@ -301,13 +300,11 @@ async function loadFriendsList(auth, db) {
     });
   }
   
-  // ---> NOVA FUNÇÃO: Configura os listeners em tempo real para as notas
   function setupRealtimeNotesListener() {
     const { auth, db } = ensureFirebase();
     const me = auth.currentUser;
     if (!me) return;
 
-    // Cancela listeners antigos para evitar duplicação e vazamento de memória
     noteListeners.forEach(unsubscribe => unsubscribe());
     noteListeners = [];
 
@@ -326,7 +323,6 @@ async function loadFriendsList(auth, db) {
                 const doc = snapshot.docs[0];
                 activeNotesCache[uid] = { id: doc.id, ownerId: uid, ...doc.data() };
             }
-            // Chama a função de renderização para atualizar a tela
             await loadNotesBar(); 
         }, err => {
             console.error(`Erro ao escutar notas de ${uid}:`, err);
@@ -335,7 +331,7 @@ async function loadFriendsList(auth, db) {
     });
   }
 
-  // ---> FUNÇÃO ANTIGA MANTIDA, agora usada para renderizar os dados do cache
+  // ---> FUNÇÃO ATUALIZADA PARA MOSTRAR APENAS USUÁRIOS COM NOTAS
   async function loadNotesBar() {
       const bar = refs.notesBar();
       if (!bar) return;
@@ -343,24 +339,46 @@ async function loadFriendsList(auth, db) {
       const { auth, db } = ensureFirebase();
       const me = auth.currentUser;
       if (!me) { bar.innerHTML = ''; return; }
-      
-      const userIdsInOrder = [me.uid, ..._friendsCache.map(f => f.uid)];
-      
-      const profilePromises = userIdsInOrder.map(uid => fetchUserProfile(db, uid));
+
+      // 1. Pega os IDs dos amigos que têm uma nota ativa no cache
+      const friendIdsWithNotes = _friendsCache
+          .map(f => f.uid)
+          .filter(uid => activeNotesCache[uid]);
+
+      // 2. Lista de perfis para buscar: o seu + amigos com notas.
+      const userIdsToFetch = [me.uid, ...friendIdsWithNotes];
+
+      const profilePromises = userIdsToFetch.map(uid => fetchUserProfile(db, uid));
       const profiles = await Promise.all(profilePromises);
 
+      // 3. Mapeia os perfis para criar os 'tiles' de HTML
       const tiles = profiles.map(profile => {
-          const note = activeNotesCache[profile.uid]; // Pega a nota do cache
+          const note = activeNotesCache[profile.uid];
+          // A lógica de filtragem já foi feita, então todos aqui devem ser exibidos.
           return noteTileHtml({
               ownerId: profile.uid,
-              ownerName: profile.uid === me.uid ? 'Você' : profile.nickname,
+              ownerName: profile.uid === me.uid ? 'Você' : (profile.nickname || 'Amigo'),
               photoURL: profile.photoURL || '../img/Design sem nome2.png',
-              note: note, // note pode ser undefined se não houver nota, a função lida com isso
+              note: note,
               isSelf: profile.uid === me.uid
           });
       });
+      
+      // Garante que o usuário logado apareça primeiro.
+      tiles.sort((a, b) => {
+        if (a.includes(`data-owner-id="${me.uid}"`)) return -1;
+        if (b.includes(`data-owner-id="${me.uid}"`)) return 1;
+        return 0;
+      });
 
-      bar.innerHTML = tiles.filter(Boolean).join('') || `<div class="no-suggestions">Sem notas no momento.</div>`;
+      // 4. Renderiza
+      if (tiles.length === 1 && !activeNotesCache[me.uid]) {
+        // Se a única pessoa for você e você não tiver nota, mostra seu tile e a mensagem.
+        bar.innerHTML = tiles[0] + `<div class="no-suggestions" style="margin-left:12px;">Nenhuma nota de amigos.</div>`;
+      } else {
+        bar.innerHTML = tiles.join('');
+      }
+
       wireNoteTileActions();
   }
 
@@ -368,7 +386,7 @@ async function loadFriendsList(auth, db) {
     const avatar = `<div class="note-avatar"><img src="${htmlEscape(photoURL)}" alt="${htmlEscape(ownerName)}"></div>`;
     let bubble = isSelf && !note 
       ? `<div class="note-bubble muted">+</div>` 
-      : `<div class="note-bubble muted"></div>`;
+      : `<div class="note-bubble muted"></div>`; // Amigos sem nota não são renderizados, então este é um fallback
 
     if (note && note.type === 'text') {
       bubble = `<div class="note-bubble">${htmlEscape(String(note.text || ''))}</div>`;
@@ -391,7 +409,6 @@ async function loadFriendsList(auth, db) {
       const avatar = tile.querySelector('.note-avatar');
       const openProfile = () => window.location.href = `../pages/user.html?uid=${encodeURIComponent(uid)}`;
       
-      // Clique no avatar ou nome abre o modal de criação, SE for o próprio usuário e não tiver nota
       if(uid === currentUser?.uid && !activeNotesCache[uid]) {
         avatar?.addEventListener('click', () => refs.addNoteBtn()?.click());
         nameEl?.addEventListener('click', () => refs.addNoteBtn()?.click());
@@ -438,7 +455,6 @@ async function loadFriendsList(auth, db) {
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
-        // ---> ATUALIZAÇÃO: Limpa a UI e os listeners ao deslogar
         noteListeners.forEach(unsubscribe => unsubscribe());
         noteListeners = [];
         activeNotesCache = {};
@@ -453,13 +469,10 @@ async function loadFriendsList(auth, db) {
       try { const snap = await db.collection('users').doc(user.uid).get(); currentUserProfile = snap.exists ? (snap.data() || {}) : {}; }
       catch (e) { currentUserProfile = {}; }
       
-      // Carrega amigos e sugestões como antes
       await loadFriendsList(auth, db);
       await loadSuggestions(auth, db);
       
-      // ---> ATUALIZAÇÃO: Em vez do setInterval, agora iniciamos o listener de tempo real
       setupRealtimeNotesListener();
-      // Carrega a barra de notas uma vez no início
       await loadNotesBar(); 
     });
   });
