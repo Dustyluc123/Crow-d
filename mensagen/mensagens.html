@@ -6,30 +6,23 @@
   <title>Mensagens - Crow-d</title>
   <link rel="icon" type="image/png" href="../img/corvo.png" />
 
-  <!-- Seus estilos globais -->
-
   <link rel="stylesheet" href="../home/home.css" />
   <link rel="stylesheet" href="../css/global.css" />
   
   
 
-  <!-- Estilos desta página -->
   <link rel="stylesheet" href="mensagens.css" />
 
-  <!-- Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- Emoji picker -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
-  <!-- Seus scripts globais (Firebase init, darkmode etc.) -->
-     <script src="../config/global.js"></script>
+  <script src="../config/global.js"></script>
   <script src="../config/global-notifications.js"></script>
 
   <script src="../config/global-modals.js" ></script>
@@ -58,7 +51,6 @@
       <h1 class="page-title"><i class="fas fa-comment"></i> Mensagens</h1>
 
       <div class="messages-container">
-        <!-- Lista de conversas -->
         <aside class="conversations-list">
           <div id="conversations-items">
             <div class="loading-conversations">
@@ -66,7 +58,6 @@
             </div>
           </div>
 
-          <!-- Sugestões para iniciar conversa -->
           <section id="suggestions-container" style="display:none">
             <h3 class="suggestions-title">Inicie uma nova conversa</h3>
             <p class="section-subtitle">Sugestões de amigos para conversar:</p>
@@ -78,7 +69,6 @@
           </section>
         </aside>
 
-        <!-- Área do chat -->
         <section class="chat-area">
  
 
@@ -97,7 +87,6 @@
     </main>
   </div>
 
-  <!-- Bottom nav (mobile) -->
   <nav id="mobile-bottom-nav">
     <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
     <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
@@ -106,7 +95,6 @@
     <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
   </nav>
 
-  <!-- Template da sugestão -->
   <template id="suggestion-template">
     <a href="#" class="suggestion-item-link">
       <div class="suggestion-item">
@@ -120,8 +108,6 @@
     </a>
   </template>
 
-  <!-- Script desta página -->
-
   <script src="script.js"></script>
  
     
@@ -129,5 +115,3 @@
     
 </body>
 </html>
-
-  

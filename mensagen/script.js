@@ -1,4 +1,6 @@
-// mensagens/script.js — VERSÃO CORRIGIDA E COMPLETA
+// mensagens/script.js — conversas 1:1, sugestões, chat em tempo real, emoji, excluir, toasts
+// + FIX header mobile: esconde header global só quando chat estiver aberto no mobile
+// + FIX nulls: reconsulta elementos do header do chat sempre que abrir conversa
 
 (function(){
   // ---------------------- DOM helpers ----------------------
@@ -80,6 +82,7 @@
     if (chatMessagesEl) chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
   }
 
+  // reconsulta sempre os elementos do header do chat
   function getChatHeaderEls() {
     return {
       chatNameEl:     document.getElementById('chatName'),
@@ -89,6 +92,7 @@
     };
   }
 
+  // ---- FIX header mobile ----
   const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
   function setChatOpen(open){
     if (open && isMobile()) document.body.classList.add('chat-open');
@@ -110,23 +114,8 @@
     userCache.set(uid, prof);
     return prof;
   }
-  
-  // ====================== Funções Principais ======================
 
-  function displayNoChatSelected() {
-    const { chatMessagesEl, chatNameEl, chatAvatarEl, chatStatusEl } = getChatHeaderEls();
-    if (chatMessagesEl) {
-        chatMessagesEl.innerHTML = `
-            <div class="no-chat-selected" style="text-align: center; margin-top: 50px; color: #888;">
-                <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 10px;"></i>
-                <p>Selecione uma conversa para começar</p>
-            </div>`;
-    }
-    if (chatNameEl) chatNameEl.textContent = 'Mensagens';
-    if (chatAvatarEl) chatAvatarEl.src = '../img/corvo.png';
-    if (chatStatusEl) chatStatusEl.textContent = '';
-  }
-
+  // ====================== Conversas ======================
   function otherParticipant(participants, myUid){
     return (participants || []).find(p => p !== myUid) || myUid;
   }
@@ -169,7 +158,7 @@
           <div class="conversation-time">${it.lastMessageAt ? fmtTime(it.lastMessageAt) : ''}</div>
         `;
         el.addEventListener('click', (ev) => {
-          if (ev.target.closest('.delete-btn')) return;
+          if (ev.target.closest('.delete-btn')) return; // evita abrir se clicar em deletar
           openConversation(it.id, otherUid, prof);
         });
         if (listEl) listEl.appendChild(el);
@@ -180,6 +169,7 @@
     } catch (e) {
       console.error(e);
       if (listEl) listEl.innerHTML = '<div class="error-message">Erro ao carregar conversas.</div>';
+      if (suggestionsContainer) suggestionsContainer.style.display = 'none';
     }
   }
 
@@ -226,6 +216,7 @@
         const m = doc.data();
         const isMine = m.senderId === currentUser.uid;
         
+        // *** ALTERAÇÃO PRINCIPAL AQUI: Adiciona o botão de apagar se a mensagem for sua ***
         const deleteButtonHTML = isMine ? `
             <button class="message-delete-btn" data-message-id="${doc.id}" title="Apagar mensagem">
                 <i class="fas fa-trash"></i>
@@ -396,7 +387,11 @@
         setChatOpen(false);
         selectedConversationId = null;
         if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-        displayNoChatSelected();
+        const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+        if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
+        if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
+        const avatar = document.getElementById('chatAvatar');
+        if (avatar) avatar.src = '../img/Design sem nome2.png';
       }
       await loadConversations();
     } catch (e) {
@@ -411,13 +406,16 @@
     try {
       await db.collection('conversations').doc(selectedConversationId)
               .collection('messages').doc(messageId).delete();
+      // Não precisa de toast, a mensagem some da tela
     } catch (e) {
       console.error(e);
       toast('Não foi possível excluir a mensagem.', 'error');
     }
   }
 
+  // Delegação para cliques em toda a página
   document.addEventListener('click', (e) => {
+    // Procura por um botão de apagar mensagem
     const deleteMsgBtn = e.target.closest('.message-delete-btn');
     if (deleteMsgBtn) {
         const messageId = deleteMsgBtn.dataset.messageId;
@@ -427,6 +425,7 @@
         return;
     }
     
+    // Procura por um botão de apagar conversa
     const deleteConvBtn = e.target.closest('.delete-btn[data-conversation-id]');
     if (deleteConvBtn) {
         const conversationId = deleteConvBtn.dataset.conversationId;
@@ -442,8 +441,11 @@
     setChatOpen(false);
     selectedConversationId = null;
     if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-    displayNoChatSelected();
-    markActiveConversation(null); // Garante que a seleção é removida
+    const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+    if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
+    if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
+    const avatar = document.getElementById('chatAvatar');
+    if (avatar) avatar.src = '../img/Design sem nome2.png';
   });
 
   emojiBtn?.addEventListener('click', () => {
@@ -477,28 +479,15 @@
       const { auth } = ensureFirebase();
       auth.onAuthStateChanged(async (user) => {
         if (!user) {
-          window.location.href = '../login/login.html';
+          if (listEl) listEl.innerHTML = '<div class="no-conversations">Faça login para ver suas conversas.</div>';
+          if (suggestionsContainer) suggestionsContainer.style.display = 'none';
+          setChatOpen(false);
           return;
         }
         currentUser = user;
-        
-        // Carrega as conversas
+        const profileLink = document.querySelector('.profile-link');
+        if (profileLink) profileLink.href = `../pages/user.html?uid=${encodeURIComponent(user.uid)}`;
         await loadConversations();
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        const conversationIdFromUrl = urlParams.get('id') || urlParams.get('conversationId');
-        
-        if (conversationIdFromUrl) {
-            const convDoc = await ensureFirebase().db.collection('conversations').doc(conversationIdFromUrl).get();
-            if (convDoc.exists) {
-                const otherUid = otherParticipant(convDoc.data().participants, currentUser.uid);
-                openConversation(conversationIdFromUrl, otherUid);
-            }
-        } else {
-            // *** CORREÇÃO DEFINITIVA PARA O ESTADO INICIAL ***
-            displayNoChatSelected();
-            markActiveConversation(null);
-        }
       });
     } catch (e) {
       console.error(e);
