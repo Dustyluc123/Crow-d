@@ -31,3 +31,112 @@
 .friend-card h3 {
     margin: 10px 0 5px;
 }
+
+/* ============================================= */
+/* MELHORIAS CSS - MODO CLARO           */
+/* ============================================= */
+
+/* Estilos aplicados apenas quando o modo escuro NÃO está ativo */
+body:not(.dark-mode) #noteModal .modal-content {
+    background-color: #f8f9fa; /* Um branco um pouco mais suave que o padrão */
+    border: 1px solid #dee2e6;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+body:not(.dark-mode) #noteModal .modal-header {
+    background-color: #f1f3f5;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+body:not(.dark-mode) #noteModal .modal-header h2 {
+    color: #343a40;
+    font-weight: 600;
+}
+
+body:not(.dark-mode) #noteModal .modal-body {
+    padding: 1.5rem;
+}
+
+body:not(.dark-mode) #noteModal label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+body:not(.dark-mode) #noteModal #noteText {
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 1rem;
+    color: #212529;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efeito de foco para a caixa de texto */
+body:not(.dark-mode) #noteModal #noteText:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+    outline: none;
+}
+
+body:not(.dark-mode) #noteModal .modal-actions {
+    background-color: #f1f3f5;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Estilo do botão primário (Postar) */
+body:not(.dark-mode) #noteModal .primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+body:not(.dark-mode) #noteModal .primary-btn:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+}
+
+/* Estilo do botão secundário (Cancelar) */
+body:not(.dark-mode) #noteModal .secondary-btn {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 600;
+    padding: 10px 20px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+body:not(.dark-mode) #noteModal .secondary-btn:hover {
+    background-color: #dee2e6;
+    border-color: #adb5bd;
+}
+
+/* Melhora a barra de rolagem horizontal da seção de notas */
+.notes-bar::-webkit-scrollbar {
+    height: 8px;
+}
+
+.notes-bar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.notes-bar::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.notes-bar::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
