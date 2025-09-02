@@ -48,17 +48,126 @@ let displayedReposts = new Set();
  let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
  let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
  const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
- let activeCommentListeners = {}; // Armazena os listeners de comentários ativos
+ let activeCommentListeners = {};
+ 
+ // scripts.js
 
+// ... (todo o seu código existente) ...
+
+// === INÍCIO DO CÓDIGO DO EDITOR DE IMAGEM ===
+
+// Variáveis para controlar o editor
+let cropperInstance = null;
+let postImageBase64 = null; // A imagem cortada será guardada aqui
+
+// Referências aos elementos do HTML que adicionámos
+const imageEditorModal = document.getElementById('image-editor-modal');
+const imageToCrop = document.getElementById('image-to-crop');
+const cropImageBtn = document.getElementById('crop-image-btn');
+const cancelCropBtn = document.getElementById('cancel-crop-btn');
+const closeEditorModalBtn = document.getElementById('close-editor-modal');
  // Em scripts.js, adicione este bloco no topo
 
 // --- INÍCIO DA LÓGICA DE UPLOAD DE IMAGEM PARA POSTS ---
-const postImageInput = document.getElementById('post-image-input');
+
 const imagePreviewContainer = document.getElementById('post-image-preview-container');
 const imagePreview = document.getElementById('post-image-preview');
 const removeImageBtn = document.getElementById('remove-image-btn');
 
-let postImageBase64 = null; // Variável para guardar a imagem do post
+
+// Referências aos elementos do formulário de post
+const postImageInput = document.getElementById('post-image-input');
+const postImagePreviewContainer = document.getElementById('post-image-preview-container');
+const postImagePreview = document.getElementById('post-image-preview');
+const removePostImageBtn = document.getElementById('remove-post-image-btn');
+
+// Função para ABRIR o editor
+function openImageEditor(file) {
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        imageToCrop.src = event.target.result;
+        imageEditorModal.style.display = 'block';
+
+        if (cropperInstance) {
+            cropperInstance.destroy();
+        }
+
+        // Ativa a ferramenta Cropper.js na imagem
+        cropperInstance = new Cropper(imageToCrop, {
+            aspectRatio: 1 / 1, // Proporção quadrada (1:1). Pode mudar para 16/9, etc.
+            viewMode: 1,
+            background: false,
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+// Função para FECHAR o editor
+function closeImageEditor() {
+    imageEditorModal.style.display = 'none';
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+    postImageInput.value = ''; // Limpa a seleção do ficheiro
+}
+
+// Função para LIMPAR a pré-visualização da imagem
+function clearPostImage() {
+    postImageBase64 = null;
+    postImageInput.value = '';
+    postImagePreview.src = '#';
+    postImagePreviewContainer.style.display = 'none';
+}
+
+// O que acontece quando o utilizador escolhe uma imagem
+if (postImageInput) {
+    postImageInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            // Em vez de mostrar a imagem diretamente, abre o editor
+            openImageEditor(files[0]);
+        }
+    });
+}
+
+// Ações dos botões do editor
+if (cropImageBtn) {
+    cropImageBtn.addEventListener('click', () => {
+        if (cropperInstance) {
+            // Pega na imagem cortada e converte-a
+            const canvas = cropperInstance.getCroppedCanvas({
+                width: 800, // Define uma largura máxima para a imagem final
+                height: 800,
+            });
+            postImageBase64 = canvas.toDataURL('image/jpeg'); // Converte para texto (Base64)
+            
+            // Mostra a imagem cortada na pré-visualização do post
+            postImagePreview.src = postImageBase64;
+            postImagePreviewContainer.style.display = 'block';
+            
+            closeImageEditor(); // Fecha a janela
+        }
+    });
+}
+
+// Botões para fechar/cancelar e remover
+if (closeEditorModalBtn) closeEditorModalBtn.addEventListener('click', closeImageEditor);
+if (cancelCropBtn) cancelCropBtn.addEventListener('click', closeImageEditor);
+if (removePostImageBtn) removePostImageBtn.addEventListener('click', clearPostImage);
+
+
+// IMPORTANTE: Verifique a sua função createPost
+// Ela já deve estar a usar a variável `postImageBase64` para guardar a imagem no post.
+// Se não estiver, certifique-se de que ela envia `postImageBase64` para o Firestore.
+
+// === FIM DO CÓDIGO DO EDITOR DE IMAGEM ===
+
+
+
+
 
 if (postImageInput) {
     postImageInput.addEventListener('change', function() {
@@ -647,7 +756,7 @@ function handleScroll() {
 
 // Garanta que o listener do botão de voltar seja adicionado aqui.
 backToFeedBtn.addEventListener('click', hideSinglePostView);
-// home/scripts.js
+// Em scripts.js
 
 function addPostToDOM(post, isSingleView = false) {
     if (!postTemplate) {
@@ -658,8 +767,6 @@ function addPostToDOM(post, isSingleView = false) {
     // VERIFICAÇÃO DE REPUBLICACÃO ÓRFÃ
     if (post.isRepost && (!post.originalPost || Object.keys(post.originalPost).length === 0)) {
         console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
-        // Opcional: para limpar o seu banco de dados, descomente a linha abaixo
-        // db.collection('posts').doc(post.id).delete();
         return null;
     }
 
@@ -679,10 +786,16 @@ function addPostToDOM(post, isSingleView = false) {
         postElement.classList.add('repost-card');
         const repostHeader = document.createElement('div');
         repostHeader.className = 'repost-header';
-        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou`;
+        
+        // --- AQUI ESTÁ A ALTERAÇÃO ---
+        // Adicionamos a tag <img> para a foto de quem republicou.
+        repostHeader.innerHTML = `
+            <i class="fas fa-retweet"></i>
+            <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
+            <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
+        `;
         postElement.prepend(repostHeader);
         
-        // Remove completamente os botões de ação para republicações
         if (actionsContainer) {
             actionsContainer.remove();
         }
@@ -735,11 +848,11 @@ function addPostToDOM(post, isSingleView = false) {
         }
     }
 
-    // Configuração dos Comentários (funciona para posts originais e republicações)
+    // Configuração dos Comentários
     const commentsSection = postElement.querySelector('.post-comments');
     const commentBtn = postElement.querySelector(".comment-btn");
     
-    if (commentBtn) { // Verifica se o botão de comentário existe
+    if (commentBtn) {
         commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
         commentBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -897,50 +1010,111 @@ async function createPost(content) {
  function redirectToUserProfile(userId) {
    window.location.href = `pages/user.html?uid=${userId}`;
  }
-async function toggleLike(postId, buttonElement) {
-    try {
-        if (likeInProgress[postId]) return;
-        likeInProgress[postId] = true;
+// Em scripts.js
 
-        if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para curtir.");
+async function toggleRepost(basePostId, buttonElement) {
+    if (buttonElement) buttonElement.disabled = true;
+
+    try {
+        if (!currentUser || !currentUserProfile) {
+            showCustomAlert("Você precisa estar logado para republicar.");
             return;
         }
 
-        const postRef = db.collection("posts").doc(postId);
+        const postRef = db.collection("posts").doc(basePostId);
         const postDoc = await postRef.get();
-        if (!postDoc.exists) return;
-
-        const postData = postDoc.data();
-        const isLiked = (postData.likedBy || []).includes(currentUser.uid);
+        if (!postDoc.exists) {
+            showCustomAlert("Esta publicação não existe mais.");
+            return;
+        }
         
-        // Atualização da UI imediata
-        const likeCountElement = buttonElement.querySelector(".like-count");
-        let currentLikes = parseInt(likeCountElement.textContent);
+        const originalPostData = postDoc.data();
+        const hasReposted = (originalPostData.repostedBy || []).includes(currentUser.uid);
 
-        if (isLiked) {
-            await postRef.update({
-                likes: firebase.firestore.FieldValue.increment(-1),
-                likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+        if (hasReposted) {
+            // --- AÇÃO PARA DESFAZER A REPUBLICAÇÃO ---
+            const repostQuery = db.collection("posts")
+                .where("originalPostId", "==", basePostId)
+                .where("authorId", "==", currentUser.uid);
+            
+            const repostSnapshot = await repostQuery.get();
+            const batch = db.batch();
+            
+            // Apaga a republicação da tela e do banco de dados
+            repostSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+                const repostElement = document.querySelector(`.post[data-post-id="${doc.id}"]`);
+                if (repostElement) repostElement.remove();
             });
-            buttonElement.classList.remove("liked");
-            likeCountElement.textContent = Math.max(0, currentLikes - 1);
+            
+            batch.update(postRef, {
+                repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
+                repostCount: firebase.firestore.FieldValue.increment(-repostSnapshot.size || -1)
+            });
+            await batch.commit();
+
+            // Atualiza o botão do post original (se estiver na tela)
+            const originalPostButton = document.querySelector(`.post[data-base-post-id="${basePostId}"] .repost-btn`);
+            if (originalPostButton) {
+                originalPostButton.classList.remove('reposted');
+                originalPostButton.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
+            }
+            showToast("Republicação removida.", "info");
+            // Ao desfazer, o ideal é recarregar para que o post original volte a aparecer
+            loadInitialPosts();
+
         } else {
+            // --- AÇÃO PARA CRIAR A REPUBLICAÇÃO (LÓGICA CORRIGIDA) ---
+            if (originalPostData.authorId === currentUser.uid) {
+                showCustomAlert("Você não pode republicar as suas próprias publicações.");
+                return;
+            }
+
+            const repostData = {
+                isRepost: true,
+                originalPostId: basePostId,
+                originalPost: originalPostData,
+                authorId: currentUser.uid,
+                authorName: currentUserProfile.nickname || "Usuário",
+                authorPhoto: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            };
+
+            const newRepostRef = await db.collection("posts").add(repostData);
             await postRef.update({
-                likes: firebase.firestore.FieldValue.increment(1),
-                likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+                repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+                repostCount: firebase.firestore.FieldValue.increment(1)
             });
-            buttonElement.classList.add("liked");
-            likeCountElement.textContent = currentLikes + 1;
-            // Lógica de notificação (opcional)
+
+            // Cria o novo post para adicionar na tela
+            const newPostData = { id: newRepostRef.id, ...repostData };
+            const newPostElement = addPostToDOM(newPostData);
+
+            if (newPostElement) {
+                // Procura o card do post original que já está na tela
+                const originalPostElement = document.querySelector(`.post[data-base-post-id="${basePostId}"]`);
+                if (originalPostElement) {
+                    // Se o encontrar, o remove para evitar duplicados
+                    originalPostElement.remove();
+                }
+                // Adiciona a nova republicação no topo do feed
+                postsContainer.prepend(newPostElement);
+            }
+            
+            if (buttonElement) {
+                buttonElement.classList.add('reposted');
+                buttonElement.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
+            }
+            showToast("Publicação republicada!", "success");
         }
     } catch (error) {
-        console.error("Erro ao curtir post:", error);
+        console.error("Erro ao republicar:", error);
+        showCustomAlert("Ocorreu um erro ao republicar. Tente novamente.");
     } finally {
-        likeInProgress[postId] = false;
+        if (buttonElement) buttonElement.disabled = false;
+        // A linha que recarregava o feed foi removida para evitar o bug
     }
 }
-
 async function toggleSavePost(postId, buttonElement) {
     if (!currentUser) {
         showCustomAlert("Você precisa estar logado para salvar publicações.");
@@ -1304,52 +1478,58 @@ async function toggleCommentLike(postId, commentId) {
             rightSidebar.classList.remove('open');
        }
  });
-function addSuggestionToDOM(user, commonHobbiesCount) {
-    if (!suggestionsContainer || !suggestionTemplate) return;
+// Em home/scripts.js
+
+function addSuggestionToDOM(user) {
+    if (!suggestionTemplate) {
+        console.error("Template de sugestão não encontrado.");
+        return;
+    }
 
     const suggestionClone = document.importNode(suggestionTemplate.content, true);
     const suggestionElement = suggestionClone.querySelector(".suggestion");
-    const photoElement = suggestionClone.querySelector(".suggestion-photo");
-    const nameElement = suggestionClone.querySelector(".suggestion-name");
-    const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies");
     const followButton = suggestionClone.querySelector(".follow-btn");
+    const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies"); // Pega no elemento dos hobbies
 
     suggestionElement.dataset.userId = user.id;
+    suggestionClone.querySelector(".suggestion-photo").src = user.photoURL || 'img/Design sem nome2.png';
+    suggestionClone.querySelector(".suggestion-name").textContent = user.nickname || 'Usuário';
+    
+    // --- INÍCIO DA CORREÇÃO DE HOBBIES ---
 
-    if (user.photoURL) {
-        photoElement.src = user.photoURL;
+    // Garante que temos os hobbies de ambos os utilizadores
+    const currentUserHobbies = currentUserProfile?.hobbies || [];
+    const suggestedUserHobbies = user.hobbies || [];
+
+    // Encontra apenas os hobbies que existem em ambas as listas
+    const commonHobbies = currentUserHobbies.filter(hobby => suggestedUserHobbies.includes(hobby));
+
+    // Define o texto com base no número de hobbies em comum
+    if (commonHobbies.length > 0) {
+        hobbiesElement.textContent = `${commonHobbies.length} hobby(s) em comum`;
+        // Opcional: Se quiser mostrar os hobbies, pode usar a linha abaixo
+        // hobbiesElement.textContent = `Em comum: ${commonHobbies.join(', ')}`;
+    } else {
+        hobbiesElement.textContent = 'Nenhum hobby em comum';
     }
-    photoElement.addEventListener("click", () => redirectToUserProfile(user.id));
 
-    nameElement.textContent = user.nickname || "Usuário";
-    nameElement.addEventListener("click", () => redirectToUserProfile(user.id));
+    // --- FIM DA CORREÇÃO DE HOBBIES ---
 
-    hobbiesElement.textContent = `${commonHobbiesCount} ${commonHobbiesCount === 1 ? "hobby" : "hobbies"} em comum`;
+    const profileLink = `pages/user.html?uid=${user.id}`;
+    suggestionClone.querySelector('.suggestion-name').parentElement.href = profileLink;
+    suggestionClone.querySelector('.suggestion-photo').parentElement.href = profileLink;
 
-    // Ação de clique corrigida
     followButton.addEventListener("click", async function() {
-        // Desativa o botão para evitar cliques múltiplos
-        this.disabled = true;
-        this.textContent = 'Aguarde...';
-
-        const success = await sendFriendRequest(user.id, user);
-        
-        if (success) {
-            // Remove o card da tela apenas se o pedido for enviado com sucesso
-            suggestionElement.remove();
-        } else {
-            // Reativa o botão se o envio falhar
-            this.disabled = false;
-            this.textContent = 'Seguir';
-        }
+        await sendFriendRequest(user.id);
     });
 
     suggestionsContainer.appendChild(suggestionClone);
 }
+// Em home/scripts.js
 
-async function sendFriendRequest(userId, userData) {
+async function sendFriendRequest(userId) {
     if (!currentUserProfile || !currentUserProfile.nickname) {
-        showToast("Seu perfil ainda não foi carregado, tente novamente.", "error");
+        showToast("O seu perfil ainda não foi carregado, tente novamente.", "error");
         return false;
     }
 
@@ -1363,48 +1543,29 @@ async function sendFriendRequest(userId, userData) {
         if (userId === currentUser.uid) throw new Error('Você não pode se adicionar.');
 
         const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
-        if (friendDoc.exists) throw new Error('Este usuário já é seu amigo.');
+        if (friendDoc.exists) throw new Error('Este utilizador já é seu amigo.');
 
         const requestId = [currentUser.uid, userId].sort().join('_');
         const requestRef = db.collection('friendRequests').doc(requestId);
-        const requestDoc = await requestRef.get();
-        if (requestDoc.exists) throw new Error('Já existe um pedido pendente.');
 
-        const batch = db.batch();
-        
-        // --- INÍCIO DA MUDANÇA ---
-        // 1. Cria a referência da notificação PRIMEIRO para obter seu ID único
-        const notificationRef = db.collection("users").doc(userId).collection("notifications").doc();
+        // A verificação de pedido pendente foi removida para evitar erros de permissão.
+        // O próprio .set() é idempotente, então não criará duplicados.
 
-        // 2. Prepara os dados do pedido de amizade, INCLUINDO o ID da notificação
-        batch.set(requestRef, {
+        await requestRef.set({
             from: currentUser.uid,
             to: userId,
             fromUserName: currentUserProfile.nickname,
             fromUserPhoto: currentUserProfile.photoURL || null,
-            notificationId: notificationRef.id, // <-- CAMPO ADICIONADO
             status: "pending",
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         });
-
-        // 3. Prepara os dados da notificação (como antes)
-        batch.set(notificationRef, {
-            type: "friend_request",
-            fromUserId: currentUser.uid,
-            fromUserName: currentUserProfile.nickname,
-            fromUserPhoto: currentUserProfile.photoURL || null,
-            content: "enviou uma solicitação de amizade",
-            requestId: requestRef.id,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            read: false
-        });
-        // --- FIM DA MUDANÇA ---
-        
-        await batch.commit();
         
         showToast("Solicitação enviada!", "success");
         if (followButton) {
+            // *** MUDANÇA PRINCIPAL ***
+            // O botão agora fica permanentemente como "Pendente" e desativado.
             followButton.textContent = 'Pendente';
+            followButton.disabled = true; 
         }
         return true;
 
@@ -1417,113 +1578,7 @@ async function sendFriendRequest(userId, userData) {
         return false;
     }
 }
-// home/scripts.js
 
-async function toggleRepost(basePostId, buttonElement) {
-    // Desativa o botão imediatamente para evitar cliques duplos
-    if (buttonElement) buttonElement.disabled = true;
-
-    try {
-        if (!currentUser || !currentUserProfile) {
-            showCustomAlert("Você precisa estar logado para republicar.");
-            return;
-        }
-
-        const postRef = db.collection("posts").doc(basePostId);
-        const postDoc = await postRef.get();
-        if (!postDoc.exists) {
-            showCustomAlert("Esta publicação não existe mais.");
-            return;
-        }
-        
-        const originalPostData = postDoc.data();
-        const repostedBy = originalPostData.repostedBy || [];
-        const hasReposted = repostedBy.includes(currentUser.uid);
-
-        if (hasReposted) {
-            // --- AÇÃO PARA "JUNTAR" E LIMPAR OS DUPLICADOS ---
-            // Esta parte procura e apaga TODAS as republicações que você fez deste post.
-            const repostQuery = db.collection("posts")
-                .where("originalPostId", "==", basePostId)
-                .where("authorId", "==", currentUser.uid);
-            
-            const repostSnapshot = await repostQuery.get();
-            
-            if (repostSnapshot.empty) {
-                // Se não encontrar republicações mas o post original ainda diz que sim, corrige o post original.
-                await postRef.update({
-                    repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                });
-                console.warn("Corrigido estado de republicação inconsistente.");
-                showToast("Estado de republicação corrigido.", "info");
-                return;
-            }
-
-            // Inicia uma operação em lote para apagar todos os duplicados de uma vez
-            const batch = db.batch();
-            repostSnapshot.forEach(doc => {
-                batch.delete(doc.ref); // Adiciona cada duplicado ao lote de exclusão
-            });
-            
-            // Atualiza o post original para remover a sua marcação de republicação
-            // e subtrai o número exato de republicações apagadas.
-            batch.update(postRef, {
-                repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
-                repostCount: firebase.firestore.FieldValue.increment(-repostSnapshot.size)
-            });
-
-            await batch.commit();
-
-            if (buttonElement) {
-                buttonElement.classList.remove('reposted');
-                buttonElement.innerHTML = `<i class="fas fa-retweet"></i> Republicar`;
-            }
-            showToast("Republicações duplicadas removidas.", "info");
-
-        } else {
-            // --- AÇÃO PARA CRIAR UMA NOVA E ÚNICA REPUBLICAÇÃO ---
-            // (Esta parte do código já está correta e previne novos duplicados)
-            if (originalPostData.isRepost) {
-                showCustomAlert("Não é possível republicar uma republicação.");
-                return;
-            }
-
-            const repostData = {
-                isRepost: true,
-                originalPostId: basePostId,
-                originalPost: originalPostData,
-                authorId: currentUser.uid,
-                authorName: currentUserProfile.nickname || "Usuário",
-                authorPhoto: currentUserProfile.photoURL || null,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                likes: 0,
-                likedBy: [],
-                commentCount: 0,
-            };
-
-            await db.collection("posts").add(repostData);
-            await postRef.update({
-                repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
-                repostCount: firebase.firestore.FieldValue.increment(1)
-            });
-            
-            if (buttonElement) {
-                buttonElement.classList.add('reposted');
-                buttonElement.innerHTML = `<i class="fas fa-retweet"></i> Republicado`;
-            }
-            showToast("Publicação republicada!", "success");
-        }
-    } catch (error) {
-        console.error("Erro ao republicar:", error);
-        showCustomAlert("Ocorreu um erro ao republicar. Tente novamente.");
-    } finally {
-        if (buttonElement) buttonElement.disabled = false; // Reativa o botão no final
-        // Recarrega o feed para mostrar as mudanças
-        if (typeof loadInitialPosts === 'function') {
-            loadInitialPosts();
-        }
-    }
-}
 async function loadUpcomingEvents() {
    const upcomingEventsContainer = document.getElementById('upcoming-events-container');
    if (!upcomingEventsContainer) return;

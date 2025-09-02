@@ -8,6 +8,9 @@
    <link rel="stylesheet" href="home/home.css">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="icon" type="image/png" href="img/corvo.png">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
+    
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -209,6 +212,23 @@
         <a href="mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
         <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
    </div>
+   <div id="image-editor-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Editar Imagem</h2>
+                <button class="close-modal" id="close-editor-modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <div>
+                    <img id="image-to-crop" src="" style="max-width: 100%;">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="secondary-btn" id="cancel-crop-btn">Cancelar</button>
+                <button class="primary-btn" id="crop-image-btn">Cortar e Usar</button>
+            </div>
+        </div>
+    </div>
 
 
    <script src="config/global.js" ></script>

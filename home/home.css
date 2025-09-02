@@ -2022,3 +2022,20 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb {
 body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     background-color: var(--primary-hover); /* Cor ao passar o mouse */
 }
+/* Em home/home.css */
+
+/* Novo estilo para a foto de quem republicou */
+.repost-author-photo {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-color); /* Borda sutil */
+}
+
+/* Garante que o cabeçalho fique bem alinhado */
+.repost-header {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espaçamento entre os itens (ícone, foto, nome) */
+}
