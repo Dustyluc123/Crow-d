@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const createEventForm = document.querySelector('#createEventModal .modal-form');
     const createEventBtn = document.getElementById('createEventBtn');
     const closeModalBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
-// --- LÓGICA DOS CONTADORES DE CARACTERES ---
+    // --- LÓGICA DOS CONTADORES DE CARACTERES ---
     const eventNameInput = document.getElementById('eventName');
     const eventNameCounter = document.getElementById('eventName-char-counter');
     const eventLocationInput = document.getElementById('eventLocation');
@@ -111,10 +111,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
- /**
-     * Exibe os eventos do usuário na barra lateral.
-     * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
-     */
+    /**
+        * Exibe os eventos do usuário na barra lateral.
+        * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
+        */
     function displayMyEvents(myEvents) {
         if (!myEventsContainer) return;
         myEventsContainer.innerHTML = '';
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const seeMoreLink = document.createElement('a');
         seeMoreLink.href = "#";
         seeMoreLink.className = "see-more";
-        
+
         popularEventsContainer.appendChild(seeMoreLink);
     }
     /**
@@ -189,35 +189,35 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {object} event - O objeto do evento com os seus dados.
      */
     // Em eventos.js
-function addEventToDOM(event) {
-    const eventCardWrapper = document.createElement('a');
-    eventCardWrapper.className = 'event-card-link';
-    eventCardWrapper.href = `single-event.html?id=${event.id}`;
+    function addEventToDOM(event) {
+        const eventCardWrapper = document.createElement('a');
+        eventCardWrapper.className = 'event-card-link';
+        eventCardWrapper.href = `single-event.html?id=${event.id}`;
 
-    const eventCard = document.createElement('div');
-    eventCard.className = 'event-card';
+        const eventCard = document.createElement('div');
+        eventCard.className = 'event-card';
 
-    const eventDate = event.eventDateTime.toDate();
-    const formattedDate = eventDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit' });
-    const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const eventDate = event.eventDateTime.toDate();
+        const formattedDate = eventDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const isParticipating = event.participants && event.participants.includes(currentUser.uid);
-    const isCreator = event.creatorId === currentUser.uid;
+        const isParticipating = event.participants && event.participants.includes(currentUser.uid);
+        const isCreator = event.creatorId === currentUser.uid;
 
-    const deleteButtonHTML = isCreator ?
-        `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
+        const deleteButtonHTML = isCreator ?
+            `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
 
-    // --- LÓGICA DO "VER MAIS" ---
-    const description = event.description;
-    const DESCRIPTION_LIMIT = 100; // Limite de caracteres antes de mostrar "Ver mais"
-    let descriptionHTML = `<p class="event-description">${description}</p>`;
+        // --- LÓGICA DO "VER MAIS" ---
+        const description = event.description;
+        const DESCRIPTION_LIMIT = 100; // Limite de caracteres antes de mostrar "Ver mais"
+        let descriptionHTML = `<p class="event-description">${description}</p>`;
 
-    if (description.length > DESCRIPTION_LIMIT) {
-        descriptionHTML += `<div class="event-see-more-container"><span class="event-see-more">Ver mais...</span></div>`;
-    }
-    // --- FIM DA LÓGICA ---
+        if (description.length > DESCRIPTION_LIMIT) {
+            descriptionHTML += `<div class="event-see-more-container"><span class="event-see-more">Ver mais...</span></div>`;
+        }
+        // --- FIM DA LÓGICA ---
 
-    eventCard.innerHTML = `
+        eventCard.innerHTML = `
         <div class="event-header">
             <h3>${event.eventName}</h3>
             <div class="event-date-display">
@@ -243,27 +243,27 @@ function addEventToDOM(event) {
         </div>
     `;
 
-    // Adiciona listeners aos botões
-    const participateBtn = eventCard.querySelector('.participate-btn');
-    participateBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleParticipation(event.id, participateBtn);
-    });
-
-    if (isCreator) {
-        const deleteBtn = eventCard.querySelector('.delete-btn');
-        deleteBtn.addEventListener('click', (e) => {
+        // Adiciona listeners aos botões
+        const participateBtn = eventCard.querySelector('.participate-btn');
+        participateBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            deleteEvent(event.id);
+            toggleParticipation(event.id, participateBtn);
         });
-    }
 
-    eventCardWrapper.appendChild(eventCard);
-    eventsContainer.appendChild(eventCardWrapper);
-}
-   async function deleteEvent(eventId) {
+        if (isCreator) {
+            const deleteBtn = eventCard.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteEvent(event.id);
+            });
+        }
+
+        eventCardWrapper.appendChild(eventCard);
+        eventsContainer.appendChild(eventCardWrapper);
+    }
+    async function deleteEvent(eventId) {
         const confirmed = await showConfirmationModal("Excluir Evento", "Você tem a certeza que quer excluir este evento? Esta ação não pode ser desfeita.");
         if (confirmed) {
             try {
@@ -304,58 +304,67 @@ function addEventToDOM(event) {
     }
 
     // Em eventos.js
+    async function createEvent(e) {
+        e.preventDefault();
 
-async function createEvent(e) {
-    e.preventDefault();
+        // 1. Pega os valores dos campos
+        const eventName = document.getElementById('eventName').value;
+        const eventLocation = document.getElementById('eventLocation').value;
+        const eventDate = document.getElementById('eventDate').value;
+        const eventTime = document.getElementById('eventTime').value;
+        const description = document.getElementById('eventDescription').value;
 
-    // 1. Pega todos os valores dos campos primeiro
-    const eventName = document.getElementById('eventName').value;
-    const eventLocation = document.getElementById('eventLocation').value;
-    const eventDate = document.getElementById('eventDate').value;
-    const eventTime = document.getElementById('eventTime').value;
-    const description = document.getElementById('eventDescription').value;
-    const tags = document.getElementById('eventTags').value.split(',').map(tag => tag.trim());
+        // --- INÍCIO DA CORREÇÃO ---
+        // Pega todas as checkboxes de tags que estão marcadas
+        const selectedCheckboxes = document.querySelectorAll('#createEventModal input[name="event-tags"]:checked');
+        // Cria um array com os valores (os nomes das tags) das checkboxes selecionadas
+        const tags = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+        // --- FIM DA CORREÇÃO ---
 
-    // 2. Faz todas as verificações
-    if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
-        showCustomAlert("Por favor, preencha todos os campos obrigatórios.");
-        return;
+        // 2. Faz todas as verificações
+        if (!eventName || !eventLocation || !eventDate || !eventTime || !description) {
+            showCustomAlert("Por favor, preencha todos os campos obrigatórios.");
+            return;
+        }
+        // Adiciona uma verificação para as tags
+        if (tags.length === 0) {
+            showCustomAlert("Por favor, selecione pelo menos uma tag para o evento.");
+            return;
+        }
+        if (eventName.length > 20) {
+            showCustomAlert("O nome do evento não pode ter mais de 20 caracteres.");
+            return;
+        }
+        if (eventLocation.length > 40) {
+            showCustomAlert("A localização do evento não pode ter mais de 40 caracteres.");
+            return;
+        }
+
+        // 3. Continua com a criação do evento se tudo estiver correto
+        const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+
+        try {
+            await db.collection('events').add({
+                eventName,
+                eventLocation,
+                eventDateTime,
+                description,
+                tags, // Usa o novo array de tags
+                creatorId: currentUser.uid,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                participants: [currentUser.uid]
+            });
+
+            createEventModal.style.display = 'none';
+            createEventForm.reset();
+            showToast("Evento criado com sucesso!", "success");
+            loadEvents();
+
+        } catch (error) {
+            console.error("Erro ao criar evento: ", error);
+            showCustomAlert("Ocorreu um erro ao criar o evento.");
+        }
     }
-    if (eventName.length > 20) {
-        showCustomAlert("O nome do evento não pode ter mais de 20 caracteres.");
-        return;
-    }
-    if (eventLocation.length > 40) {
-        showCustomAlert("A localização do evento não pode ter mais de 40 caracteres.");
-        return;
-    }
-
-    // 3. Continua com a criação do evento se tudo estiver correto
-    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
-
-    try {
-        await db.collection('events').add({
-            eventName,
-            eventLocation,
-            eventDateTime,
-            description,
-            tags,
-            creatorId: currentUser.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            participants: [currentUser.uid] // Criador já entra participando
-        });
-
-        createEventModal.style.display = 'none';
-        createEventForm.reset();
-        showToast("Evento criado com sucesso!", "success"); // Notificação de sucesso
-        loadEvents();
-        
-    } catch (error) {
-        console.error("Erro ao criar evento: ", error);
-        showCustomAlert("Ocorreu um erro ao criar o evento.");
-    }
-}
-
     if (createEventBtn) {
         createEventBtn.addEventListener('click', () => { createEventModal.style.display = 'flex'; });
     }

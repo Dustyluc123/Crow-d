@@ -9,8 +9,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <title>Eventos - Crow-d</title>
-      <link rel="icon" type="image/png" href="../img/corvo.png">
-      <link rel="stylesheet" href="../css/global.css">
+    <link rel="icon" type="image/png" href="../img/corvo.png">
+    <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="../home/page-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -20,11 +20,15 @@
     .event-tags {
         margin-bottom: 15px;
     }
+
     .container-dos-cards {
-  display: flex;
-  flex-wrap: wrap; /* Permite que os cards quebrem para a próxima linha */
-  gap: 20px; /* Espaçamento entre os cards */
-}
+        display: flex;
+        flex-wrap: wrap;
+        /* Permite que os cards quebrem para a próxima linha */
+        gap: 20px;
+        /* Espaçamento entre os cards */
+    }
+
     /* Novo estilo para os itens na lista de eventos populares */
     #popular-events-container .event {
         display: flex;
@@ -39,17 +43,17 @@
     .event-card {
         display: flex;
         flex-direction: column;
-        height: 100%; 
+        height: 100%;
     }
 
     .event-content {
-        flex-grow: 1; 
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
     }
 
     .event-actions {
-        margin-top: auto; 
+        margin-top: auto;
     }
 
     /* Limita a descrição a 3 linhas e adiciona "..." */
@@ -57,10 +61,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
-       
+
         -webkit-box-orient: vertical;
-        line-height: 1.5em; 
-        min-height: 4.5em; 
+        line-height: 1.5em;
+        min-height: 4.5em;
     }
 
     /* Adicionado para os links dos cards */
@@ -98,12 +102,13 @@
                     <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
                     <li>
                         <a href="../pages/notificacao.html" class="notification-nav-link">
-    <i class="fas fa-bell"></i>
-    <span>Notificação</span>
-    <span class="notification-badge" id="header-notification-badge" style="display: none;"></span>
-</a>
+                            <i class="fas fa-bell"></i>
+                            <span>Notificação</span>
+                            <span class="notification-badge" id="header-notification-badge"
+                                style="display: none;"></span>
+                        </a>
                     </li>
-                    
+
                     <li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
                     <li><a href="../events/eventos.html" class="active"><i class="fas fa-calendar"></i> Eventos</a></li>
                     <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
@@ -148,15 +153,16 @@
             </div>
             <form class="modal-form">
                 <div class="input-group">
-            <label for="eventName">Nome do Evento</label>
-            <input type="text" id="eventName" placeholder="Digite o nome do evento" required maxlength="20">
-            <small id="eventName-char-counter">0/20</small>
-        </div>
-        <div class="input-group">
-            <label for="eventLocation">Local</label>
-            <input type="text" id="eventLocation" placeholder="Digite o local do evento" required maxlength="40">
-            <small id="eventLocation-char-counter">0/40</small>
-        </div>
+                    <label for="eventName">Nome do Evento</label>
+                    <input type="text" id="eventName" placeholder="Digite o nome do evento" required maxlength="20">
+                    <small id="eventName-char-counter">0/20</small>
+                </div>
+                <div class="input-group">
+                    <label for="eventLocation">Local</label>
+                    <input type="text" id="eventLocation" placeholder="Digite o local do evento" required
+                        maxlength="40">
+                    <small id="eventLocation-char-counter">0/40</small>
+                </div>
                 <div class="input-group">
                     <label>Data e Hora</label>
                     <div class="date-time-inputs">
@@ -169,8 +175,116 @@
                     <textarea id="eventDescription" placeholder="Descreva o evento" required></textarea>
                 </div>
                 <div class="input-group">
-                    <label for="eventTags">Tags (separadas por vírgula)</label>
-                    <input type="text" id="eventTags" placeholder="Ex: Música, Arte, Esportes">
+                    <label>Tags do Evento (selecione uma ou mais)</label>
+                    <div class="tag-selection-container">
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Futebol"><span
+                                class="hobby-name">Futebol</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Basquete"><span
+                                class="hobby-name">Basquete</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Vôlei"><span
+                                class="hobby-name">Vôlei</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Corrida"><span
+                                class="hobby-name">Corrida</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Ciclismo"><span
+                                class="hobby-name">Ciclismo</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Natação"><span
+                                class="hobby-name">Natação</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Skate"><span
+                                class="hobby-name">Skate</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Artes Marciais"><span class="hobby-name">Artes Marciais</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Tênis"><span
+                                class="hobby-name">Tênis</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Handebol"><span
+                                class="hobby-name">Handebol</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Yoga"><span
+                                class="hobby-name">Yoga</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Academia"><span
+                                class="hobby-name">Academia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Desenho"><span
+                                class="hobby-name">Desenho</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Pintura"><span
+                                class="hobby-name">Pintura</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Fotografia"><span
+                                class="hobby-name">Fotografia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Dança"><span
+                                class="hobby-name">Dança</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Escultura"><span
+                                class="hobby-name">Escultura</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Arte Digital"><span
+                                class="hobby-name">Arte Digital</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Teatro"><span
+                                class="hobby-name">Teatro</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Caligrafia"><span
+                                class="hobby-name">Caligrafia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Cerâmica"><span
+                                class="hobby-name">Cerâmica</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Ouvir música"><span
+                                class="hobby-name">Ouvir música</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Tocar instrumento"><span class="hobby-name">Tocar instrumento</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Cantar"><span
+                                class="hobby-name">Cantar</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Shows"><span
+                                class="hobby-name">Shows</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Produção Musical"><span class="hobby-name">Produção Musical</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Compor"><span
+                                class="hobby-name">Compor</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="DJing"><span
+                                class="hobby-name">DJing</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Colecionar Discos"><span class="hobby-name">Colecionar Discos</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Programação"><span
+                                class="hobby-name">Programação</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Jogos"><span
+                                class="hobby-name">Jogos</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Robótica"><span
+                                class="hobby-name">Robótica</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Design"><span
+                                class="hobby-name">Design</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Edição de Vídeo"><span class="hobby-name">Edição de Vídeo</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Streaming"><span
+                                class="hobby-name">Streaming</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Montagem de PC"><span class="hobby-name">Montagem de PC</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Cibersegurança"><span class="hobby-name">Cibersegurança</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Filmes"><span
+                                class="hobby-name">Filmes</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Séries"><span
+                                class="hobby-name">Séries</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Animes"><span
+                                class="hobby-name">Animes</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Livros"><span
+                                class="hobby-name">Livros</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Quadrinhos/Mangás"><span class="hobby-name">Quadrinhos/Mangás</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Ficção Científica"><span class="hobby-name">Ficção Científica</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Fantasia"><span
+                                class="hobby-name">Fantasia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Poesia"><span
+                                class="hobby-name">Poesia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Culinária"><span
+                                class="hobby-name">Culinária</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Viagens"><span
+                                class="hobby-name">Viagens</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Idiomas"><span
+                                class="hobby-name">Idiomas</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Voluntariado"><span
+                                class="hobby-name">Voluntariado</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Jardinagem"><span
+                                class="hobby-name">Jardinagem</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Acampar"><span
+                                class="hobby-name">Acampar</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Astronomia"><span
+                                class="hobby-name">Astronomia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags"
+                                value="Animais de Estimação"><span class="hobby-name">Animais de
+                                Estimação</span></label>
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="event-btn secondary close-modal-btn">Cancelar</button>
@@ -179,18 +293,18 @@
             </form>
         </div>
     </div>
-<div id="mobile-bottom-nav">
-    <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
-    <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
-    <a href="../friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
-    <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
-    <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
-</div>
+    <div id="mobile-bottom-nav">
+        <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
+        <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
+        <a href="../friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
+        <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
+        <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
+    </div>
     <script src="eventos.js"></script>
     <script src="../config/darkmode.js"></script>
     <script src="../config/global.js" defer></script>
     <script src="../config/global-notifications.js" defer></script>
-     <script src="../config/global-modals.js"></script>
+    <script src="../config/global-modals.js"></script>
 </body>
 
 </html>
