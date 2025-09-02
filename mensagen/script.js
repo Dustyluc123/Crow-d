@@ -181,27 +181,21 @@
     selectedConversationId = conversationId;
     markActiveConversation(conversationId);
 
-    // garante perfil (se não veio)
     if (!peerProfile && peerUid) {
       try { peerProfile = await getUserProfile(peerUid); } catch {}
     }
 
-    // (re)pega os elementos do header do chat AGORA
     const { chatNameEl, chatAvatarEl, chatStatusEl, chatMessagesEl } = getChatHeaderEls();
 
-    // header do chat (só se existirem no DOM)
     if (chatNameEl)   chatNameEl.textContent = (peerProfile?.displayName || 'Conversando');
     if (chatAvatarEl) chatAvatarEl.src = (peerProfile?.photoURL || '../img/Design sem nome2.png');
     if (chatStatusEl) chatStatusEl.innerHTML = `<span class="status-badge"></span> disponível`;
 
-    // mobile: mostra chat e esconde header global (via body.chat-open)
     if (feedEl) feedEl.classList.add('chat-active');
     setChatOpen(true);
 
-    // limpa listener anterior
     if (typeof messagesUnsub === 'function' && messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
 
-    // ler mensagens em tempo real
     const { db } = ensureFirebase();
     const msgRef = db.collection('conversations').doc(conversationId).collection('messages').orderBy('createdAt','asc');
 
@@ -210,7 +204,6 @@
     }
 
     messagesUnsub = msgRef.onSnapshot((snap) => {
-      // revalida o container a cada tick (em caso de hot-swap de DOM)
       const { chatMessagesEl: container } = getChatHeaderEls();
       if (!container) return;
 
@@ -222,8 +215,16 @@
       snap.forEach(doc => {
         const m = doc.data();
         const isMine = m.senderId === currentUser.uid;
+        
+        // *** ALTERAÇÃO PRINCIPAL AQUI: Adiciona o botão de apagar se a mensagem for sua ***
+        const deleteButtonHTML = isMine ? `
+            <button class="message-delete-btn" data-message-id="${doc.id}" title="Apagar mensagem">
+                <i class="fas fa-trash"></i>
+            </button>` : '';
+
         frags.push(`
-          <div class="message ${isMine ? 'message-sent' : 'message-received'}" data-message-id="${doc.id}">
+          <div class="message ${isMine ? 'message-sent' : 'message-received'}">
+            ${deleteButtonHTML}
             <div class="message-content">${htmlEscape(m.text || '')}</div>
             <span class="message-time">${m.createdAt ? fmtTime(m.createdAt) : ''}</span>
           </div>
@@ -237,16 +238,12 @@
       if (container) container.innerHTML = '<div class="error-message">Erro ao ler mensagens.</div>';
     });
   }
-
-  // cria (ou reutiliza) conversa 1–1 e abre
+  
   async function startOrOpenConversationWith(otherUid){
     const { db } = ensureFirebase();
-
-    // procura conversa existente
     const snap = await db.collection('conversations')
       .where('participants','array-contains', currentUser.uid)
       .get();
-
     let found = null;
     snap.forEach(d => {
       const data = d.data() || {};
@@ -255,9 +252,7 @@
         found = { id: d.id, ...data };
       }
     });
-
     if (!found) {
-      // cria nova
       const ref = await db.collection('conversations').add({
         participants: [currentUser.uid, otherUid],
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -266,28 +261,22 @@
       });
       found = { id: ref.id, participants:[currentUser.uid, otherUid] };
     }
-
     const prof = await getUserProfile(otherUid);
     await openConversation(found.id, otherUid, prof);
   }
 
-  // ====================== Enviar ======================
   async function sendMessage(){
     const text = chatInput?.value.trim();
     if (!text || !selectedConversationId) return;
-
     const { db } = ensureFirebase();
-
     const msg = {
       text,
       senderId: currentUser.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-
     try {
       const convRef = db.collection('conversations').doc(selectedConversationId);
       const msgRef  = convRef.collection('messages').doc();
-
       const batch = db.batch();
       batch.set(msgRef, msg);
       batch.update(convRef, {
@@ -295,7 +284,6 @@
         lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       await batch.commit();
-
       chatInput.value = '';
       chatInput.focus();
     } catch (e) {
@@ -304,7 +292,6 @@
     }
   }
 
-  // ====================== Sugestões ======================
   const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
   const countCommon = (a, b) => {
     const A = new Set(normalizeHobbies(a)); const B = new Set(normalizeHobbies(b)); let n=0; for (const x of A) if (B.has(x)) n++; return n;
@@ -344,32 +331,21 @@
 
   async function loadSuggestions(){
     const { db } = ensureFirebase();
-
     try {
-      // amigos do usuário
       const fSnap = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-
       const myHobbies = await getUserHobbies(db, currentUser.uid);
       const items = [];
-
       for (const d of fSnap.docs) {
         const data = d.data() || {};
         if (!isAcceptedFriendData(data)) continue;
-
         const friendUid = data.friendId || data.uid || d.id;
         if (!friendUid || friendUid === currentUser.uid) continue;
-
         const profile = await getUserProfile(friendUid);
         const friendHobbies = await getUserHobbies(db, friendUid);
         const common = countCommon(myHobbies, friendHobbies);
-
         items.push({ uid: friendUid, name: profile.displayName, photo: profile.photoURL, common });
       }
-
-      // Ordena por hobbies em comum
       items.sort((a,b) => b.common - a.common);
-
-      // Render
       if (suggestionsList) suggestionsList.innerHTML = '';
       const tpl = $('#suggestion-template');
       items.slice(0, 8).forEach(it => {
@@ -379,18 +355,14 @@
         const name = $('.suggestion-name', node);
         const sub  = $('.suggestion-sub', node);
         const btn  = $('.start-chat-btn', node);
-
         if (img)  img.src = it.photo || '../img/Design sem nome2.png';
         if (name) name.textContent = it.name || 'Usuário';
         if (sub)  sub.textContent  = `${it.common} ${it.common===1?'hobby em comum':'hobbies em comum'}`;
-
         const open = (e) => { e.preventDefault(); startOrOpenConversationWith(it.uid); };
         if (link) link.addEventListener('click', open);
         if (btn)  btn.addEventListener('click', open);
-
         if (suggestionsList) suggestionsList.appendChild(node);
       });
-
       if (!items.length && suggestionsList) {
         suggestionsList.innerHTML = '<div class="no-conversations">Sem sugestões por enquanto.</div>';
       }
@@ -405,7 +377,6 @@
     await loadSuggestions();
   }
 
-  // ====================== Delete (conversa/mensagem) ======================
   async function deleteConversation(conversationId){
     const { db } = ensureFirebase();
     try {
@@ -435,24 +406,36 @@
     try {
       await db.collection('conversations').doc(selectedConversationId)
               .collection('messages').doc(messageId).delete();
-      toast('Mensagem excluída.', 'success');
+      // Não precisa de toast, a mensagem some da tela
     } catch (e) {
       console.error(e);
       toast('Não foi possível excluir a mensagem.', 'error');
     }
   }
 
-  // Delegação: qualquer .delete-btn
+  // Delegação para cliques em toda a página
   document.addEventListener('click', (e) => {
-    const del = e.target.closest('.delete-btn');
-    if (!del) return;
-    const convId = del.getAttribute('data-conversation-id');
-    const msgId  = del.getAttribute('data-message-id');
-    if (convId) { e.preventDefault(); deleteConversation(convId); }
-    else if (msgId) { e.preventDefault(); deleteMessage(msgId); }
+    // Procura por um botão de apagar mensagem
+    const deleteMsgBtn = e.target.closest('.message-delete-btn');
+    if (deleteMsgBtn) {
+        const messageId = deleteMsgBtn.dataset.messageId;
+        if (messageId && confirm('Tem certeza que quer apagar esta mensagem?')) {
+            deleteMessage(messageId);
+        }
+        return;
+    }
+    
+    // Procura por um botão de apagar conversa
+    const deleteConvBtn = e.target.closest('.delete-btn[data-conversation-id]');
+    if (deleteConvBtn) {
+        const conversationId = deleteConvBtn.dataset.conversationId;
+        if (conversationId && confirm('Tem certeza que quer apagar esta conversa?')) {
+            deleteConversation(conversationId);
+        }
+        return;
+    }
   });
 
-  // ====================== UI / Mobile ======================
   backBtn?.addEventListener('click', () => {
     if (feedEl) feedEl.classList.remove('chat-active');
     setChatOpen(false);
@@ -465,7 +448,6 @@
     if (avatar) avatar.src = '../img/Design sem nome2.png';
   });
 
-  // emojis
   emojiBtn?.addEventListener('click', () => {
     if (!emojiPicker) return;
     emojiPicker.style.display = (emojiPicker.style.display === 'none' || !emojiPicker.style.display) ? 'block' : 'none';
@@ -481,20 +463,17 @@
     chatInput.selectionStart = chatInput.selectionEnd = start + emoji.length;
   });
 
-  // enviar
   sendBtn?.addEventListener('click', sendMessage);
   chatInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
-  // logout
   logoutBtn?.addEventListener('click', async (e) => {
     e.preventDefault();
     try { const { auth } = ensureFirebase(); await auth.signOut(); location.reload(); }
     catch (err) { console.error(err); toast('Erro ao sair.', 'error'); }
   });
 
-  // ====================== Auth Boot ======================
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const { auth } = ensureFirebase();
@@ -506,11 +485,8 @@
           return;
         }
         currentUser = user;
-
-        // (opcional) atualiza link de perfil
         const profileLink = document.querySelector('.profile-link');
         if (profileLink) profileLink.href = `../pages/user.html?uid=${encodeURIComponent(user.uid)}`;
-
         await loadConversations();
       });
     } catch (e) {
