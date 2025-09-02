@@ -207,3 +207,59 @@ body.dark-mode ::-webkit-scrollbar-thumb{ background-color:#555; }
     height: calc(100vh - 60px) !important; /* 60px = mobile bottom nav */
   }
 }
+/* Cor de fundo mais suave para o modo claro */
+body {
+  background-color: #f0f2f5; /* Um cinza muito claro e suave */
+}
+
+/* Garante que o container principal se destaque */
+.messages-container {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+/* === ESTILOS PARA O BOTÃO DE APAGAR MENSAGEM === */
+
+/* A linha da mensagem precisa ter posicionamento relativo */
+.message {
+  position: relative;
+  align-items: center; /* Alinha a lixeira com o balão */
+}
+
+/* Estilo da lixeira */
+.message-delete-btn {
+  position: absolute;
+  left: -35px; /* Posição à esquerda do balão */
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  color: var(--light-text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.5; /* Sempre visível, mas com transparência */
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Efeito ao passar o mouse */
+.message.sent:hover .message-delete-btn {
+  opacity: 1; /* Opacidade total no hover da mensagem */
+}
+
+.message-delete-btn:hover {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+/* Ajuste para modo escuro */
+body.dark-mode .message-delete-btn {
+  color: var(--dark-text-secondary);
+}
+body.dark-mode .message-delete-btn:hover {
+  background-color: #ff4d4d;
+  color: white;
+}
