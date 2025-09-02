@@ -246,48 +246,94 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- FUNÇÕES EXISTENTES (sem alteração) ---
+// Em script.js
+function createGroupCard(group, isMember) {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.dataset.groupId = group.id;
+    const isOwner = group.createdBy === currentUser.uid;
 
-    // Criar Grupo
-    createGroupForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const groupName = document.getElementById('groupName').value.trim();
-        const groupDescription = document.getElementById('groupDescription').value.trim();
-        const tagsInput = document.getElementById('groupTags').value;
-        const groupTags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
-        const isPrivate = isPrivateCheckbox.checked;
-        const password = document.getElementById('groupPassword').value;
+    // --- LÓGICA DO "VER MAIS" PARA A DESCRIÇÃO ---
+    const DESCRIPTION_LIMIT = 100; // Limite de 100 caracteres
+    const fullDescription = group.description;
+    let descriptionHTML;
+    let needsToggleButton = fullDescription.length > DESCRIPTION_LIMIT;
 
-        if (!groupName || !groupDescription) {
-            alert("Por favor, preencha o nome e a descrição.");
-            return;
+    if (needsToggleButton) {
+        // Se precisar do botão, mostramos a descrição truncada inicialmente
+        descriptionHTML = `<p class="group-description">${fullDescription}</p>
+                           <button class="toggle-description-btn">Ver mais</button>`;
+    } else {
+        // Se não, mostramos a descrição completa
+        descriptionHTML = `<p class="group-description expanded">${fullDescription}</p>`;
+    }
+    // --- FIM DA LÓGICA ---
+
+    let actionsHTML = '';
+    if (isMember) {
+        actionsHTML = `
+            <button class="group-btn chat-btn"><i class="fas fa-comment"></i> Entrar no Chat</button>
+            <button class="group-btn view-members-btn"><i class="fas fa-users"></i> Ver Membros</button>
+            <button class="group-btn share-group-btn"><i class="fas fa-share-alt"></i> Compartilhar</button>
+        `;
+        if (isOwner) {
+            actionsHTML += `<button class="group-btn danger delete-group-btn"><i class="fas fa-trash"></i> Excluir Grupo</button>`;
+        } else {
+            actionsHTML += `<button class="group-btn secondary leave-btn"><i class="fas fa-sign-out-alt"></i> Sair</button>`;
         }
+    } else {
+        actionsHTML = `<button class="group-btn join-btn"><i class="fas fa-plus"></i> Participar</button>`;
+    }
 
-        if (isPrivate && !password) {
-            alert("Por favor, digite uma senha para o grupo privado.");
-            return;
+    // Monta o HTML do card, agora com o descriptionHTML dinâmico
+    card.innerHTML = `
+        <div class="group-header">
+            <h3>${group.name}</h3>
+            <div class="group-members">
+                <i class="fas fa-users"></i> ${group.members.length}
+            </div>
+        </div>
+        <div class="group-content">
+            ${descriptionHTML}
+            <div class="group-tags">
+                ${group.tags.map(tag => `<span class="hobby-tag">${tag}</span>`).join('')}
+            </div>
+            <div class="group-actions">
+                ${actionsHTML}
+            </div>
+        </div>
+    `;
+
+    // --- ADICIONA O EVENTO DE CLIQUE AO BOTÃO "VER MAIS" ---
+    if (needsToggleButton) {
+        const toggleBtn = card.querySelector('.toggle-description-btn');
+        const descriptionElement = card.querySelector('.group-description');
+        
+        toggleBtn.addEventListener('click', () => {
+            const isExpanded = descriptionElement.classList.toggle('expanded');
+            toggleBtn.textContent = isExpanded ? 'Ver menos' : 'Ver mais';
+        });
+    }
+    // --- FIM DA ADIÇÃO DO EVENTO ---
+
+    // Adiciona os eventos aos outros botões (código existente)
+    if (isMember) {
+        card.querySelector('.chat-btn').addEventListener('click', () => {
+            window.location.href = `chat.html?groupId=${group.id}`;
+        });
+        card.querySelector('.view-members-btn').addEventListener('click', () => viewMembers(group.id));
+        card.querySelector('.share-group-btn').addEventListener('click', () => openShareModal(group.id, group.name));
+        
+        if (isOwner) {
+            card.querySelector('.delete-group-btn').addEventListener('click', () => deleteGroup(group.id));
+        } else {
+            card.querySelector('.leave-btn').addEventListener('click', () => leaveGroup(group.id));
         }
-
-        try {
-            await db.collection('groups').add({
-                name: groupName,
-                description: groupDescription,
-                tags: groupTags,
-                members: [currentUser.uid],
-                createdBy: currentUser.uid,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                isPrivate: isPrivate,
-                password: password
-            });
-
-            createGroupModal.style.display = 'none';
-            createGroupForm.reset();
-            loadGroups();
-        } catch (error) {
-            console.error("Erro ao criar grupo:", error);
-            alert("Ocorreu um erro ao criar o grupo.");
-        }
-    });
+    } else {
+        card.querySelector('.join-btn').addEventListener('click', () => joinGroup(group.id, group.isPrivate, group.password));
+    }
+    return card;
+}
 
    async function joinGroup(groupId, isPrivate, password) {
         if (isPrivate) {

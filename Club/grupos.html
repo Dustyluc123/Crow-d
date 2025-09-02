@@ -12,6 +12,53 @@
 </head>
 <body>
     <style>
+        /* Em grupos.html, dentro da tag <style> */
+
+/* 1. Truncar o NOME do grupo com "..." se for muito longo */
+.group-header h3 {
+    white-space: nowrap;      /* Impede que o texto quebre a linha */
+    overflow: hidden;         /* Esconde o que ultrapassar o limite */
+    text-overflow: ellipsis;  /* Adiciona "..." no final */
+    max-width: 90%;           /* Garante que haja espaço para o contador de membros */
+}
+
+/* 2. Estilos para a DESCRIÇÃO do grupo (estado inicial e expandido) */
+.group-description {
+    line-height: 1.5em; /* Define uma altura de linha consistente */
+    max-height: 4.5em;  /* Altura máxima para 3 linhas (1.5em * 3) */
+    overflow: hidden;   /* Esconde o resto do texto */
+    transition: max-height 0.3s ease-out; /* Animação suave */
+    position: relative; /* Necessário para o efeito de degradê */
+}
+
+.group-description.expanded {
+    max-height: 500px; /* Um valor alto para garantir que todo o texto apareça */
+}
+
+/* 3. Efeito de degradê para indicar que há mais texto (opcional, mas recomendado) */
+.group-description:not(.expanded)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1.5em; /* Altura de uma linha */
+    background: linear-gradient(to bottom, transparent, var(--light-bg-secondary));
+}
+body.dark-mode .group-description:not(.expanded)::after {
+    background: linear-gradient(to bottom, transparent, var(--dark-bg-secondary));
+}
+
+/* 4. Estilo para o botão "Ver mais" / "Ver menos" */
+.toggle-description-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: bold;
+    padding: 5px 0 0 0; /* Espaçamento superior */
+    display: block; /* Garante que o botão ocupe sua própria linha */
+}
         .group-btn.danger {
             background-color: #dc3545; /* Vermelho */
             color: white;
@@ -19,6 +66,61 @@
         .group-btn.danger:hover {
             background-color: #c82333; /* Vermelho mais escuro */
         }
+        /* Estilo para o container das tags no modal */
+.tag-selection-container {
+    max-height: 150px; /* Altura máxima antes de mostrar a barra de rolagem */
+    overflow-y: auto;  /* Barra de rolagem vertical */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    background-color: var(--light-bg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Espaço entre as tags */
+}
+
+body.dark-mode .tag-selection-container {
+    background-color: var(--dark-bg);
+}
+
+/* Estilo para cada opção de tag */
+.hobby-option {
+    display: inline-block;
+    margin: 0;
+    background-color: var(--light-bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+body.dark-mode .hobby-option {
+    background-color: var(--dark-bg-secondary);
+}
+
+.hobby-option:hover {
+    background-color: var(--border-color);
+}
+
+/* Esconde o checkbox real */
+.hobby-option input[type="checkbox"] {
+    display: none;
+}
+
+/* Estilo para o texto da tag */
+.hobby-option .hobby-name {
+    display: inline-block;
+    padding: 8px 15px;
+    font-size: 0.9em;
+}
+
+/* Estilo para a tag quando selecionada */
+.hobby-option input[type="checkbox"]:checked + .hobby-name {
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    border-color: var(--primary-color);
+}
     </style>
     <header>
         <div class="logo">
@@ -99,8 +201,30 @@
                     <textarea id="groupDescription" placeholder="Descreva o propósito do grupo" required></textarea>
                 </div>
                 <div class="input-group">
-                    <label for="groupTags">Tags (separadas por vírgula)</label>
-                    <input type="text" id="groupTags" placeholder="Ex: Música, Arte, Esportes">
+                    <label>Tags do Grupo (selecione uma ou mais)</label>
+                    <div class="tag-selection-container">
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Futebol"><span class="hobby-name">Futebol</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Basquete"><span class="hobby-name">Basquete</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Vôlei"><span class="hobby-name">Vôlei</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Corrida"><span class="hobby-name">Corrida</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Ciclismo"><span class="hobby-name">Ciclismo</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Natação"><span class="hobby-name">Natação</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Skate"><span class="hobby-name">Skate</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Artes Marciais"><span class="hobby-name">Artes Marciais</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Tênis"><span class="hobby-name">Tênis</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Handebol"><span class="hobby-name">Handebol</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Yoga"><span class="hobby-name">Yoga</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Academia"><span class="hobby-name">Academia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Desenho"><span class="hobby-name">Desenho</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Pintura"><span class="hobby-name">Pintura</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Fotografia"><span class="hobby-name">Fotografia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Dança"><span class="hobby-name">Dança</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Escultura"><span class="hobby-name">Escultura</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Arte Digital"><span class="hobby-name">Arte Digital</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Teatro"><span class="hobby-name">Teatro</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Caligrafia"><span class="hobby-name">Caligrafia</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="group-tags" value="Cerâmica"><span class="hobby-name">Cerâmica</span></label>
+                        </div>
                 </div>
                 
                 <div class="input-group switch-container">
