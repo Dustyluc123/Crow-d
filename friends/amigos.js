@@ -1,4 +1,4 @@
-// scripts.js — Amigos (corrigido + Instagram Notes - Apenas Texto)
+// scripts.js — Amigos (corrigido + Instagram Notes - Apenas Texto + Realtime integrado)
 (function () {
   // ---------------------- Utilidades ----------------------
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -53,7 +53,6 @@
     leftSidebarToggle: () => $("#left-sidebar-toggle"),
     leftSidebar: () => $(".left-sidebar"),
 
-    // Notas (simplificado)
     notesSection: () => $(".notes-section"),
     notesBar: () => $("#notesBar"),
     addNoteBtn: () => $("#addNoteBtn"),
@@ -70,6 +69,10 @@
   let lastVisibleFriend = null;
   let isFetchingFriends = false;
   const FRIENDS_PER_PAGE = 4;
+  
+  // ---> ADIÇÃO: Variáveis para o controle do listener em tempo real
+  let noteListeners = []; // Armazena as funções para cancelar os listeners
+  let activeNotesCache = {}; // Cache local para guardar as notas e evitar buscas repetidas
 
   // ---------------------- Hobbies helpers ----------------------
   const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
@@ -131,14 +134,15 @@ async function loadFriendsList(auth, db) {
         if (loadingIndicator) loadingIndicator.remove();
         
         if (acceptedFriendIds.length === 0) {
+            _friendsCache = []; // Limpa o cache se não tiver amigos
             grid.innerHTML = `<div class="no-friends">Nenhum amigo encontrado.</div>`;
             return;
         }
 
-        _friendsCache = [];
         const friendPromises = acceptedFriendIds.map(id => db.collection("users").doc(id).get());
         const friendDocs = await Promise.all(friendPromises);
-
+        
+        _friendsCache = []; // Reseta o cache antes de preencher
         friendDocs.forEach(udoc => {
             if (!udoc.exists) return;
             const u = udoc.data() || {};
@@ -161,7 +165,7 @@ async function loadFriendsList(auth, db) {
     const hobbiesHtml = hasHobbies ? hobbies.slice(0,4).map(h => `<span class="hobby-tag">${htmlEscape(h)}</span>`).join("") : `<span class="hobby-tag">Sem hobbies</span>`;
     return `
       <div class="friend-card" data-uid="${htmlEscape(uid)}">
-        <img class="friend-avatar" src="${htmlEscape(photoURL)}" alt="${htmlEscape(displayName)}">
+        <img class="friend-avatar" src="${htmlEscape(photoURL || '../img/corvo.png')}" alt="${htmlEscape(displayName)}">
         <div class="friend-info">
           <h3 class="friend-name">${htmlEscape(displayName)}</h3>
           <div class="friend-hobbies">${hobbiesHtml}</div>
@@ -201,23 +205,16 @@ async function loadFriendsList(auth, db) {
       const usersSnap = await db.collection('users').get();
       const myHobbies = normalizeHobbies(currentUserProfile?.hobbies);
 
-      const exclusion = new Set([me.uid]);
-      const [friendsSnap, sentSnap, recvSnap] = await Promise.all([
-        db.collection('users').doc(me.uid).collection('friends').get(),
-        db.collection('friendRequests').where('from', '==', me.uid).get(),
-        db.collection('friendRequests').where('to', '==', me.uid).get()
-      ]);
-      friendsSnap.forEach(doc => exclusion.add(doc.id));
+      const exclusion = new Set([me.uid, ..._friendsCache.map(f => f.uid)]);
+      const sentSnap = await db.collection('friendRequests').where('from', '==', me.uid).get();
       sentSnap.forEach(doc => exclusion.add(doc.data().to));
-      recvSnap.forEach(doc => exclusion.add(doc.data().from));
 
       const scored = [];
       usersSnap.forEach(d => {
         if (exclusion.has(d.id)) return;
         const u = d.data() || {};
-        const candidateH = normalizeHobbies(u.hobbies);
-        const common = countCommon(myHobbies, candidateH);
-        if (common > 0) scored.push({ id: d.id, nickname: u.nickname || u.displayName || 'Usuário', photoURL: u.photoURL || null, common });
+        const common = countCommon(myHobbies, normalizeHobbies(u.hobbies));
+        if (common > 0) scored.push({ id: d.id, nickname: u.nickname || 'Usuário', photoURL: u.photoURL, common });
       });
 
       scored.sort((a, b) => b.common - a.common);
@@ -254,7 +251,6 @@ async function loadFriendsList(auth, db) {
     });
   }
 
-  // ---------------------- Solicitações de amizade ----------------------
   async function createFriendRequest(auth, db, toUid) {
     const me = auth.currentUser; if (!me) throw new Error('É preciso estar logado.');
     if (toUid === me.uid) throw new Error('Você não pode enviar solicitação para si mesmo.');
@@ -264,10 +260,7 @@ async function loadFriendsList(auth, db) {
     if (!existing.empty) throw new Error('Já há uma solicitação pendente para este usuário.');
 
     await db.collection('friendRequests').add({
-      from: me.uid,
-      to: toUid,
-      status: 'pending',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      from: me.uid, to: toUid, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
 
@@ -280,26 +273,19 @@ async function loadFriendsList(auth, db) {
     const modal = refs.noteModal();
     if (!addBtn || !modal) return;
 
-    // Abrir/fechar modal
     addBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
     refs.noteCloseBtns().forEach(b => b.addEventListener('click', () => { modal.style.display = 'none'; }));
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-    // Postar
-    const submit = refs.noteSubmitBtn();
-    submit?.addEventListener('click', async () => {
+    refs.noteSubmitBtn()?.addEventListener('click', async () => {
       try {
         const { auth, db } = ensureFirebase();
         const me = auth.currentUser; if (!me) throw new Error('Faça login.');
-
         const text = (refs.noteTextArea()?.value || '').trim();
         if (!text) { toast('Escreva algo.', 'error'); return; }
-        
         await postTextNote(db, me.uid, text);
-        
         if (refs.noteTextArea()) refs.noteTextArea().value = '';
         modal.style.display = 'none';
-        await loadNotesBar();
         toast('Nota postada!', 'success');
       } catch (e) {
         console.error(e); toast(e?.message || 'Não foi possível postar a nota.', 'error');
@@ -314,61 +300,65 @@ async function loadFriendsList(auth, db) {
       type: 'text', text: trimmed, createdAt: firebase.firestore.FieldValue.serverTimestamp(), expiresAt
     });
   }
+  
+  // ---> NOVA FUNÇÃO: Configura os listeners em tempo real para as notas
+  function setupRealtimeNotesListener() {
+    const { auth, db } = ensureFirebase();
+    const me = auth.currentUser;
+    if (!me) return;
 
+    // Cancela listeners antigos para evitar duplicação e vazamento de memória
+    noteListeners.forEach(unsubscribe => unsubscribe());
+    noteListeners = [];
+
+    const userIdsToListen = [me.uid, ..._friendsCache.map(f => f.uid)];
+
+    userIdsToListen.forEach(uid => {
+        const query = db.collection('users').doc(uid).collection('notes')
+            .where('expiresAt', '>', firebase.firestore.Timestamp.now())
+            .orderBy('expiresAt', 'desc')
+            .limit(1);
+
+        const unsubscribe = query.onSnapshot(async snapshot => {
+            if (snapshot.empty) {
+                delete activeNotesCache[uid];
+            } else {
+                const doc = snapshot.docs[0];
+                activeNotesCache[uid] = { id: doc.id, ownerId: uid, ...doc.data() };
+            }
+            // Chama a função de renderização para atualizar a tela
+            await loadNotesBar(); 
+        }, err => {
+            console.error(`Erro ao escutar notas de ${uid}:`, err);
+        });
+        noteListeners.push(unsubscribe);
+    });
+  }
+
+  // ---> FUNÇÃO ANTIGA MANTIDA, agora usada para renderizar os dados do cache
   async function loadNotesBar() {
       const bar = refs.notesBar();
       if (!bar) return;
 
-      bar.innerHTML = `<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando notas...</div>`;
-
       const { auth, db } = ensureFirebase();
       const me = auth.currentUser;
       if (!me) { bar.innerHTML = ''; return; }
+      
+      const userIdsInOrder = [me.uid, ..._friendsCache.map(f => f.uid)];
+      
+      const profilePromises = userIdsInOrder.map(uid => fetchUserProfile(db, uid));
+      const profiles = await Promise.all(profilePromises);
 
-      const now = Date.now();
-
-      const getLatestNote = async (uid) => {
-          try {
-              const snap = await db.collection('users').doc(uid).collection('notes').orderBy('createdAt', 'desc').limit(1).get();
-              if (snap.empty) return null;
-              const doc = snap.docs[0];
-              const n = doc.data();
-              const exp = n.expiresAt?.toDate?.() || new Date(0);
-              return exp.getTime() > now ? { id: doc.id, ownerId: uid, ...n } : null;
-          } catch (e) {
-              if (e?.code === 'permission-denied') return null;
-              throw e;
-          }
-      };
-
-      const myProfile = await fetchUserProfile(db, me.uid);
-      const myNote = await getLatestNote(me.uid);
-
-      let friendIds = _friendsCache.map(f => f.uid);
-      if (friendIds.length === 0) {
-          const fSnap = await db.collection('users').doc(me.uid).collection('friends').get();
-          friendIds = fSnap.docs.map(d => d.id);
-      }
-
-      const friendProfiles = await Promise.all(friendIds.map(uid => fetchUserProfile(db, uid)));
-      const friendNotes = await Promise.all(friendIds.map(uid => getLatestNote(uid)));
-
-      const tiles = [
-          noteTileHtml({
-              ownerId: myProfile.uid,
-              ownerName: 'Você',
-              photoURL: myProfile.photoURL || '../img/Design sem nome2.png',
-              note: myNote,
-              isSelf: true
-          }),
-          ...friendNotes.map((note, i) => note ? noteTileHtml({
-              ownerId: friendProfiles[i].uid,
-              ownerName: friendProfiles[i].nickname,
-              photoURL: friendProfiles[i].photoURL || '../img/Design sem nome2.png',
-              note,
-              isSelf: false
-          }) : null)
-      ];
+      const tiles = profiles.map(profile => {
+          const note = activeNotesCache[profile.uid]; // Pega a nota do cache
+          return noteTileHtml({
+              ownerId: profile.uid,
+              ownerName: profile.uid === me.uid ? 'Você' : profile.nickname,
+              photoURL: profile.photoURL || '../img/Design sem nome2.png',
+              note: note, // note pode ser undefined se não houver nota, a função lida com isso
+              isSelf: profile.uid === me.uid
+          });
+      });
 
       bar.innerHTML = tiles.filter(Boolean).join('') || `<div class="no-suggestions">Sem notas no momento.</div>`;
       wireNoteTileActions();
@@ -376,9 +366,12 @@ async function loadFriendsList(auth, db) {
 
   function noteTileHtml({ ownerId, ownerName, photoURL, note, isSelf }) {
     const avatar = `<div class="note-avatar"><img src="${htmlEscape(photoURL)}" alt="${htmlEscape(ownerName)}"></div>`;
-    let bubble = `<div class="note-bubble muted">Sem nota</div>`;
+    let bubble = isSelf && !note 
+      ? `<div class="note-bubble muted">+</div>` 
+      : `<div class="note-bubble muted"></div>`;
+
     if (note && note.type === 'text') {
-      bubble = `<div class="note-bubble">${htmlEscape(String(note.text || '').slice(0, NOTE_MAX_LEN))}</div>`;
+      bubble = `<div class="note-bubble">${htmlEscape(String(note.text || ''))}</div>`;
     }
     const del = isSelf && note ? `<button class="note-del" data-note-owner="${htmlEscape(ownerId)}" data-note-id="${htmlEscape(note.id)}" title="Apagar nota">×</button>` : '';
 
@@ -397,8 +390,15 @@ async function loadFriendsList(auth, db) {
       const nameEl = tile.querySelector('.note-owner');
       const avatar = tile.querySelector('.note-avatar');
       const openProfile = () => window.location.href = `../pages/user.html?uid=${encodeURIComponent(uid)}`;
-      nameEl?.addEventListener('click', openProfile);
-      avatar?.addEventListener('click', openProfile);
+      
+      // Clique no avatar ou nome abre o modal de criação, SE for o próprio usuário e não tiver nota
+      if(uid === currentUser?.uid && !activeNotesCache[uid]) {
+        avatar?.addEventListener('click', () => refs.addNoteBtn()?.click());
+        nameEl?.addEventListener('click', () => refs.addNoteBtn()?.click());
+      } else {
+        avatar?.addEventListener('click', openProfile);
+        nameEl?.addEventListener('click', openProfile);
+      }
     });
 
     $$(".note-del").forEach(btn => {
@@ -411,7 +411,6 @@ async function loadFriendsList(auth, db) {
           const { db } = ensureFirebase();
           await db.collection('users').doc(owner).collection('notes').doc(id).delete();
           toast('Nota apagada.', 'success');
-          await loadNotesBar();
         } catch (err) { console.error(err); toast('Não foi possível apagar.', 'error'); }
       });
     });
@@ -439,30 +438,29 @@ async function loadFriendsList(auth, db) {
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
-        const grid = refs.gridAll(); if (grid) grid.innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`;
-        const sug = refs.suggestions(); if (sug) sug.innerHTML = `<div class="no-suggestions">Faça login para ver sugestões.</div>`;
-        const bar = refs.notesBar(); if (bar) bar.innerHTML = '';
+        // ---> ATUALIZAÇÃO: Limpa a UI e os listeners ao deslogar
+        noteListeners.forEach(unsubscribe => unsubscribe());
+        noteListeners = [];
+        activeNotesCache = {};
+        _friendsCache = [];
+        if (refs.gridAll()) refs.gridAll().innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`;
+        if (refs.suggestions()) refs.suggestions().innerHTML = `<div class="no-suggestions">Faça login para ver sugestões.</div>`;
+        if (refs.notesBar()) refs.notesBar().innerHTML = '';
         return;
       }
-
       currentUser = user;
 
       try { const snap = await db.collection('users').doc(user.uid).get(); currentUserProfile = snap.exists ? (snap.data() || {}) : {}; }
       catch (e) { currentUserProfile = {}; }
-
+      
+      // Carrega amigos e sugestões como antes
       await loadFriendsList(auth, db);
       await loadSuggestions(auth, db);
-      await loadNotesBar();
       
-      setInterval(loadNotesBar, 60000);
+      // ---> ATUALIZAÇÃO: Em vez do setInterval, agora iniciamos o listener de tempo real
+      setupRealtimeNotesListener();
+      // Carrega a barra de notas uma vez no início
+      await loadNotesBar(); 
     });
-    
-    const loadMoreFriendsBtn = document.getElementById('load-more-friends');
-    if (loadMoreFriendsBtn) {
-        loadMoreFriendsBtn.addEventListener('click', () => {
-            const { auth, db } = ensureFirebase();
-            loadFriendsList(auth, db);
-        });
-    }
   });
 })();
