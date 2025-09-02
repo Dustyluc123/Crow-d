@@ -1,20 +1,70 @@
-resolver bugs
-definir quais bugs estao acontecendo 
-Emoji facil no home
-fazer os hobbies que funciona igual # no post do indez 
-Resolver os problemas do Firebase plano basico
-Mudar a indentidade vizual do site para ter mais roxo mais e mais ipacato 
-fazer ser acessivo nos celulares com mais facilidade 
-app talvez(muito avancado)
 
-Inegociaveis 
 
-criar um habiende agradave no crow-d sempre pensando no usuarios
-para isso
-monitoriamento
-TERMOS DE USOS maior mais bem detalhados
-(pensar em jeitos de monitoral,com ia, com detecsao de palavras sla)
+index.html
+-post duplicado 
+chat.html
+ - Membros aparecendo de forma estranha no chat de grupos.
+- Mandar mensagem não funciona.
+salvos.html
+ - Não é possível republicar ou compartilhar.
+single-event.html
+ - Quebra de linha não funciona na bio do evento.
+eventos.html
+ - É possível criar eventos em datas passadas.
+- Limitar tamanho do texto de hobbies (com quebra de linha).
+notificao.html
+ - Notificação de evento chegou errada (marcado para dia 30, mas recebida como hoje).
+config.html
+ - Problema no Dark Mode.
+amigos.html
+- Erro ao adicionar nota.
+- Ao seguir alguém pelas sugestões, a pessoa some em vez de aparecer como pendente.
+- Botão para adicionar via nickname não abre (CSS problemático).
+- Clicar no perfil a partir de uma nota não leva ao perfil correto.
+- Botão 'ver mais' em sugestões de amigos não funciona.
+- Botão 'ver mais' em amigos mostra perfis em cima ao invés de embaixo.
+edit-profile.html
+ - Usuários relatam erro ao mudar foto (talvez bug só em produção).
+user.html
+ - Comentários duplicam ao abrir.
+- Post e repost com imagens não aparecem.
+mobile (geral)
+ - Botão de menu não funciona em todas as páginas (exceto index.html e amigos.html).
+responsividade (geral)
+ - CSS não está responsivo em todas as páginas.
+grupos.html
+- Limitar nome/descrição (com botão 'ver mais').
+- Criar página dedicada para visualizar grupo com mais detalhes.
+- Remover o 'alert' padrão ao excluir grupo e implementar confirmação adequada.
+n Melhorias Prioritárias para V2
 
-fazer os eventos serem mais importades 
-eventos por grupos
-eventos online(sla como)
+Área
+ Melhoria
+
+Sistema de E-mail
+ - Garantir que os e-mails não caiam no spam.
+- Implementar botão para reenviar verificação.
+Legal / Cadastro
+ - Inserir Termos de Uso & Política de Privacidade no fluxo de cadastro/login.
+Feed & Posts
+- Feed de Amigos (mostrar apenas posts de amigos).
+- Feed de Hobbies (personalizado por hobbies).
+- Hashtags de hobbies integradas ao feed.
+Gamificação
+ - Conquistas de perfil (ex.: 100 posts).
+Personalização Visual
+ - Novo tema com roxo mais forte.
+- Adicionar banner no perfil.
+Eventos Avançados
+- Eventos criados dentro de grupos.
+- Eventos próprios do usuário.
+- Eventos privados.
+- Eventos restritos apenas a amigos.
+Comentários Avançados
+- Respostas em comentários (thread infinita).
+- Comentários no feed mostrando post original.
+- Repost de comentários (texto/foto) como posts normais.
+Notificações
+ - Algumas notificações também devem ser enviadas por e-mail.
+Stories
+ - Publicações de 24h (texto/imagem curta, expiração automática).
