@@ -7,272 +7,211 @@
     <link rel="stylesheet" href="../css/global.css">
     <link rel="stylesheet" href="../home/home.css">
     <link rel="stylesheet" href="../home/page-styles.css">
-      <link rel="icon" type="image/png" href="../img/corvo.png">
+    <link rel="icon" type="image/png" href="../img/corvo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Estilos para a página de mensagens - Foco em Mobile */
-
-/* Garante que o layout ocupe a tela inteira sem rolar */
-html, body {
-    height: 100%;
-    overflow: hidden;
-}
-
-.main-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.feed {
-    flex-grow: 1;
-    display: flex;
-    position: relative; /* Essencial para a animação de deslize */
-    overflow: hidden;
-}
-
-/* Container que segura as duas colunas (conversas e chat) */
-.messages-container {
-    display: flex;
-    width: 200%; /* O dobro da largura para conter as duas telas */
-    height: 100%;
-    transition: transform 0.3s ease-in-out; /* Animação de deslize */
-}
-
-/* Coluna da lista de conversas e do chat ativo */
-.conversations-list, .chat-area {
-    width: 50%; /* Cada "tela" ocupa metade do container */
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* --- Estilo da Lista de Conversas --- */
-.conversations-list {
-    border-right: 1px solid var(--light-border);
-}
-
-.conversation-item {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-bottom: 1px solid var(--light-border);
-}
-
-.conversation-item:hover {
-    background-color: var(--light-bg-secondary);
-}
-
-.conversation-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 15px;
-    object-fit: cover;
-}
-
-.conversation-details {
-    overflow: hidden;
-}
-
-.conversation-name {
-    font-weight: bold;
-    white-space: nowrap;
-}
-
-.conversation-last-message {
-    color: var(--light-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* --- Estilo da Área de Chat --- */
-.chat-header {
-    padding: 10px 15px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--light-border);
-}
-
-.chat-messages {
-    flex-grow: 1;
-    padding: 15px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column-reverse; /* Mensagens começam de baixo para cima */
-}
-
-/* Bolhas de mensagem */
-.chat-message {
-    margin-bottom: 10px;
-    max-width: 75%;
-}
-
-.message-bubble {
-    padding: 10px 15px;
-    border-radius: 18px;
-    line-height: 1.4;
-}
-
-.chat-message.sent {
-    align-self: flex-end; /* Alinha à direita */
-}
-.chat-message.sent .message-bubble {
-    background-color: var(--primary-color);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-
-.chat-message.received {
-    align-self: flex-start; /* Alinha à esquerda */
-}
-.chat-message.received .message-bubble {
-    background-color: var(--light-bg-secondary);
-    border-bottom-left-radius: 4px;
-}
-
-.chat-input-area {
-    display: flex;
-    padding: 10px;
-    border-top: 1px solid var(--light-border);
-}
-
-.chat-input {
-    flex-grow: 1;
-    border: none;
-    padding: 10px;
-    border-radius: 20px;
-    background-color: var(--light-bg-secondary);
-}
-
-.chat-send-btn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0 10px;
-}
-
-/* --- LÓGICA MOBILE --- */
-/* Por padrão no mobile, a lista de conversas ocupa a tela inteira */
-@media (max-width: 768px) {
-    /* Quando um chat está ativo, o container desliza para a esquerda */
-    .feed.chat-active .messages-container {
-        transform: translateX(-50%);
-    }
-
-    .chat-header {
-        gap: 10px;
-    }
     
-    .back-to-conversations {
-        display: block; /* Garante que o botão de voltar apareça */
-        background: none;
-        border: none;
-        font-size: 1.2rem;
-        cursor: pointer;
-    }
-}
-        .chat-area { max-height: 75vh; }
-        .message-header { font-size: 0.8rem; color: var(--light-text-secondary); margin-bottom: 4px; font-weight: bold; }
-        body.dark-mode .message-header { color: var(--dark-text-secondary); }
-        .message { display: flex; align-items: flex-start; gap: 10px; }
-        .message-avatar { width: 40px; height: 40px; border-radius: 50%; }
-        .message-content { max-width: 80%; }
-        .members-sidebar { width: 250px; border-left: 1px solid var(--light-border); padding: 10px; background-color: var(--light-text); }
-        body.dark-mode .members-sidebar { background-color: var(--dark-bg-secondary); border-left-color: var(--dark-border); }
-        .member-item { display: flex; align-items: center; margin-bottom: 10px; }
-        .kick-btn { margin-left: auto; background: #dc3545; color: white; border: none; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
-        .chat-input-area { position: relative; } /* Necessário para posicionar o emoji picker */
-        emoji-picker {
-            position: absolute;
-            bottom: 60px; /* Posiciona acima do campo de input */
-            left: 10px;
-            z-index: 100;
+    <style>
+        /* ESTILOS FINAIS E COMBINADOS PARA A PÁGINA DE CHAT */
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
         }
-/* EM CHAT.HTML, DENTRO DA TAG <style> */
 
-/* Remova a posição relativa do wrapper da mensagem */
-.message.sent {
-    /* Não precisa mais de position: relative aqui */
-}
+        .main-container {
+            max-width: 1200px;
+            margin: 16px auto;
+            padding: 0 16px;
+            height: 100%; /* Ocupa a altura toda */
+            display: flex;
+            flex-direction: column;
+        }
 
-/* Adicione a posição relativa e o padding ao balão de conteúdo.
-   Isso faz com que o botão se posicione em relação a este elemento. */
-.message.sent .message-content {
-    position: relative; /* Contexto para o posicionamento do botão */
-    padding-right: 30px; /* Espaço para o botão aparecer */
-}
+        .feed {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
 
-/* Estilo do botão de exclusão */
-.message-delete-btn {
-    position: absolute;
-    right: 8px;  /* Ajuste para ficar dentro do padding */
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #a7a7a7;
-    cursor: pointer;
-    font-size: 0.8rem;
-    opacity: 0; /* O botão começa invisível */
-    transition: opacity 0.2s, color 0.2s;
-    z-index: 1; 
-}
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            flex-shrink: 0; /* Impede que o título encolha */
+        }
 
-/* O botão aparece quando o mouse está sobre o balão da mensagem */
-.message.sent .message-content:hover .message-delete-btn {
-    opacity: 1; 
-}
+        /* Container principal com espaçamento inferior */
+        .messages-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: row;
+            height: calc(100vh - 200px); /* Altura calculada para dar espaço */
+            background: var(--light-text);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            position: relative;
+        }
 
-.message-delete-btn:hover {
- 
-    color: #ff4d4d; /* Cor mais forte ao passar o mouse */
-}
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 14px;
+            border-top: 1px solid var(--light-border);
+            background: var(--light-bg-secondary);
+            position: relative;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            outline: none;
+        }
+        
+        .chat-send-btn {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Estilos das mensagens */
+        .message { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 15px;}
+        .message-avatar { width: 40px; height: 40px; border-radius: 50%; }
+        .message-content { max-width: 80%; background-color: var(--light-bg-secondary); padding: 10px 15px; border-radius: 12px; position: relative;}
+        .message.sent { flex-direction: row-reverse; align-self: flex-end; }
+        .message.sent .message-content { background-color: var(--primary-color); color: white; }
+        .message-header { font-size: 0.8rem; color: var(--light-text-secondary); margin-bottom: 4px; font-weight: bold; }
+        
+        /* === ESTILOS PARA A CAIXA DE MEMBROS FLUTUANTE === */
+        #toggle-members-btn {
+            background: none; border: none; color: var(--dark-text); font-size: 1.2rem;
+            cursor: pointer; margin-left: 15px;
+        }
+        .members-sidebar {
+            position: absolute;
+            top: 55px; /* Posição abaixo do título */
+            left: 10px;
+            width: 280px;
+            max-height: 350px;
+            background-color: var(--light-text);
+            border: 1px solid var(--light-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 15px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            opacity: 0; transform: translateY(-10px); pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .members-sidebar.active {
+            opacity: 1; transform: translateY(0); pointer-events: auto;
+        }
+        .members-sidebar h3 {
+            margin: 0 0 10px 0; padding-bottom: 10px; border-bottom: 1px solid var(--light-border);
+        }
+        #members-list {
+            overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+        }
+        .member-item {
+            display: flex; align-items: center; padding: 8px; border-radius: var(--border-radius); transition: background-color 0.2s;
+        }
+        .member-item:hover { background-color: var(--light-bg-secondary); }
+        .member-item img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
+        .member-item p { margin: 0; font-weight: 600; flex: 1; color: var(--dark-text); }
+        .kick-btn {
+            margin-left: auto; background-color: transparent; color: var(--light-text-secondary); border: none;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .kick-btn:hover { background-color: #ff4d4d20; color: #ff4d4d; }
+
+        /* === MODO ESCURO COMPLETO === */
+        body.dark-mode .page-title,
+        body.dark-mode #toggle-members-btn { color: var(--light-text); }
+        body.dark-mode .messages-container { background: var(--dark-bg-secondary); }
+        body.dark-mode .message.received .message-content { background-color: var(--dark-bg-tertiary); }
+        body.dark-mode .message-header { color: var(--dark-text-secondary); }
+        body.dark-mode .chat-input-area { background: var(--dark-bg-secondary); border-top-color: var(--dark-border); }
+        body.dark-mode .chat-input { background: var(--dark-bg-tertiary); border-color: var(--dark-border); color: var(--light-text); }
+        body.dark-mode .members-sidebar { background-color: var(--dark-bg-secondary); border-color: var(--dark-border); }
+        body.dark-mode .member-item:hover { background-color: var(--dark-bg-tertiary); }
+        body.dark-mode .member-item p { color: var(--light-text); }
+        body.dark-mode .kick-btn { color: var(--dark-text-secondary); }
     </style>
 </head>
-<body>
+<body class="mensagens-page">
+
     <header>
         <div class="logo">
-            <a href="grupos.html" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
+             <a href="grupos.html" style="text-decoration: none; color: inherit; display: flex; align-items: center;">
                 <i class="fas fa-arrow-left" style="margin-right: 15px;"></i>
                 <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
                 <span>Crow-d</span>
             </a>
         </div>
     </header>
-    <div class="main-container" style="display: flex;">
-        <main class="feed" style="flex: 1;">
-            <h1 class="page-title" id="group-name-title"><i class="fas fa-spinner fa-spin"></i></h1>
+
+    <div class="main-container">
+        <main class="feed">
+            <h1 class="page-title">
+                <span id="group-name-title"><i class="fas fa-spinner fa-spin"></i></span>
+                <button id="toggle-members-btn" title="Ver participantes">
+                    <i class="fas fa-users"></i>
+                </button>
+            </h1>
+            
+            <aside class="members-sidebar" id="members-sidebar">
+                <h3>Membros</h3>
+                <div id="members-list"></div>
+            </aside>
+
             <div class="messages-container">
-                <div class="chat-area">
+                <section class="chat-area">
                     <div class="chat-messages" id="chat-messages">
-                        </div>
-                    <div class="chat-input-area">
-                        <emoji-picker style="display: none;"></emoji-picker>
-                        <button id="emoji-btn" class="chat-action-btn"><i class="fas fa-smile"></i></button>
-                        <input type="text" class="chat-input" id="message-input" placeholder="Digite uma mensagem...">
-                        <button class="chat-send-btn" id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                        <div class="no-messages">Carregando mensagens do grupo...</div>
                     </div>
-                </div>
+                    <footer class="chat-input-area">
+                        <emoji-picker id="emojiPicker" class="light" style="display:none;"></emoji-picker>
+                        <button id="emoji-btn" class="chat-action-btn" title="Emojis"><i class="fas fa-smile"></i></button>
+                        <input type="text" id="message-input" class="chat-input" placeholder="Digite uma mensagem..." />
+                        <button id="send-btn" class="chat-send-btn" title="Enviar"><i class="fas fa-paper-plane"></i></button>
+                    </footer>
+                </section>
             </div>
         </main>
-        <aside class="members-sidebar" id="members-sidebar">
-            <h3>Membros</h3>
-            <div id="members-list"></div>
-        </aside>
     </div>
- <div id="mobile-bottom-nav">
-    <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
-    <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
-    <a href="../friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
-    <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
-    <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
-</div>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>

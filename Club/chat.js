@@ -247,3 +247,18 @@ function addMessageToDOM(messageId, message) {
         }
     });
 });
+const toggleMembersBtn = document.getElementById('toggle-members-btn');
+    const membersSidebar = document.getElementById('members-sidebar');
+
+    if (toggleMembersBtn && membersSidebar) {
+        toggleMembersBtn.addEventListener('click', () => {
+            membersSidebar.classList.toggle('active');
+        });
+
+        // Opcional: fechar a caixa se clicar fora dela
+        document.addEventListener('click', (e) => {
+            if (!membersSidebar.contains(e.target) && !toggleMembersBtn.contains(e.target)) {
+                membersSidebar.classList.remove('active');
+            }
+        });
+    }
