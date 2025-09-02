@@ -138,6 +138,74 @@ document.addEventListener('DOMContentLoaded', function () {
     /**
 
      */
+    // Encontre e substitua esta função no seu código (provavelmente em eventos.js ou global.js)
+
+async function checkUpcomingEventNotifications() {
+    if (!currentUser || !currentUser.uid) return;
+
+    try {
+        const now = new Date();
+        // Define o limite de tempo para "próximo": 48 horas para cobrir hoje e amanhã com segurança
+        const upcomingLimit = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+        // 1. Encontra todos os eventos futuros em que o utilizador participa
+        const eventsSnapshot = await db.collection('events')
+            .where('participants', 'array-contains', currentUser.uid)
+            .where('eventDateTime', '>=', now) // Apenas eventos que ainda não aconteceram
+            .where('eventDateTime', '<=', upcomingLimit) // Apenas eventos nas próximas 48h
+            .get();
+
+        if (eventsSnapshot.empty) {
+            return;
+        }
+
+        // 2. Para cada evento próximo, verifica se já existe uma notificação
+        eventsSnapshot.forEach(async (doc) => {
+            const event = { id: doc.id, ...doc.data() };
+            const eventId = event.id;
+
+            const notificationQuery = await db.collection('users').doc(currentUser.uid).collection('notifications')
+                .where('type', '==', 'event_reminder')
+                .where('eventId', '==', eventId)
+                .limit(1)
+                .get();
+
+            // 3. Se não existir notificação, cria uma nova com o texto corrigido
+            if (notificationQuery.empty) {
+                const eventDate = event.eventDateTime.toDate();
+                const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                // --- INÍCIO DA LÓGICA CORRIGIDA ---
+                let dayQualifier = ''; // Variável para "hoje" ou "amanhã"
+                const today = new Date();
+
+                // Compara se o dia, mês e ano do evento são os mesmos de hoje
+                if (eventDate.getDate() === today.getDate() &&
+                    eventDate.getMonth() === today.getMonth() &&
+                    eventDate.getFullYear() === today.getFullYear()) {
+                    dayQualifier = 'hoje';
+                } else {
+                    // Se não for hoje, assume-se que é amanhã (pois a query limita a 48h)
+                    dayQualifier = 'amanhã';
+                }
+
+                const notificationContent = `Lembrete: O evento "${event.eventName}" começa ${dayQualifier} às ${formattedTime}!`;
+                // --- FIM DA LÓGICA CORRIGIDA ---
+
+                await db.collection('users').doc(currentUser.uid).collection('notifications').add({
+                    type: 'event_reminder',
+                    eventId: eventId,
+                    fromUserName: 'Sistema de Eventos',
+                    content: notificationContent, // Usa o novo conteúdo dinâmico
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Erro ao verificar notificações de eventos:", error);
+    }
+}
     function displayPopularEvents(popularEvents) {
         popularEventsContainer.innerHTML = '';
 
@@ -376,4 +444,5 @@ async function createEvent(e) {
             createEventModal.style.display = 'none';
         }
     });
+    
 });

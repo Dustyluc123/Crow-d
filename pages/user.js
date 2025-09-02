@@ -514,165 +514,170 @@ async function loadMoreUserPosts() {
         friendsGrid.appendChild(friendLink);
     }
 
-    function addPostToDOM(post, isSingleView = false) {
-        if (!postsContainer || !postTemplate) return;
-    
-        const postClone = document.importNode(postTemplate.content, true);
-        const postElement = postClone.querySelector(".post");
-    
-        // Lógica de clique para abrir a visualização de post único
-        if (!isSingleView && !post.isRepost) {
-            postElement.style.cursor = 'pointer';
-            postElement.addEventListener('click', (e) => {
-                // Impede a navegação se o clique for em um elemento interativo
-                if (e.target.closest('button, a, .post-actions, .post-comments, .original-post-container, .post-image')) {
-                    return;
-                }
-                window.location.href = `../index.html?post=${post.id}`;
-            });
-        }
-    
-        // Lógica para tratar e exibir uma republicação
-        if (post.isRepost) {
-            const repostHeader = document.createElement('div');
-            repostHeader.className = 'repost-header';
-            repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
-            postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
-    
-            const originalPostContainer = document.createElement('div');
-            originalPostContainer.className = 'original-post-container';
-            const originalPostHeader = postClone.querySelector('.post-header');
-            const originalPostContent = postClone.querySelector('.post-content');
-            
-            originalPostContainer.appendChild(originalPostHeader);
-            originalPostContainer.appendChild(originalPostContent);
-            
-            originalPostContainer.style.cursor = 'pointer';
-            originalPostContainer.addEventListener('click', () => {
-                window.location.href = `../index.html?post=${post.originalPostId}`;
-            });
-    
-            postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
-    
-            const postActions = postClone.querySelector('.post-actions');
-            if (postActions) {
-                postActions.style.display = 'none';
+    // Em pages/user.js
+function addPostToDOM(post, isSingleView = false) {
+    if (!postsContainer || !postTemplate) return;
+
+    const postClone = document.importNode(postTemplate.content, true);
+    const postElement = postClone.querySelector(".post");
+
+    if (!isSingleView && !post.isRepost) {
+        postElement.style.cursor = 'pointer';
+        postElement.addEventListener('click', (e) => {
+            if (e.target.closest('button, a, .post-actions, .post-comments, .original-post-container, .post-image')) {
+                return;
             }
-    
-            // Sobrescreve os dados do post com os dados do post original para exibição
-            post.content = post.originalPost.content;
-            post.authorName = post.originalPost.authorName;
-            post.authorPhoto = post.originalPost.authorPhoto;
-            post.timestamp = post.originalPost.timestamp;
-            post.authorId = post.originalPost.authorId;
-            post.imageUrl = post.originalPost.imageUrl; // Garante que a imagem do post original seja usada
-        }
-    
-        // --- Seleciona todos os elementos do post ---
-        const authorPhotoElement = postClone.querySelector(".post-author-photo");
-        const authorNameElement = postClone.querySelector(".post-author-name");
-        const timestampElement = postClone.querySelector(".post-timestamp");
-        const contentElement = postClone.querySelector(".post-text");
-        const likeButton = postClone.querySelector(".like-btn");
-        const likeCount = postClone.querySelector(".like-count");
-        const commentButton = postClone.querySelector(".comment-btn");
-        const commentCount = postClone.querySelector(".comment-count");
-        const repostButton = postClone.querySelector(".repost-btn");
-        const saveButton = postClone.querySelector(".save-btn");
-        const shareButton = postClone.querySelector(".share-btn");
-        const commentsSection = postClone.querySelector(".post-comments");
-        const commentInput = postClone.querySelector(".comment-text");
-        const sendCommentButton = postClone.querySelector(".send-comment-btn");
-        const commentUserPhoto = postClone.querySelector(".comment-user-photo");
-        const postMediaContainer = postClone.querySelector(".post-media");
-        const postImageElement = postClone.querySelector(".post-image");
-        const deletePostBtn = postClone.querySelector('.post-delete-btn');
-    
-        // --- Preenche os dados do post ---
-        postElement.dataset.postId = post.id;
-        postElement.dataset.authorId = post.authorId;
-    
-        if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
-        authorNameElement.textContent = post.authorName;
-        if (post.timestamp) {
-            const date = post.timestamp.toDate();
-            timestampElement.textContent = formatTimestamp(date);
-        }
-        contentElement.textContent = post.content;
-        likeCount.textContent = post.likes || 0;
-        commentCount.textContent = post.commentCount || 0;
-    
-        if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
-            likeButton.classList.add("liked");
-        }
-        if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
-            saveButton.classList.add("saved");
-        }
-        if (currentUserProfile && currentUserProfile.photoURL) {
-          commentUserPhoto.src = currentUserProfile.photoURL;
-        }
-    
-        // --- Lógica para Imagem e Botão de Excluir ---
-        if (post.imageUrl) {
-            postImageElement.src = post.imageUrl;
-            postMediaContainer.style.display = 'block';
-        } else {
-            postMediaContainer.style.display = 'none';
-        }
-    
-        if (!post.isRepost && post.authorId === currentUser.uid) {
-            deletePostBtn.style.display = 'block';
-            deletePostBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deletePost(post.id);
-            });
-        }
-    
-        // --- Adiciona os Event Listeners ---
-        authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-        authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
-        likeButton.addEventListener("click", () => toggleLike(post.id));
-        saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
-        repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
-        shareButton.addEventListener("click", () => sharePost(post.id));
-    
-        commentButton.addEventListener("click", () => {
-            commentsSection.classList.toggle("active");
-            if (commentsSection.classList.contains("active")) {
-                const commentsList = commentsSection.querySelector('.comments-list');
-                if (activeCommentListeners[post.id]) {
-                    activeCommentListeners[post.id]();
-                }
-                activeCommentListeners[post.id] = loadComments(post.id, commentsList);
-            } else {
-                if (activeCommentListeners[post.id]) {
-                    activeCommentListeners[post.id]();
-                    delete activeCommentListeners[post.id];
-                }
-            }
+            window.location.href = `../index.html?post=${post.id}`;
         });
+    }
+
+    // --- INÍCIO DA CORREÇÃO PARA IMAGENS ---
+    // Verifica as duas possíveis variações do nome do campo (imageUrl e imageURL)
+    if (post.isRepost && post.originalPost) {
+        const originalImageUrl = post.originalPost.imageUrl || post.originalPost.imageURL || null;
+        
+        const repostHeader = document.createElement('div');
+        repostHeader.className = 'repost-header';
+        repostHeader.innerHTML = `<i class="fas fa-retweet"></i> <strong>${post.authorName}</strong> republicou`;
+        postElement.insertBefore(repostHeader, postElement.querySelector('.post-header'));
+
+        const originalPostContainer = document.createElement('div');
+        originalPostContainer.className = 'original-post-container';
+        const originalPostHeader = postClone.querySelector('.post-header');
+        const originalPostContent = postClone.querySelector('.post-content');
+        
+        originalPostContainer.appendChild(originalPostHeader);
+        originalPostContainer.appendChild(originalPostContent);
+        
+        originalPostContainer.style.cursor = 'pointer';
+        originalPostContainer.addEventListener('click', () => {
+            window.location.href = `../index.html?post=${post.originalPostId}`;
+        });
+
+        postElement.insertBefore(originalPostContainer, postElement.querySelector('.post-actions'));
+
+        const postActions = postClone.querySelector('.post-actions');
+        if (postActions) {
+            postActions.style.display = 'none';
+        }
+
+        // Sobrescreve os dados do post com os dados do post original
+        post.content = post.originalPost.content;
+        post.authorName = post.originalPost.authorName;
+        post.authorPhoto = post.originalPost.authorPhoto;
+        post.timestamp = post.originalPost.timestamp;
+        post.authorId = post.originalPost.authorId;
+        post.imageUrl = originalImageUrl; // Usa a URL da imagem corrigida
+    }
+    // --- FIM DA CORREÇÃO PARA IMAGENS ---
+
+    const authorPhotoElement = postClone.querySelector(".post-author-photo");
+    // ... (resto dos seletores de elementos permanece igual)
+    const authorNameElement = postClone.querySelector(".post-author-name");
+    const timestampElement = postClone.querySelector(".post-timestamp");
+    const contentElement = postClone.querySelector(".post-text");
+    const likeButton = postClone.querySelector(".like-btn");
+    const likeCount = postClone.querySelector(".like-count");
+    const commentButton = postClone.querySelector(".comment-btn");
+    const commentCount = postClone.querySelector(".comment-count");
+    const repostButton = postClone.querySelector(".repost-btn");
+    const saveButton = postClone.querySelector(".save-btn");
+    const shareButton = postClone.querySelector(".share-btn");
+    const commentsSection = postClone.querySelector(".post-comments");
+    const commentInput = postClone.querySelector(".comment-text");
+    const sendCommentButton = postClone.querySelector(".send-comment-btn");
+    const commentUserPhoto = postClone.querySelector(".comment-user-photo");
+    const postMediaContainer = postClone.querySelector(".post-media");
+    const postImageElement = postClone.querySelector(".post-image");
+    const deletePostBtn = postClone.querySelector('.post-delete-btn');
+
+    postElement.dataset.postId = post.id;
+    postElement.dataset.authorId = post.authorId;
+
+    if (post.authorPhoto) authorPhotoElement.src = post.authorPhoto;
+    authorNameElement.textContent = post.authorName;
+    if (post.timestamp) {
+        const date = post.timestamp.toDate();
+        timestampElement.textContent = formatTimestamp(date);
+    }
+    contentElement.textContent = post.content;
+    likeCount.textContent = post.likes || 0;
+    commentCount.textContent = post.commentCount || 0;
+
+    if (post.likedBy && post.likedBy.includes(currentUser.uid)) {
+        likeButton.classList.add("liked");
+    }
+    if (post.savedBy && post.savedBy.includes(currentUser.uid)) {
+        saveButton.classList.add("saved");
+    }
+    if (currentUserProfile && currentUserProfile.photoURL) {
+      commentUserPhoto.src = currentUserProfile.photoURL;
+    }
+
+    // --- SEGUNDA PARTE DA CORREÇÃO DE IMAGEM ---
+    // Verifica as duas variações novamente para garantir que a imagem seja exibida
+    const finalImageUrl = post.imageUrl || post.imageURL || null;
+    if (finalImageUrl) {
+        postImageElement.src = finalImageUrl;
+        postMediaContainer.style.display = 'block';
+    } else {
+        postMediaContainer.style.display = 'none';
+    }
+    // --- FIM DA SEGUNDA PARTE ---
+
+    if (!post.isRepost && post.authorId === currentUser.uid) {
+        deletePostBtn.style.display = 'block';
+        deletePostBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePost(post.id);
+        });
+    }
+
+    // O resto da função com os event listeners permanece o mesmo...
+     authorPhotoElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
+    authorNameElement.addEventListener("click", () => redirectToUserProfile(post.authorId));
+    likeButton.addEventListener("click", () => toggleLike(post.id));
+    saveButton.addEventListener("click", (e) => toggleSavePost(post.id, e.currentTarget));
+    repostButton.addEventListener("click", (e) => toggleRepost(post.id, e.currentTarget));
+    shareButton.addEventListener("click", () => sharePost(post.id));
+
+    commentButton.addEventListener("click", () => {
+        commentsSection.classList.toggle("active");
+        if (commentsSection.classList.contains("active")) {
+            const commentsList = commentsSection.querySelector('.comments-list');
+            if (activeCommentListeners[post.id]) {
+                activeCommentListeners[post.id]();
+            }
+            activeCommentListeners[post.id] = loadComments(post.id, commentsList);
+        } else {
+            if (activeCommentListeners[post.id]) {
+                activeCommentListeners[post.id]();
+                delete activeCommentListeners[post.id];
+            }
+        }
+    });
+
+    sendCommentButton.addEventListener("click", () => {
+        const content = commentInput.value.trim();
+        if (content) {
+            addComment(post.id, content);
+            commentInput.value = "";
+        }
+    });
     
-        sendCommentButton.addEventListener("click", () => {
+    commentInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
             const content = commentInput.value.trim();
             if (content) {
                 addComment(post.id, content);
                 commentInput.value = "";
             }
-        });
-        
-        commentInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                const content = commentInput.value.trim();
-                if (content) {
-                    addComment(post.id, content);
-                    commentInput.value = "";
-                }
-            }
-        });
-    
-        return postElement;  
-    }
+        }
+    });
+
+    return postElement;
+}
     function formatTimestamp(date) { 
     if (!(date instanceof Date) || isNaN(date)) {
       return "Agora mesmo";
@@ -944,60 +949,36 @@ async function toggleRepost(postId, buttonElement) {
     }
 }
 
-    function loadComments(postId, commentsListElement) { 
-        if (!commentsListElement) {
-            console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
-            return;
-        }
-
-        if (commentsListElement.innerHTML === '') {
-            commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
-        }
-
-        return db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc")
-            .onSnapshot((snapshot) => {
-                const initialMessage = commentsListElement.querySelector('.loading-comments, .no-comments');
-                if (initialMessage) {
-                    initialMessage.remove();
-                }
-
-                snapshot.docChanges().forEach((change) => {
-                    const commentData = { id: change.doc.id, ...change.doc.data() };
-                    
-                    if (change.type === "added") {
-                        addCommentToDOM(postId, commentData, commentsListElement);
-                    }
-                    if (change.type === "modified") {
-                        const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-                        if (commentElement) {
-                            const likeCount = commentElement.querySelector('.comment-like-count');
-                            const likeButton = commentElement.querySelector('.comment-like-btn');
-                            if(likeCount) likeCount.textContent = commentData.likes || 0;
-                            if(likeButton) {
-                                if(commentData.likedBy && commentData.likedBy.includes(currentUser.uid)) {
-                                    likeButton.classList.add('liked');
-                                } else {
-                                    likeButton.classList.remove('liked');
-                                }
-                            }
-                        }
-                    }
-                    if (change.type === "removed") {
-                        const commentElement = commentsListElement.querySelector(`.comment[data-comment-id="${commentData.id}"]`);
-                        if (commentElement) {
-                            commentElement.remove();
-                        }
-                    }
-                });
-
-                if (commentsListElement.children.length === 0) {
-                    commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
-                }
-            }, (error) => {
-                console.error("Erro ao escutar comentários:", error);
-                commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
-            });
+    // Em pages/user.js
+function loadComments(postId, commentsListElement) {
+    if (!commentsListElement) {
+        console.error("Elemento da lista de comentários não foi fornecido para loadComments.");
+        return () => {}; // Retorna uma função vazia para não quebrar
     }
+
+    // CORREÇÃO: Limpa a lista e exibe o indicador de "carregando" toda vez que a função é chamada.
+    // Isso previne a duplicação de comentários ao reabrir a seção.
+    commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando comentários...</div>';
+
+    return db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc")
+        .onSnapshot((snapshot) => {
+            commentsListElement.innerHTML = ''; // Limpa novamente após a primeira carga
+
+            if (snapshot.empty) {
+                commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda.</div>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const commentData = { id: doc.id, ...doc.data() };
+                addCommentToDOM(postId, commentData, commentsListElement);
+            });
+            
+        }, (error) => {
+            console.error("Erro ao escutar comentários:", error);
+            commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
+        });
+}
 
     function addCommentToDOM(postId, comment, commentsList) { 
         if (!commentTemplate || !commentsList) return;
