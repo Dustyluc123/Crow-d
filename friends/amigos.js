@@ -1,4 +1,4 @@
-// scripts.js — Amigos (corrigido + Instagram Notes - Apenas Texto + Realtime integrado e filtrado)
+// scripts.js — Amigos (corrigido + Instagram Notes - Bug de exclusão resolvido)
 (function () {
   // ---------------------- Utilidades ----------------------
   const $ = (sel, root = document) => root.querySelector(sel);
@@ -292,10 +292,22 @@ async function loadFriendsList(auth, db) {
     });
   }
 
+  // ---> FUNÇÃO CORRIGIDA PARA O BUG DE EXCLUSÃO
   async function postTextNote(db, ownerId, text) {
     const trimmed = text.slice(0, NOTE_MAX_LEN);
     const expiresAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + NOTE_TTL_MS));
-    await db.collection('users').doc(ownerId).collection('notes').add({
+    const notesRef = db.collection('users').doc(ownerId).collection('notes');
+
+    // 1. Busca e apaga qualquer nota que o usuário já tenha.
+    const existingNotes = await notesRef.get();
+    const deletePromises = [];
+    existingNotes.forEach(doc => {
+        deletePromises.push(doc.ref.delete());
+    });
+    await Promise.all(deletePromises);
+
+    // 2. Adiciona a nova nota.
+    await notesRef.add({
       type: 'text', text: trimmed, createdAt: firebase.firestore.FieldValue.serverTimestamp(), expiresAt
     });
   }
@@ -331,7 +343,6 @@ async function loadFriendsList(auth, db) {
     });
   }
 
-  // ---> FUNÇÃO ATUALIZADA PARA MOSTRAR APENAS USUÁRIOS COM NOTAS
   async function loadNotesBar() {
       const bar = refs.notesBar();
       if (!bar) return;
@@ -340,21 +351,17 @@ async function loadFriendsList(auth, db) {
       const me = auth.currentUser;
       if (!me) { bar.innerHTML = ''; return; }
 
-      // 1. Pega os IDs dos amigos que têm uma nota ativa no cache
       const friendIdsWithNotes = _friendsCache
           .map(f => f.uid)
           .filter(uid => activeNotesCache[uid]);
 
-      // 2. Lista de perfis para buscar: o seu + amigos com notas.
       const userIdsToFetch = [me.uid, ...friendIdsWithNotes];
 
       const profilePromises = userIdsToFetch.map(uid => fetchUserProfile(db, uid));
       const profiles = await Promise.all(profilePromises);
 
-      // 3. Mapeia os perfis para criar os 'tiles' de HTML
       const tiles = profiles.map(profile => {
           const note = activeNotesCache[profile.uid];
-          // A lógica de filtragem já foi feita, então todos aqui devem ser exibidos.
           return noteTileHtml({
               ownerId: profile.uid,
               ownerName: profile.uid === me.uid ? 'Você' : (profile.nickname || 'Amigo'),
@@ -364,16 +371,13 @@ async function loadFriendsList(auth, db) {
           });
       });
       
-      // Garante que o usuário logado apareça primeiro.
       tiles.sort((a, b) => {
         if (a.includes(`data-owner-id="${me.uid}"`)) return -1;
         if (b.includes(`data-owner-id="${me.uid}"`)) return 1;
         return 0;
       });
 
-      // 4. Renderiza
       if (tiles.length === 1 && !activeNotesCache[me.uid]) {
-        // Se a única pessoa for você e você não tiver nota, mostra seu tile e a mensagem.
         bar.innerHTML = tiles[0] + `<div class="no-suggestions" style="margin-left:12px;">Nenhuma nota de amigos.</div>`;
       } else {
         bar.innerHTML = tiles.join('');
@@ -386,7 +390,7 @@ async function loadFriendsList(auth, db) {
     const avatar = `<div class="note-avatar"><img src="${htmlEscape(photoURL)}" alt="${htmlEscape(ownerName)}"></div>`;
     let bubble = isSelf && !note 
       ? `<div class="note-bubble muted">+</div>` 
-      : `<div class="note-bubble muted"></div>`; // Amigos sem nota não são renderizados, então este é um fallback
+      : `<div class="note-bubble muted"></div>`;
 
     if (note && note.type === 'text') {
       bubble = `<div class="note-bubble">${htmlEscape(String(note.text || ''))}</div>`;
