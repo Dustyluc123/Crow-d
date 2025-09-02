@@ -263,3 +263,16 @@ body.dark-mode .message-delete-btn:hover {
   background-color: #ff4d4d;
   color: white;
 }
+
+/* Correção final para a cor do horário */
+
+/* Define uma cor escura para o horário no modo claro (padrão) */
+.message-time {
+  color: #666 !important; 
+}
+
+/* Garante que a cor do horário continue clara no modo escuro */
+body.dark-mode .message-time {
+  color: #999 !important;
+}
+
