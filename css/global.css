@@ -178,3 +178,13 @@ a {
         padding-bottom: 70px;
     }
 }
+
+.right-sidebar {
+    width: 300px;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+}

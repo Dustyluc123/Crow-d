@@ -204,7 +204,10 @@ body.dark-mode .logout-btn:hover {
     height: fit-content;
     transition: background-color 0.3s, box-shadow 0.3s;
     position: sticky;
-    top: 80px; /* Ajustado para ficar abaixo do header fixo */
+    top: 80px;
+    /* Linhas adicionadas para correção: */
+    max-height: calc(100vh - 100px); /* Define uma altura máxima baseada na tela */
+    
 }
 
 body.dark-mode .sidebar {
