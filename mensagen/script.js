@@ -239,28 +239,35 @@
     });
   }
   
+  // #######################################################
+  // ### FUNÇÃO CORRIGIDA PARA EVITAR CONVERSAS DUPLICADAS ###
+  // #######################################################
   async function startOrOpenConversationWith(otherUid){
     const { db } = ensureFirebase();
-    const snap = await db.collection('conversations')
-      .where('participants','array-contains', currentUser.uid)
-      .get();
+
+    // Cria um ID de conversa único e previsível, ordenando os UIDs
+    const participants = [currentUser.uid, otherUid].sort();
+    const conversationId = participants.join('_');
+
+    const convRef = db.collection('conversations').doc(conversationId);
+    let convDoc = await convRef.get();
     let found = null;
-    snap.forEach(d => {
-      const data = d.data() || {};
-      const parts = data.participants || [];
-      if (parts.length === 2 && parts.includes(otherUid)) {
-        found = { id: d.id, ...data };
-      }
-    });
-    if (!found) {
-      const ref = await db.collection('conversations').add({
-        participants: [currentUser.uid, otherUid],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastMessage: '',
-        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      found = { id: ref.id, participants:[currentUser.uid, otherUid] };
+
+    if (convDoc.exists) {
+        // Se a conversa com o ID previsível existe, usa ela
+        found = { id: convDoc.id, ...convDoc.data() };
+    } else {
+        // Se não existe, cria a conversa com esse ID
+        const newConvData = {
+            participants: participants,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastMessage: '',
+            lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        await convRef.set(newConvData);
+        found = { id: conversationId, ...newConvData };
     }
+
     const prof = await getUserProfile(otherUid);
     await openConversation(found.id, otherUid, prof);
   }
