@@ -236,19 +236,40 @@ async function loadFriendsList(auth, db) {
         <button class="follow-btn">Seguir</button>
       </div>`;
   }
-  function wireSuggestionActions(auth, db) {
-    $$(".suggestion .follow-btn").forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const card = e.currentTarget.closest('.suggestion');
-        const toUid = card?.dataset?.userId; if (!toUid) return;
-        try {
-          await createFriendRequest(auth, db, toUid);
-          toast('Solicitação enviada!', 'success');
-          card.remove();
-        } catch (err) { console.error(err); toast(err?.message || 'Falha ao enviar solicitação.', 'error'); }
-      });
+// Substitua a função antiga por esta em amigos.js
+function wireSuggestionActions(auth, db) {
+  $$(".suggestion .follow-btn").forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const button = e.currentTarget; // Pega a referência do botão clicado
+      const card = button.closest('.suggestion');
+      const toUid = card?.dataset?.userId;
+      if (!toUid) return;
+
+      // Desabilita o botão imediatamente para evitar cliques duplos e mostra um feedback
+      button.disabled = true;
+      button.textContent = 'Enviando...';
+
+      try {
+        // Envia a solicitação de amizade
+        await createFriendRequest(auth, db, toUid);
+        toast('Solicitação enviada!', 'success');
+
+        // ALTERAÇÃO PRINCIPAL:
+        // Em vez de remover o card, apenas mudamos o texto do botão
+        // e o mantemos desabilitado.
+        button.textContent = 'Pendente';
+
+      } catch (err) {
+        console.error(err);
+        toast(err?.message || 'Falha ao enviar solicitação.', 'error');
+
+        // Em caso de erro, reabilita o botão para que o usuário possa tentar novamente.
+        button.disabled = false;
+        button.textContent = 'Seguir';
+      }
     });
-  }
+  });
+}
 
   async function createFriendRequest(auth, db, toUid) {
     const me = auth.currentUser; if (!me) throw new Error('É preciso estar logado.');
