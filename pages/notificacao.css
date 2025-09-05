@@ -62,27 +62,6 @@
     padding: 14px;
     margin-bottom: 14px;
   }
-  body.dark-mode .notification-item { background: var(--dark-bg-secondary); }
-  
-  .notification-avatar {
-    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
-    border: 2px solid var(--light-border);
-  }
-  body.dark-mode .notification-avatar { border-color: var(--dark-border); }
-  
-  .notification-info { flex: 1; min-width: 0; }
-  .notification-title { color: var(--dark-text); }
-  body.dark-mode .notification-title { color: var(--light-text); }
-  .notification-time { font-size: .85rem; color: var(--light-text-secondary); }
-  body.dark-mode .notification-time { color: var(--dark-text-secondary); }
-  
-  .notification-actions { display: flex; gap: 8px; }
-  .notification-actions .request-accept,
-  .notification-actions .request-decline {
-    background-color: var(--primary-color); color: var(--light-text);
-    border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;
-  }
-  .notification-actions .request-decline { background-color: #c0392b; }
   
         .notification-time {
             font-size: 12px;
