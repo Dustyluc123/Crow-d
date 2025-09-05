@@ -63,47 +63,14 @@
   };
 
   // ---------------------- Estado ----------------------
-  let _friendsCache = [];
   let currentUser = null;
   let currentUserProfile = null;
   let lastVisibleFriend = null;
   let isFetchingFriends = false;
-  const FRIENDS_PER_PAGE = 4;
-  
-  let noteListeners = [];
-  let activeNotesCache = {};
+  let _friendsCache = [];
 
-  // ---------------------- Hobbies helpers ----------------------
-  const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
-  const countCommon = (a, b) => {
-    const A = new Set(normalizeHobbies(a));
-    const B = new Set(normalizeHobbies(b));
-    let n = 0; for (const x of A) if (B.has(x)) n++; return n;
-  };
-
-  async function getUserHobbies(db, userId) {
-    try {
-      const userDoc = await db.collection("users").doc(userId).get();
-      if (userDoc.exists) {
-        const data = userDoc.data() || {};
-        if (Array.isArray(data.hobbies) && data.hobbies.length > 0) {
-            return data.hobbies.map(h => String(h).trim()).filter(Boolean);
-        }
-      }
-    } catch (e) { console.debug('getUserHobbies:', e?.message); }
-    return [];
-  }
-
-  async function fetchUserProfile(db, uid) {
-    try {
-      const snap = await db.collection('users').doc(uid).get();
-      if (!snap.exists) return { uid, nickname: 'Usuário', photoURL: null };
-      const d = snap.data() || {};
-      return { uid, nickname: d.nickname || d.displayName || d.name || 'Usuário', photoURL: d.photoURL || null };
-    } catch (e) { console.debug('fetchUserProfile:', e?.message); return { uid, nickname: 'Usuário', photoURL: null }; }
-  }
-
-async function loadFriendsList(auth, db) {
+  // ---------------------- Amigos: lista ----------------------
+  async function loadFriendsList(auth, db) {
     const grid = refs.gridAll();
     if (!grid) return;
     
@@ -116,38 +83,31 @@ async function loadFriendsList(auth, db) {
     }
 
     try {
-        const friendsSubCollection = db.collection("users").doc(user.uid).collection("friends");
-        const allFriendsSnapshot = await friendsSubCollection.get();
+      const friendsSnap = await db.collection('users').doc(user.uid).collection('friends').get();
+      const friendIds = friendsSnap.docs.map(d => d.id);
 
-        const acceptedFriendIds = [];
-        allFriendsSnapshot.forEach(doc => {
-            const data = doc.data() || {};
-            const isAccepted = data.status === "accepted" || typeof data.status === "undefined";
-            if (isAccepted) {
-                const friendId = doc.id;
-                if (friendId && friendId !== user.uid) acceptedFriendIds.push(friendId);
-            }
-        });
-        
-        const loadingIndicator = grid.querySelector('.loading-indicator');
-        if (loadingIndicator) loadingIndicator.remove();
-        
-        if (acceptedFriendIds.length === 0) {
-            _friendsCache = [];
-            grid.innerHTML = `<div class="no-friends">Nenhum amigo encontrado.</div>`;
-            return;
-        }
-
-        const friendPromises = acceptedFriendIds.map(id => db.collection("users").doc(id).get());
-        const friendDocs = await Promise.all(friendPromises);
-        
+      if (!friendIds.length) {
+        grid.innerHTML = `<div class="no-friends">Você ainda não adicionou amigos.</div>`;
         _friendsCache = [];
-        friendDocs.forEach(udoc => {
-            if (!udoc.exists) return;
-            const u = udoc.data() || {};
-            const displayName = u.nickname || u.displayName || u.name || "Usuário";
-            const photoURL = u.photoURL || "../img/corvo.png";
-            _friendsCache.push({ uid: udoc.id, displayName, photoURL, hobbies: u.hobbies || [] });
+        return;
+      }
+
+      const profiles = await Promise.all(friendIds.map(async (fid) => {
+        try {
+          const udoc = await db.collection('users').doc(fid).get();
+          const u = udoc.data() || {};
+          const displayName = u.nickname || u.displayName || u.name || 'Usuário';
+          const photoURL = u.photoURL || '../img/corvo.png';
+          return { uid: udoc.id, displayName, photoURL, hobbies: u.hobbies || [] };
+        } catch (e) {
+          console.debug('perfil amigo falhou:', e?.message);
+          return null;
+        }
+      }));
+
+      _friendsCache = [];
+      profiles.filter(Boolean).forEach(({ uid, displayName, photoURL, hobbies }) => {
+            _friendsCache.push({ uid, displayName, photoURL, hobbies: hobbies || [] });
         });
         
         grid.innerHTML = _friendsCache.map(friendCardHtml).join("");
@@ -157,11 +117,11 @@ async function loadFriendsList(auth, db) {
         console.error(err);
         grid.innerHTML = `<div class="error-message">Erro ao carregar amigos: ${htmlEscape(err.message || String(err))}</div>`;
     }
-}
+  }
 
   function friendCardHtml({ uid, displayName, photoURL, hobbies }) {
     const hasHobbies = Array.isArray(hobbies) && hobbies.length > 0;
-    const hobbiesHtml = hasHobbies ? hobbies.slice(0,4).map(h => `<span class="hobby-tag">${htmlEscape(h)}</span>`).join("") : `<span class="hobby-tag">Sem hobbies</span>`;
+    const hobbiesHtml = hasHobbies ? hobbies.slice(0,4).map(h => `<span class="hobby-tag">${htmlEscape(String(h))}</span>`).join("") : `<span class="hobby-tag">Sem hobbies</span>`;
     return `
       <div class="friend-card" data-uid="${htmlEscape(uid)}">
         <img class="friend-avatar" src="${htmlEscape(photoURL || '../img/corvo.png')}" alt="${htmlEscape(displayName)}">
@@ -174,7 +134,7 @@ async function loadFriendsList(auth, db) {
         </div>
       </div>`;
   }
- function wireFriendCardClicks() {
+  function wireFriendCardClicks() {
     $$(".friend-card .friend-avatar, .friend-card .friend-name, .friend-card .profile-btn").forEach(el => {
       el.addEventListener('click', (e) => {
         const card = e.currentTarget.closest('.friend-card');
@@ -209,19 +169,24 @@ async function loadFriendsList(auth, db) {
       sentSnap.forEach(doc => exclusion.add(doc.data().to));
 
       const scored = [];
-      usersSnap.forEach(d => {
-        if (exclusion.has(d.id)) return;
-        const u = d.data() || {};
-        const common = countCommon(myHobbies, normalizeHobbies(u.hobbies));
-        if (common > 0) scored.push({ id: d.id, nickname: u.nickname || 'Usuário', photoURL: u.photoURL, common });
+      usersSnap.forEach(udoc => {
+        if (exclusion.has(udoc.id)) return;
+        const u = udoc.data() || {};
+        const hobbies = normalizeHobbies(u.hobbies);
+        const common = intersectionCount(myHobbies, hobbies);
+        if (common > 0) {
+          scored.push({ id: udoc.id, nickname: u.nickname || u.displayName || u.name || 'Usuário', photoURL: u.photoURL || '../img/Design sem nome2.png', common });
+        }
       });
 
       scored.sort((a, b) => b.common - a.common);
-      box.innerHTML = scored.slice(0, 12).map(s => suggestionCardHtml(s)).join("");
+      if (!scored.length) { box.innerHTML = `<div class="no-suggestions">Sem sugestões com hobbies em comum por enquanto.</div>`; return; }
+
+      box.innerHTML = scored.slice(0, 10).map(suggestionCardHtml).join("");
       wireSuggestionActions(auth, db);
-      if (!scored.length) box.innerHTML = `<div class="no-suggestions">Sem sugestões no momento.</div>`;
-    } catch (err) {
-      console.error(err);
+
+    } catch (e) {
+      console.error(e);
       box.innerHTML = `<div class="error-message">Erro ao carregar sugestões.</div>`;
     }
   }
@@ -271,20 +236,102 @@ function wireSuggestionActions(auth, db) {
   });
 }
 
+  function normalizeHobbies(h) {
+    if (!Array.isArray(h)) return [];
+    return h.map(x => String(x).trim()).filter(Boolean);
+  }
+  function intersectionCount(a, b) {
+    if (!a.length || !b.length) return 0;
+    const setA = new Set(a);
+    let c = 0;
+    for (const x of b) if (setA.has(x)) c++;
+    return c;
+  }
+  async function getUserHobbies(db, uid) {
+    try {
+      const snap = await db.collection('users').doc(uid).get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (Array.isArray(data.hobbies) && data.hobbies.length > 0) {
+            return data.hobbies.map(h => String(h).trim()).filter(Boolean);
+        }
+      }
+    } catch (e) { console.debug('getUserHobbies:', e?.message); }
+    return [];
+  }
+
+  async function fetchUserProfile(db, uid) {
+    try {
+      const snap = await db.collection('users').doc(uid).get();
+      if (!snap.exists) return { uid, nickname: 'Usuário', photoURL: null };
+      const d = snap.data() || {};
+      return { uid, nickname: d.nickname || d.displayName || d.name || 'Usuário', photoURL: d.photoURL || null };
+    } catch (e) { console.debug('fetchUserProfile:', e?.message); return { uid, nickname: 'Usuário', photoURL: null }; }
+  }
+
   async function createFriendRequest(auth, db, toUid) {
     const me = auth.currentUser; if (!me) throw new Error('É preciso estar logado.');
     if (toUid === me.uid) throw new Error('Você não pode enviar solicitação para si mesmo.');
 
-    const existing = await db.collection('friendRequests')
-      .where('from', '==', me.uid).where('to', '==', toUid).where('status', '==', 'pending').get();
-    if (!existing.empty) throw new Error('Já há uma solicitação pendente para este usuário.');
+    const from = me.uid;
+    const to = toUid;
+    const requestId = [from, to].sort().join("_");
+    const reqRef = db.collection('friendRequests').doc(requestId);
 
-    await db.collection('friendRequests').add({
-      from: me.uid, to: toUid, status: 'pending', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Tenta criar sem leitura prévia para respeitar as regras (create permitido ao from)
+    try {
+      await reqRef.set({
+        from, to,
+        status: 'pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: false });
+    } catch (err) {
+      // Se falhou com permission-denied, é muito provável que o doc já exista
+      // (um SET viraria UPDATE, e o 'from' não tem permissão de update nas suas regras)
+      if (err && err.code === 'permission-denied') {
+        try {
+          const snap = await reqRef.get();
+          if (snap.exists) {
+            const r = snap.data() || {};
+            if (r.status === 'pending') {
+              if (r.from === from) throw new Error('Solicitação já enviada.');
+              if (r.to === from) throw new Error('Este usuário já lhe enviou um pedido — abra as notificações para aceitar.');
+              throw new Error('Já existe uma solicitação pendente.');
+            }
+            if (r.status === 'accepted') {
+              throw new Error('Vocês já são amigos.');
+            }
+            if (r.status === 'declined') {
+              throw new Error('Pedido já foi recusado. O remetente precisa cancelar antes de reenviar.');
+            }
+            throw new Error('Já existe um histórico deste pedido.');
+          }
+        } catch (e2) {
+          // Não conseguimos ler; repasse o erro original
+          throw err;
+        }
+      }
+      // Outros erros: propaga
+      throw err;
+    }
+
+    // Cria notificação para o destinatário (suas regras permitem create por qualquer logado)
+    try {
+      await db.collection('users').doc(to).collection('notifications').add({
+        type: 'friend_request',
+        requestId,
+        fromUserId: from,
+        content: 'enviou uma solicitação de amizade',
+        status: 'pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false,
+      });
+    } catch (e) {
+      console.warn('Aviso: falha ao criar notificação de friend_request:', e);
+    }
   }
 
-  // ---------------------- NOTAS (Apenas Texto) ----------------------
+  // ---------------------- NOTAS (Apenas Texto) ---------------------
   const NOTE_MAX_LEN = 60;
   const NOTE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -300,85 +347,85 @@ function wireSuggestionActions(auth, db) {
     refs.noteSubmitBtn()?.addEventListener('click', async () => {
       try {
         const { auth, db } = ensureFirebase();
-        const me = auth.currentUser; if (!me) throw new Error('Faça login.');
+        const me = auth.currentUser; if (!me) { toast('Faça login para postar notas.', 'error'); return; }
         const text = (refs.noteTextArea()?.value || '').trim();
         if (!text) { toast('Escreva algo.', 'error'); return; }
-        await postTextNote(db, me.uid, text);
-        if (refs.noteTextArea()) refs.noteTextArea().value = '';
-        modal.style.display = 'none';
-        toast('Nota postada!', 'success');
+        if (text.length > NOTE_MAX_LEN) { toast(`Máximo de ${NOTE_MAX_LEN} caracteres.`, 'error'); return; }
+
+        const now = Date.now();
+        await firebase.firestore().collection('users').doc(me.uid).collection('notes').doc('latest').set({
+          text,
+          createdAt: now,
+          expireAt: now + NOTE_TTL_MS,
+        });
+
+        refs.noteTextArea().value = '';
+        refs.noteModal().style.display = 'none';
+        toast('Nota publicada!', 'success');
+        await loadNotesBar();
       } catch (e) {
-        console.error(e); toast(e?.message || 'Não foi possível postar a nota.', 'error');
+        console.error(e);
+        toast('Não foi possível postar a nota.', 'error');
       }
     });
   }
 
-  // ---> FUNÇÃO CORRIGIDA PARA O BUG DE EXCLUSÃO
-  async function postTextNote(db, ownerId, text) {
-    const trimmed = text.slice(0, NOTE_MAX_LEN);
-    const expiresAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + NOTE_TTL_MS));
-    const notesRef = db.collection('users').doc(ownerId).collection('notes');
+  let noteListeners = [];
+  let activeNotesCache = {};
 
-    // 1. Busca e apaga qualquer nota que o usuário já tenha.
-    const existingNotes = await notesRef.get();
-    const deletePromises = [];
-    existingNotes.forEach(doc => {
-        deletePromises.push(doc.ref.delete());
-    });
-    await Promise.all(deletePromises);
-
-    // 2. Adiciona a nova nota.
-    await notesRef.add({
-      type: 'text', text: trimmed, createdAt: firebase.firestore.FieldValue.serverTimestamp(), expiresAt
-    });
-  }
-  
   function setupRealtimeNotesListener() {
-    const { auth, db } = ensureFirebase();
-    const me = auth.currentUser;
-    if (!me) return;
-
+    // limpa listeners anteriores
     noteListeners.forEach(unsubscribe => unsubscribe());
     noteListeners = [];
 
-    const userIdsToListen = [me.uid, ..._friendsCache.map(f => f.uid)];
+    const { auth, db } = ensureFirebase();
+    const me = auth.currentUser; if (!me) return;
 
-    userIdsToListen.forEach(uid => {
-        const query = db.collection('users').doc(uid).collection('notes')
-            .where('expiresAt', '>', firebase.firestore.Timestamp.now())
-            .orderBy('expiresAt', 'desc')
-            .limit(1);
+    // próprio
+    const unsubSelf = db.collection('users').doc(me.uid).collection('notes').doc('latest')
+      .onSnapshot((doc) => {
+        const d = doc.data();
+        if (d && typeof d.expireAt === 'number' && Date.now() < d.expireAt && d.text) {
+          activeNotesCache[me.uid] = { text: String(d.text), expireAt: d.expireAt };
+        } else {
+          delete activeNotesCache[me.uid];
+        }
+        loadNotesBar();
+      });
+    noteListeners.push(unsubSelf);
 
-        const unsubscribe = query.onSnapshot(async snapshot => {
-            if (snapshot.empty) {
-                delete activeNotesCache[uid];
+    // amigos
+    firebase.firestore().collection('users').doc(me.uid).collection('friends').get().then((snap) => {
+      snap.forEach(fr => {
+        const fid = fr.id;
+        const unsub = db.collection('users').doc(fid).collection('notes').doc('latest')
+          .onSnapshot(doc => {
+            const d = doc.data();
+            if (d && typeof d.expireAt === 'number' && Date.now() < d.expireAt && d.text) {
+              activeNotesCache[fid] = { text: String(d.text), expireAt: d.expireAt };
             } else {
-                const doc = snapshot.docs[0];
-                activeNotesCache[uid] = { id: doc.id, ownerId: uid, ...doc.data() };
+              delete activeNotesCache[fid];
             }
-            await loadNotesBar(); 
-        }, err => {
-            console.error(`Erro ao escutar notas de ${uid}:`, err);
-        });
-        noteListeners.push(unsubscribe);
+            loadNotesBar();
+          });
+        noteListeners.push(unsub);
+      });
     });
   }
 
   async function loadNotesBar() {
-      const bar = refs.notesBar();
-      if (!bar) return;
-
+      const bar = refs.notesBar(); if (!bar) return;
       const { auth, db } = ensureFirebase();
-      const me = auth.currentUser;
-      if (!me) { bar.innerHTML = ''; return; }
+      const me = auth.currentUser; if (!me) { bar.innerHTML = ''; return; }
 
-      const friendIdsWithNotes = _friendsCache
-          .map(f => f.uid)
-          .filter(uid => activeNotesCache[uid]);
+      const friendIds = [me.uid];
+      try {
+        const snap = await db.collection('users').doc(me.uid).collection('friends').get();
+        snap.forEach(d => friendIds.push(d.id));
+      } catch (e) { /* ignore */ }
 
-      const userIdsToFetch = [me.uid, ...friendIdsWithNotes];
-
-      const profilePromises = userIdsToFetch.map(uid => fetchUserProfile(db, uid));
+      // buscar perfis
+      const profilePromises = friendIds.map(fid => fetchUserProfile(db, fid));
       const profiles = await Promise.all(profilePromises);
 
       const tiles = profiles.map(profile => {
@@ -409,67 +456,30 @@ function wireSuggestionActions(auth, db) {
 
   function noteTileHtml({ ownerId, ownerName, photoURL, note, isSelf }) {
     const avatar = `<div class="note-avatar"><img src="${htmlEscape(photoURL)}" alt="${htmlEscape(ownerName)}"></div>`;
-    let bubble = isSelf && !note 
-      ? `<div class="note-bubble muted">+</div>` 
-      : `<div class="note-bubble muted"></div>`;
-
-    if (note && note.type === 'text') {
-      bubble = `<div class="note-bubble">${htmlEscape(String(note.text || ''))}</div>`;
-    }
-    const del = isSelf && note ? `<button class="note-del" data-note-owner="${htmlEscape(ownerId)}" data-note-id="${htmlEscape(note.id)}" title="Apagar nota">×</button>` : '';
+    const name = `<div class="note-name">${htmlEscape(ownerName)}</div>`;
+    const body = note && note.text ? `<div class="note-bubble">${htmlEscape(note.text)}</div>` : `<div class="note-bubble muted">Sem nota</div>`;
+    const actions = isSelf
+      ? `<button class="note-action" data-action="edit" data-owner-id="${htmlEscape(ownerId)}"><i class="fas fa-pen"></i></button>`
+      : ``;
 
     return `
       <div class="note-tile" data-owner-id="${htmlEscape(ownerId)}">
         ${avatar}
-        ${bubble}
-        <div class="note-owner">${htmlEscape(ownerName)}</div>
-        ${del}
+        <div class="note-meta">
+          ${name}
+          ${body}
+        </div>
+        <div class="note-actions">${actions}</div>
       </div>`;
   }
 
   function wireNoteTileActions() {
-    $$(".note-tile").forEach(tile => {
-      const uid = tile.getAttribute('data-owner-id');
-      const nameEl = tile.querySelector('.note-owner');
-      const avatar = tile.querySelector('.note-avatar');
-      const openProfile = () => window.location.href = `../pages/user.html?uid=${encodeURIComponent(uid)}`;
-      
-      if(uid === currentUser?.uid && !activeNotesCache[uid]) {
-        avatar?.addEventListener('click', () => refs.addNoteBtn()?.click());
-        nameEl?.addEventListener('click', () => refs.addNoteBtn()?.click());
-      } else {
-        avatar?.addEventListener('click', openProfile);
-        nameEl?.addEventListener('click', openProfile);
-      }
-    });
-
-    $$(".note-del").forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const owner = btn.getAttribute('data-note-owner');
-        const id = btn.getAttribute('data-note-id');
-        if (!owner || !id) return;
-        try {
-          const { db } = ensureFirebase();
-          await db.collection('users').doc(owner).collection('notes').doc(id).delete();
-          toast('Nota apagada.', 'success');
-        } catch (err) { console.error(err); toast('Não foi possível apagar.', 'error'); }
+    $$(".note-action[data-action='edit']").forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = refs.noteModal();
+        if (modal) modal.style.display = 'flex';
       });
     });
-  }
-
-  // ---------------------- UI diversos ----------------------
-  function wireLogout(auth) {
-    const btn = refs.logoutBtn(); if (!btn) return;
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      try { await auth.signOut(); toast('Você saiu da conta.', 'success'); setTimeout(() => window.location.reload(), 400); }
-      catch { toast('Erro ao sair.', 'error'); }
-    });
-  }
-  function wireLeftSidebarToggle() {
-    const btn = refs.leftSidebarToggle(); const sidebar = refs.leftSidebar(); if (!btn || !sidebar) return;
-    btn.addEventListener('click', () => { sidebar.classList.toggle('open'); });
   }
 
   // ---------------------- Boot ----------------------
@@ -501,4 +511,19 @@ function wireSuggestionActions(auth, db) {
       await loadNotesBar(); 
     });
   });
+
+  // ---------------------- UI extras (logout/side) ----------------------
+  function wireLogout(auth) {
+    const b = refs.logoutBtn(); if (!b) return;
+    b.addEventListener('click', async () => {
+      try { await auth.signOut(); location.reload(); }
+      catch (e) { toast('Falha ao sair.', 'error'); }
+    });
+  }
+  function wireLeftSidebarToggle() {
+    const t = refs.leftSidebarToggle(); const s = refs.leftSidebar(); if (!t || !s) return;
+    t.addEventListener('click', () => {
+      s.classList.toggle('open');
+    });
+  }
 })();
