@@ -1586,9 +1586,28 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
 
         // --- FIM DA CORREÇÃO DE HOBBIES ---
 
-        const profileLink = `pages/user.html?uid=${user.id}`;
-        suggestionClone.querySelector('.suggestion-name').parentElement.href = profileLink;
-        suggestionClone.querySelector('.suggestion-photo').parentElement.href = profileLink;
+        const profileLink = `pages/user.html?uid=${encodeURIComponent(user.id)}`;
+const nameEl = suggestionClone.querySelector('.suggestion-name');
+const imgEl  = suggestionClone.querySelector('.suggestion-photo');
+
+// wrap do NOME
+if (nameEl) {
+  const aName = document.createElement('a');
+  aName.href = profileLink;
+  aName.className = 'suggestion-name-link';
+  nameEl.replaceWith(aName);
+  aName.appendChild(nameEl);
+}
+
+// wrap da FOTO
+if (imgEl) {
+  const aImg = document.createElement('a');
+  aImg.href = profileLink;
+  aImg.className = 'suggestion-photo-link';
+  imgEl.replaceWith(aImg);
+  aImg.appendChild(imgEl);
+}
+
 
         followButton.addEventListener("click", async function () {
             await sendFriendRequest(user.id);

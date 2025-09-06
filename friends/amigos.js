@@ -199,7 +199,7 @@
           <p>${common} ${common === 1 ? 'hobby em comum' : 'hobbies em comum'}</p>
         </div>
         <button class="follow-btn">Seguir</button>
-      </div>`;
+      </div>`
   }
 // Substitua a função antiga por esta em amigos.js
 function wireSuggestionActions(auth, db) {

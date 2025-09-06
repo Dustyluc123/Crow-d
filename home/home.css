@@ -2047,3 +2047,10 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
   cursor: default;
   pointer-events: none;
 }
+
+.suggestion .suggestion-name-link,
+.suggestion .suggestion-photo-link{
+  color: inherit;
+  text-decoration: none;
+}
+.suggestion .suggestion-name-link:hover{ text-decoration: underline; }
