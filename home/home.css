@@ -2042,3 +2042,8 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     align-items: center;
     gap: 8px; /* Espaçamento entre os itens (ícone, foto, nome) */
 }
+.follow-btn.is-pending{
+  background: rgba(99,102,241,.18);
+  cursor: default;
+  pointer-events: none;
+}

@@ -57,17 +57,30 @@
                     <h1><i class="fas fa-bell"></i> Suas Notificações</h1>
                 </div>
 
-                <div class="mark-all-read">
-                    <button class="mark-all-read-btn" id="markAllReadBtn">
-                        <i class="fas fa-check-double"></i> Marcar todas como lidas
-                    </button>
-                </div>
                 
                 <div id="notifications-container">
-                    <div class="notification-loading">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando notificações...
-                    </div>
-                </div>
+  <div id="notifications-root" class="notifs-grid">
+    <section id="col-left">
+      <h3>Pedidos recebidos</h3>
+      <div id="friend-requests"></div>
+
+      <h3>Pedidos enviados</h3>
+      <div id="sent-requests"></div>
+    </section>
+
+    <aside id="col-right">
+      <div class="right-toolbar">
+        <button id="mark-all-read" class="btn">Marcar todas como lidas</button>
+      </div>
+      <div id="general-notifications"></div>
+    </aside>
+  </div>
+
+  <span id="loading-notifications" class="loading-notifications" hidden>
+    <i class="fas fa-spinner fa-spin"></i> Carregando notificações...
+  </span>
+</div>
+
             </main>
         </div>
 

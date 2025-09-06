@@ -37,6 +37,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const singlePostView = document.getElementById("single-post-view");
     const focusedPostContainer = document.getElementById("focused-post-container");
     const backToFeedBtn = document.getElementById("back-to-feed-btn");
+
+function toast(m,t="info"){ try{ window.createToast?.(m,t) }catch(_){} }
+
     // Variáveis globais
     let currentUser = null;
     let currentUserProfile = null;
@@ -153,6 +156,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    
+
     // Botões para fechar/cancelar e remover
     if (closeEditorModalBtn) closeEditorModalBtn.addEventListener('click', closeImageEditor);
     if (cancelCropBtn) cancelCropBtn.addEventListener('click', closeImageEditor);
@@ -212,6 +217,110 @@ document.addEventListener("DOMContentLoaded", function () {
             postsListener = null; // Limpa a variável
         }
     }
+    async function createFriendRequest(toUid){
+  const me = auth.currentUser;
+  if(!me){ toast("Entre para seguir.","error"); return false; }
+  if(!toUid || toUid===me.uid){ toast("Usuário inválido.","error"); return false; }
+
+  const from = me.uid, to = toUid;
+  const reqId = [from,to].sort().join("_");
+  const reqRef = db.collection("friendRequests").doc(reqId);
+
+  try{
+    await reqRef.set({
+      from, to, status:"pending",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge:false });
+  }catch(err){
+    if(err?.code==="permission-denied"){
+      try{
+        const snap = await reqRef.get();
+        if(snap.exists){
+          const r = snap.data()||{};
+          if(r.status==="pending"){
+            if(r.from===from) throw new Error("Solicitação já enviada.");
+            if(r.to===from) throw new Error("Essa pessoa já te enviou — aceite nas notificações.");
+          }
+          if(r.status==="accepted") throw new Error("Vocês já são amigos.");
+          if(r.status==="declined") throw new Error("Pedido foi recusado. Cancele antes de reenviar.");
+        }
+      }catch(_){}
+    }
+    throw err;
+  }
+
+  // notificação para o destinatário
+  try{
+    await db.collection("users").doc(to).collection("notifications").add({
+      type:"friend_request",
+      requestId:reqId,
+      fromUserId: from,
+      content:"enviou uma solicitação de amizade",
+      status:"pending",
+      read:false,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }catch(_) {}
+
+  toast("Solicitação enviada!","success");
+  return true;
+}
+function wireSuggestionActionsIndex(){
+  document.addEventListener("click", async (e)=>{
+    const btn = e.target.closest(".follow-btn, .friend-btn, .send-request-btn");
+    if(!btn) return;
+
+    const host = btn.closest("[data-user-id]");
+    const toUid = btn.getAttribute("data-user-id") || host?.getAttribute("data-user-id");
+    if(!toUid) return;
+
+    const initial = btn.textContent;
+    btn.disabled = true; btn.textContent = "Enviando…";
+
+    try{
+      const ok = await createFriendRequest(toUid);
+      if(ok){
+        btn.textContent = "Pendente";
+        btn.classList.add("is-pending");
+      }else{
+        btn.textContent = initial; btn.disabled = false;
+      }
+    }catch(err){
+      toast(err?.message || "Não foi possível enviar.","error");
+      btn.textContent = initial; btn.disabled = false;
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", wireSuggestionActionsIndex);
+function getUserPagePath(){
+  // no index.html da raiz, user fica em /pages/
+  return 'pages/user.html';
+}
+
+function wireSuggestionNavigationIndex(){
+  const box = document.getElementById('suggestions-container');
+  if(!box) return;
+
+  // não interfere no botão de seguir
+  box.addEventListener('click', (e)=>{
+    if (e.target.closest('.follow-btn, .friend-btn, .send-request-btn')) return;
+
+    // só navega se clicou no NOME ou na FOTO
+    const hit = e.target.closest('.suggestion-photo, .suggestion-name');
+    if(!hit) return;
+
+    const card = hit.closest('.suggestion[data-user-id]');
+    const uid  = card?.dataset.userId;
+    if(!uid) return;
+
+    const userPage = getUserPagePath();
+    window.location.href = `${userPage}?uid=${encodeURIComponent(uid)}`;
+  });
+}
+
+document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
+
 
     function formatTimestamp(date) {
         // Verificar se date é um objeto Date válido
