@@ -63,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const sendShareBtn     = document.getElementById('sendShareBtn');
   let currentGroupIdToShare = null;
 
+
+
+  
   // ================================
   // Autenticação
   // ================================
@@ -152,66 +155,72 @@ document.addEventListener('DOMContentLoaded', () => {
       suggestedGroupsContainer.innerHTML = '';
     }
   }
+// Dentro do seu arquivo script.js
 
-  // ================================
-  // Criar grupo
-  // ================================
-  if (createGroupForm) {
-    createGroupForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) { showToast('Você precisa estar logado.', 'error'); return; }
+// Encontre o listener do formulário de criação de grupo
+if (createGroupForm) {
+  createGroupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentUser) { showToast('Você precisa estar logado.', 'error'); return; }
 
-      const nameEl = createGroupForm.querySelector('#groupName');
-      const descEl = createGroupForm.querySelector('#groupDescription');
-      const tagsEl = createGroupForm.querySelector('#groupTags');
-      const passEl = createGroupForm.querySelector('#groupPassword');
+    const nameEl = createGroupForm.querySelector('#groupName');
+    const descEl = createGroupForm.querySelector('#groupDescription');
+    
+    // As tags agora são selecionadas pelos checkboxes
+    const tagsCheckboxes = createGroupForm.querySelectorAll('input[name="group-tags"]:checked');
+    const tags = Array.from(tagsCheckboxes).map(cb => cb.value);
 
-      const name        = (nameEl?.value || '').trim();
-      const description = (descEl?.value || '').trim();
-      const tags        = (tagsEl?.value || '').split(',').map(s => s.trim()).filter(Boolean);
-      const isPrivate   = !!isPrivateCheckbox?.checked;
-      const password    = isPrivate ? (passEl?.value || '').trim() : null;
+    const passEl = createGroupForm.querySelector('#groupPassword');
 
-      if (!name) { showToast('Dê um nome ao grupo.', 'error'); return; }
-      if (isPrivate && !password) { showToast('Informe a senha do grupo privado.', 'error'); return; }
+    const name = (nameEl?.value || '').trim();
+    const description = (descEl?.value || '').trim();
+    const isPrivate = !!isPrivateCheckbox?.checked;
+    const password = isPrivate ? (passEl?.value || '').trim() : null;
 
-      const now = firebase.firestore.FieldValue.serverTimestamp();
-      const doc = {
-        name,
-        description,
-        tags,
-        isPrivate,
-        password: isPrivate ? password : null, // ⚠️ plaintext (mantenho conceito atual)
-        createdBy: currentUser.uid,
-        admins: [currentUser.uid],
-        members: [currentUser.uid],
-        createdAt: now,
-        updatedAt: now,
-      };
+    // --- ADIÇÃO DA VALIDAÇÃO DE 20 CARACTERES ---
+    if (name.length > 20) {
+        showToast('O nome do grupo não pode ter mais de 20 caracteres.', 'error');
+        return; // Impede a criação do grupo
+    }
+    // --- FIM DA VALIDAÇÃO ---
 
-      const btn = createGroupForm.querySelector('button[type="submit"]');
-      const old = btn?.textContent;
-      if (btn) { btn.disabled = true; btn.textContent = 'Criando...'; }
+    if (!name) { showToast('Dê um nome ao grupo.', 'error'); return; }
+    if (tags.length === 0) { showToast('Selecione pelo menos uma tag para o grupo.', 'error'); return; } // Validação para tags
+    if (isPrivate && !password) { showToast('Informe a senha do grupo privado.', 'error'); return; }
 
-      try {
-        await db.collection('groups').add(doc);
-        showToast('Grupo criado!', 'success');
-        if (createGroupModal) createGroupModal.style.display = 'none';
-        createGroupForm.reset();
-        passwordFieldWrap?.classList.remove('visible');
-        await loadGroups();
-      } catch (e2) {
-        console.error('Erro ao criar grupo:', e2);
-        showToast('Não foi possível criar o grupo.', 'error');
-      } finally {
-        if (btn) { btn.disabled = false; btn.textContent = old; }
-      }
-    });
-  }
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const doc = {
+      name,
+      description,
+      tags, // Salva as tags selecionadas
+      isPrivate,
+      password: isPrivate ? password : null,
+      createdBy: currentUser.uid,
+      admins: [currentUser.uid],
+      members: [currentUser.uid],
+      createdAt: now,
+      updatedAt: now,
+    };
 
-  // ================================
-  // Card do grupo (única definição)
-  // ================================
+    const btn = createGroupForm.querySelector('button[type="submit"]');
+    const old = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = 'Criando...'; }
+
+    try {
+      await db.collection('groups').add(doc);
+      showToast('Grupo criado!', 'success');
+      if (createGroupModal) createGroupModal.style.display = 'none';
+      createGroupForm.reset();
+      if(passwordFieldWrap) passwordFieldWrap.classList.remove('visible');
+      await loadGroups();
+    } catch (e2) {
+      console.error('Erro ao criar grupo:', e2);
+      showToast('Não foi possível criar o grupo.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
+  });
+}
   function createGroupCard(group, isMember) {
     const card = document.createElement('div');
     card.className = 'group-card';

@@ -121,6 +121,14 @@ body.dark-mode .hobby-option {
     border-radius: 20px;
     border-color: var(--primary-color);
 }
+.char-counter {
+    display: block;
+    text-align: right;
+    font-size: 0.8em;
+    color: #6c757d; /* Um cinza discreto */
+    margin-top: 4px;
+    height: 1em; /* Evita que o layout "pule" */
+}
     </style>
     <header>
         <div class="logo">
@@ -194,7 +202,8 @@ body.dark-mode .hobby-option {
             <form class="modal-form">
                 <div class="input-group">
                     <label for="groupName">Nome do Grupo</label>
-                    <input type="text" id="groupName" placeholder="Digite o nome do grupo" required>
+                    <input type="text" id="groupName" placeholder="Digite o nome do grupo" required maxlength="20">
+                    <small id="groupNameCounter" class="char-counter">0 / 20</small>
                 </div>
                 <div class="input-group">
                     <label for="groupDescription">Descrição</label>

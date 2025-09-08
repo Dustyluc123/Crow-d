@@ -1,5 +1,4 @@
 // CONTEÚDO COMPLETO E CORRIGIDO PARA O ARQUIVO: mensagens/script.js
-
 (function(){
   // ---------------------- DOM helpers ----------------------
   const $  = (s, r=document) => r.querySelector(s);
@@ -60,6 +59,7 @@
   // ---------------------- Estado ----------------------
   let currentUser = null;
   let selectedConversationId = null;
+  let currentPeerUid = null;       // <- NOVO: guarda com quem estou falando
   let messagesUnsub = null;
   const userCache = new Map(); // uid -> {displayName, photoURL}
 
@@ -83,6 +83,7 @@
   // reconsulta sempre os elementos do header do chat
   function getChatHeaderEls() {
     return {
+      chatHeaderEl:  document.getElementById('chatHeader'),  // <- NOVO
       chatNameEl:     document.getElementById('chatName'),
       chatAvatarEl:   document.getElementById('chatAvatar'),
       chatStatusEl:   document.getElementById('chatStatus'),
@@ -176,17 +177,31 @@
 
   async function openConversation(conversationId, peerUid, peerProfile){
     selectedConversationId = conversationId;
+    currentPeerUid = peerUid || currentPeerUid; // <- NOVO: guarda alvo
     markActiveConversation(conversationId);
 
-    if (!peerProfile && peerUid) {
-      try { peerProfile = await getUserProfile(peerUid); } catch {}
+    if (!peerProfile && currentPeerUid) {
+      try { peerProfile = await getUserProfile(currentPeerUid); } catch {}
     }
 
-    const { chatNameEl, chatAvatarEl, chatStatusEl, chatMessagesEl } = getChatHeaderEls();
+    const { chatHeaderEl, chatNameEl, chatAvatarEl, chatStatusEl, chatMessagesEl } = getChatHeaderEls();
 
-    if (chatNameEl)   chatNameEl.textContent = (peerProfile?.displayName || 'Conversando');
-    if (chatAvatarEl) chatAvatarEl.src = (peerProfile?.photoURL || '../img/Design sem nome2.png');
+    // Nome & Foto no topo
+    const displayName = (peerProfile?.displayName || 'Conversando');
+    const photo       = (peerProfile?.photoURL || '../img/Design sem nome2.png');
+
+    if (chatNameEl)   chatNameEl.textContent = displayName;
+    if (chatAvatarEl) chatAvatarEl.src = photo;
     if (chatStatusEl) chatStatusEl.innerHTML = `<span class="status-badge"></span> disponível`;
+
+    // Clique no cabeçalho -> abre perfil do contato
+    if (chatHeaderEl) {
+      chatHeaderEl.style.cursor = 'pointer';
+      chatHeaderEl.onclick = () => {
+        if (!currentPeerUid) return;
+        window.location.href = `../pages/user.html?uid=${encodeURIComponent(currentPeerUid)}`;
+      };
+    }
 
     if (feedEl) feedEl.classList.add('chat-active');
     setChatOpen(true);
@@ -212,7 +227,7 @@
       snap.forEach(doc => {
         const m = doc.data();
         const isMine = m.senderId === currentUser.uid;
-        
+
         const deleteButtonHTML = isMine ? `
             <button class="message-delete-btn" data-message-id="${doc.id}" title="Apagar mensagem">
                 <i class="fas fa-trash"></i>
@@ -289,6 +304,7 @@
     }
   }
 
+  // ---------------------- Sugestões ----------------------
   const normalizeHobbies = (h) => Array.isArray(h) ? h.map(x => typeof x === 'string' ? x.trim() : '').filter(Boolean) : [];
   const countCommon = (a, b) => {
     const A = new Set(normalizeHobbies(a)); const B = new Set(normalizeHobbies(b)); let n=0; for (const x of A) if (B.has(x)) n++; return n;
@@ -355,9 +371,15 @@
         if (img)  img.src = it.photo || '../img/Design sem nome2.png';
         if (name) name.textContent = it.name || 'Usuário';
         if (sub)  sub.textContent  = `${it.common} ${it.common===1?'hobby em comum':'hobbies em comum'}`;
+
+        // fallback acessível + abertura inline:
+        const messagesPath = location.pathname.endsWith('/index.html') ? location.pathname : '../mensagens/index.html';
+        if (link) link.href = `${messagesPath}?uid=${encodeURIComponent(it.uid)}`;
+
         const open = (e) => { e.preventDefault(); startOrOpenConversationWith(it.uid); };
         if (link) link.addEventListener('click', open);
         if (btn)  btn.addEventListener('click', open);
+
         if (suggestionsList) suggestionsList.appendChild(node);
       });
       if (!items.length && suggestionsList) {
@@ -374,6 +396,7 @@
     await loadSuggestions();
   }
 
+  // ---------------------- Excluir conversa / mensagem ----------------------
   async function deleteConversation(conversationId){
     const { db } = ensureFirebase();
     try {
@@ -383,12 +406,13 @@
         if (feedEl) feedEl.classList.remove('chat-active');
         setChatOpen(false);
         selectedConversationId = null;
+        currentPeerUid = null; // <- NOVO reset
         if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-        const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+        const { chatMessagesEl, chatNameEl, chatAvatarEl, chatStatusEl } = getChatHeaderEls();
         if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
         if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
-        const avatar = document.getElementById('chatAvatar');
-        if (avatar) avatar.src = '../img/Design sem nome2.png';
+        if (chatAvatarEl)   chatAvatarEl.src = '../img/Design sem nome2.png';
+        if (chatStatusEl)   chatStatusEl.innerHTML = '<span class="status-badge"></span> offline';
       }
       await loadConversations();
     } catch (e) {
@@ -429,16 +453,18 @@
     }
   });
 
+  // ---------------------- Navegação / UI ----------------------
   backBtn?.addEventListener('click', () => {
     if (feedEl) feedEl.classList.remove('chat-active');
     setChatOpen(false);
     selectedConversationId = null;
+    currentPeerUid = null; // <- NOVO reset
     if (messagesUnsub) { messagesUnsub(); messagesUnsub = null; }
-    const { chatMessagesEl, chatNameEl } = getChatHeaderEls();
+    const { chatMessagesEl, chatNameEl, chatAvatarEl, chatStatusEl } = getChatHeaderEls();
     if (chatMessagesEl) chatMessagesEl.innerHTML = '<div class="no-messages">Selecione uma conversa para começar a conversar</div>';
     if (chatNameEl)     chatNameEl.textContent = 'Selecione uma conversa';
-    const avatar = document.getElementById('chatAvatar');
-    if (avatar) avatar.src = '../img/Design sem nome2.png';
+    if (chatAvatarEl)   chatAvatarEl.src = '../img/Design sem nome2.png';
+    if (chatStatusEl)   chatStatusEl.innerHTML = '<span class="status-badge"></span> offline';
   });
 
   emojiBtn?.addEventListener('click', () => {
@@ -467,6 +493,7 @@
     catch (err) { console.error(err); toast('Erro ao sair.', 'error'); }
   });
 
+  // ---------------------- Boot ----------------------
   document.addEventListener('DOMContentLoaded', () => {
     try {
       const { auth } = ensureFirebase();
@@ -481,20 +508,15 @@
         const profileLink = document.querySelector('.profile-link');
         if (profileLink) profileLink.href = `../pages/user.html?uid=${encodeURIComponent(user.uid)}`;
         
-        // --- INÍCIO DA LÓGICA DE CORREÇÃO ---
-        // Primeiro, carregamos todas as conversas existentes
+        // 1) Carrega conversas
         await loadConversations(); 
 
-        // Depois, verificamos se um UID foi passado na URL
+        // 2) Se tiver ?uid=<alvo>, abre/cria conversa e já entra
         const urlParams = new URLSearchParams(window.location.search);
         const userToChatId = urlParams.get('uid');
-
         if (userToChatId && userToChatId !== currentUser.uid) {
-            // Se houver um UID, a função abaixo irá encontrar a conversa existente
-            // ou criar uma nova, e então abrir a janela de chat.
-            await startOrOpenConversationWith(userToChatId);
+          await startOrOpenConversationWith(userToChatId);
         }
-        // --- FIM DA LÓGICA DE CORREÇÃO ---
       });
     } catch (e) {
       console.error(e);
