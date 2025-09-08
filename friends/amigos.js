@@ -428,16 +428,18 @@ function wireSuggestionActions(auth, db) {
       const profilePromises = friendIds.map(fid => fetchUserProfile(db, fid));
       const profiles = await Promise.all(profilePromises);
 
-      const tiles = profiles.map(profile => {
-          const note = activeNotesCache[profile.uid];
-          return noteTileHtml({
-              ownerId: profile.uid,
-              ownerName: profile.uid === me.uid ? 'Você' : (profile.nickname || 'Amigo'),
-              photoURL: profile.photoURL || '../img/Design sem nome2.png',
-              note: note,
-              isSelf: profile.uid === me.uid
-          });
+     const tiles = profiles
+  .filter(profile => profile.uid === me.uid || activeNotesCache[profile.uid]) // Mostra você sempre, amigos só se tiverem nota
+  .map(profile => {
+      const note = activeNotesCache[profile.uid];
+      return noteTileHtml({
+          ownerId: profile.uid,
+          ownerName: profile.uid === me.uid ? 'Você' : (profile.nickname || 'Amigo'),
+          photoURL: profile.photoURL || '../img/Design sem nome2.png',
+          note: note,
+          isSelf: profile.uid === me.uid
       });
+  });
       
       tiles.sort((a, b) => {
         if (a.includes(`data-owner-id="${me.uid}"`)) return -1;
