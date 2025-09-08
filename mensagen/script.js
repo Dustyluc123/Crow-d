@@ -1,6 +1,4 @@
-// mensagens/script.js — conversas 1:1, sugestões, chat em tempo real, emoji, excluir, toasts
-// + FIX header mobile: esconde header global só quando chat estiver aberto no mobile
-// + FIX nulls: reconsulta elementos do header do chat sempre que abrir conversa
+// CONTEÚDO COMPLETO E CORRIGIDO PARA O ARQUIVO: mensagens/script.js
 
 (function(){
   // ---------------------- DOM helpers ----------------------
@@ -92,7 +90,6 @@
     };
   }
 
-  // ---- FIX header mobile ----
   const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
   function setChatOpen(open){
     if (open && isMobile()) document.body.classList.add('chat-open');
@@ -158,7 +155,7 @@
           <div class="conversation-time">${it.lastMessageAt ? fmtTime(it.lastMessageAt) : ''}</div>
         `;
         el.addEventListener('click', (ev) => {
-          if (ev.target.closest('.delete-btn')) return; // evita abrir se clicar em deletar
+          if (ev.target.closest('.delete-btn')) return; 
           openConversation(it.id, otherUid, prof);
         });
         if (listEl) listEl.appendChild(el);
@@ -216,7 +213,6 @@
         const m = doc.data();
         const isMine = m.senderId === currentUser.uid;
         
-        // *** ALTERAÇÃO PRINCIPAL AQUI: Adiciona o botão de apagar se a mensagem for sua ***
         const deleteButtonHTML = isMine ? `
             <button class="message-delete-btn" data-message-id="${doc.id}" title="Apagar mensagem">
                 <i class="fas fa-trash"></i>
@@ -239,13 +235,9 @@
     });
   }
   
-  // #######################################################
-  // ### FUNÇÃO CORRIGIDA PARA EVITAR CONVERSAS DUPLICADAS ###
-  // #######################################################
   async function startOrOpenConversationWith(otherUid){
     const { db } = ensureFirebase();
 
-    // Cria um ID de conversa único e previsível, ordenando os UIDs
     const participants = [currentUser.uid, otherUid].sort();
     const conversationId = participants.join('_');
 
@@ -254,10 +246,8 @@
     let found = null;
 
     if (convDoc.exists) {
-        // Se a conversa com o ID previsível existe, usa ela
         found = { id: convDoc.id, ...convDoc.data() };
     } else {
-        // Se não existe, cria a conversa com esse ID
         const newConvData = {
             participants: participants,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -413,16 +403,13 @@
     try {
       await db.collection('conversations').doc(selectedConversationId)
               .collection('messages').doc(messageId).delete();
-      // Não precisa de toast, a mensagem some da tela
     } catch (e) {
       console.error(e);
       toast('Não foi possível excluir a mensagem.', 'error');
     }
   }
 
-  // Delegação para cliques em toda a página
   document.addEventListener('click', (e) => {
-    // Procura por um botão de apagar mensagem
     const deleteMsgBtn = e.target.closest('.message-delete-btn');
     if (deleteMsgBtn) {
         const messageId = deleteMsgBtn.dataset.messageId;
@@ -432,7 +419,6 @@
         return;
     }
     
-    // Procura por um botão de apagar conversa
     const deleteConvBtn = e.target.closest('.delete-btn[data-conversation-id]');
     if (deleteConvBtn) {
         const conversationId = deleteConvBtn.dataset.conversationId;
@@ -494,7 +480,21 @@
         currentUser = user;
         const profileLink = document.querySelector('.profile-link');
         if (profileLink) profileLink.href = `../pages/user.html?uid=${encodeURIComponent(user.uid)}`;
-        await loadConversations();
+        
+        // --- INÍCIO DA LÓGICA DE CORREÇÃO ---
+        // Primeiro, carregamos todas as conversas existentes
+        await loadConversations(); 
+
+        // Depois, verificamos se um UID foi passado na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userToChatId = urlParams.get('uid');
+
+        if (userToChatId && userToChatId !== currentUser.uid) {
+            // Se houver um UID, a função abaixo irá encontrar a conversa existente
+            // ou criar uma nova, e então abrir a janela de chat.
+            await startOrOpenConversationWith(userToChatId);
+        }
+        // --- FIM DA LÓGICA DE CORREÇÃO ---
       });
     } catch (e) {
       console.error(e);

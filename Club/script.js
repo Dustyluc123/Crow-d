@@ -38,6 +38,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const shareFriendsList = document.getElementById('share-friends-list');
     const sendShareBtn = document.getElementById('sendShareBtn');
     let currentGroupIdToShare = null;
+if (createGroupForm) {
+  createGroupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nameEl = createGroupForm.querySelector('#groupName');        // <input id="groupName" ...>
+    const descEl = createGroupForm.querySelector('#groupDescription'); // <textarea id="groupDescription">
+    const tagsEl = createGroupForm.querySelector('#groupTags');        // <input id="groupTags" placeholder="tag1, tag2">
+    const passEl = createGroupForm.querySelector('#groupPassword');    // <input id="groupPassword" type="password">
+
+    const name = (nameEl?.value || '').trim();
+    const description = (descEl?.value || '').trim();
+    const tags = (tagsEl?.value || '')
+      .split(',').map(s => s.trim()).filter(Boolean);
+    const isPrivate = !!isPrivateCheckbox?.checked;
+    const password = isPrivate ? (passEl?.value || '') : null;
+
+    if (!name) { showToast('Dê um nome ao grupo.', 'error'); return; }
+    if (isPrivate && !password) { showToast('Informe a senha do grupo privado.', 'error'); return; }
+
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const doc = {
+      name,
+      description,
+      tags,
+      isPrivate,
+      password: isPrivate ? password : null, // ⚠️ plaintext; considere hashear
+      createdBy: currentUser.uid,
+      admins: [currentUser.uid],
+      members: [currentUser.uid],
+      createdAt: now,
+      updatedAt: now
+    };
+
+    const btn = createGroupForm.querySelector('button[type="submit"]');
+    const old = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = 'Criando...'; }
+
+    try {
+      await db.collection('groups').add(doc);     // ou .doc(slug).set(doc)
+      showToast('Grupo criado!', 'success');
+      createGroupModal.style.display = 'none';
+      createGroupForm.reset();
+      passwordField?.classList.remove('visible');
+      loadGroups();
+      // se quiser redirecionar: window.location.href = `./chat.html?groupId=${ref.id}`;
+    } catch (e) {
+      console.error('Erro ao criar grupo:', e);
+      showToast('Não foi possível criar o grupo.', 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = old; }
+    }
+  });
+}
 
     // Autenticação
     auth.onAuthStateChanged(async function(user) {
@@ -76,12 +128,18 @@ document.addEventListener('DOMContentLoaded', function() {
             let hasSuggestedGroups = false;
 
             const filteredDocs = snapshot.docs.filter(doc => {
-                const group = doc.data();
-                const searchTermLower = searchTerm.toLowerCase();
-                const nameMatch = group.name.toLowerCase().includes(searchTermLower);
-                const tagMatch = group.tags.some(tag => tag.toLowerCase().includes(searchTermLower));
-                return nameMatch || tagMatch;
-            });
+  const group = doc.data();
+  const searchTermLower = searchTerm.toLowerCase();
+
+  const nameMatch = (group.name || '').toLowerCase().includes(searchTermLower);
+
+  // ✅ garante array
+  const tags = Array.isArray(group.tags) ? group.tags : [];
+  const tagMatch = tags.some(tag => (tag || '').toLowerCase().includes(searchTermLower));
+
+  return nameMatch || tagMatch;
+});
+
 
             if (filteredDocs.length === 0) {
                  myGroupsContainer.innerHTML = '<p>Nenhum grupo encontrado.</p>';
@@ -151,70 +209,96 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Adiciona os eventos aos botões
         if (isMember) {
-            card.querySelector('.chat-btn').addEventListener('click', () => {
-                window.location.href = `chat.html?groupId=${group.id}`;
-            });
-            card.querySelector('.view-members-btn').addEventListener('click', () => viewMembers(group.id));
-            card.querySelector('.share-group-btn').addEventListener('click', () => openShareModal(group.id, group.name)); // Evento para o novo botão
-            
-            if (isOwner) {
-                card.querySelector('.delete-group-btn').addEventListener('click', () => deleteGroup(group.id));
-            } else {
-                card.querySelector('.leave-btn').addEventListener('click', () => leaveGroup(group.id));
-            }
-        } else {
-            card.querySelector('.join-btn').addEventListener('click', () => joinGroup(group.id, group.isPrivate, group.password));
-        }
+  card.querySelector('.chat-btn')
+      .addEventListener('click', () => window.location.href = `chat.html?groupId=${group.id}`);
+
+  card.querySelector('.view-members-btn')
+      .addEventListener('click', () => viewMembers(group.id));
+
+  card.querySelector('.share-group-btn')
+      .addEventListener('click', () => openShareModal(group.id, group.name));
+
+  if (isOwner) {
+    card.querySelector('.delete-group-btn')
+        .addEventListener('click', () => deleteGroup(group.id));
+  } else {
+    card.querySelector('.leave-btn')
+        .addEventListener('click', () => leaveGroup(group.id));
+  }
+} else {
+  card.querySelector('.join-btn')
+      .addEventListener('click', () => joinGroup(group.id, group.isPrivate, group.password));
+}
+
         return card;
     }
 
-    // --- NOVAS FUNÇÕES PARA COMPARTILHAR O GRUPO ---
+   async function openShareModal(groupId, groupName) {
+  currentGroupIdToShare = groupId;
+  shareGroupName.textContent = groupName;
+  shareFriendsList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>';
+  shareGroupModal.style.display = 'flex';
 
-    async function openShareModal(groupId, groupName) {
-        currentGroupIdToShare = groupId;
-        shareGroupName.textContent = groupName;
-        shareFriendsList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>';
-        shareGroupModal.style.display = 'flex';
+  try {
+    const friendsSnapshot = await db.collection('users')
+      .doc(currentUser.uid).collection('friends').get();
 
-        try {
-            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-            shareFriendsList.innerHTML = '';
-
-            if (friendsSnapshot.empty) {
-                shareFriendsList.innerHTML = '<p>Você não tem amigos para compartilhar.</p>';
-                sendShareBtn.style.display = 'none'; // Esconde o botão se não há amigos
-                return;
-            }
-            sendShareBtn.style.display = 'block'; // Mostra o botão se há amigos
-
-            friendsSnapshot.forEach(doc => {
-                const friend = { id: doc.id, ...doc.data() };
-                const friendElement = document.createElement('div');
-                friendElement.className = 'friend-share-item';
-                friendElement.innerHTML = `
-                    <label style="display: flex; align-items: center; padding: 5px; cursor: pointer;">
-                        <input type="checkbox" class="friend-share-checkbox" value="${friend.id}" style="margin-right: 10px;">
-                        <img src="${friend.photoURL || '../img/Design sem nome2.png'}" style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
-                        <span>${friend.nickname}</span>
-                    </label>
-                `;
-                shareFriendsList.appendChild(friendElement);
-            });
-        } catch (error) {
-            console.error("Erro ao carregar amigos para compartilhar:", error);
-            shareFriendsList.innerHTML = '<p>Ocorreu um erro ao carregar seus amigos.</p>';
-        }
+    shareFriendsList.innerHTML = '';
+    if (friendsSnapshot.empty) {
+      shareFriendsList.innerHTML = '<p>Você não tem amigos para compartilhar.</p>';
+      sendShareBtn.style.display = 'none';
+      return;
     }
+    sendShareBtn.style.display = 'block';
 
-    async function sendShareInvites() {
-        const selectedFriends = document.querySelectorAll('.friend-share-checkbox:checked');
-        if (selectedFriends.length === 0) {
-            // Alerta substituído por Toast
-            showToast("Selecione pelo menos um amigo para compartilhar.", "error");
-            return;
-        }
+    friendsSnapshot.forEach(doc => {
+      const friend = { id: doc.id, ...doc.data() };
+      const el = document.createElement('label');
+      el.className = 'friend-share-item';
+      el.innerHTML = `
+        <input type="checkbox" class="friend-share-checkbox" value="${friend.id}">
+        <span>${friend.nickname || 'Amigo'}</span>
+      `;
+      shareFriendsList.appendChild(el);
+    });
+  } catch (e) {
+    console.error('Erro ao carregar amigos:', e);
+    shareFriendsList.innerHTML = '<p>Erro ao carregar amigos.</p>';
+  }
+}
+async function sendShareInvites() {
+  const selected = document.querySelectorAll('.friend-share-checkbox:checked');
+  if (selected.length === 0) { showToast('Selecione pelo menos um amigo.', 'error'); return; }
+
+  const groupName = shareGroupName.textContent;
+  const batch = db.batch();
+
+  selected.forEach(cb => {
+    const friendId = cb.value;
+    const notifRef = db.collection('users').doc(friendId).collection('notifications').doc();
+    batch.set(notifRef, {
+      type: 'group_invite',
+      fromUserId: currentUser.uid,
+      fromUserName: (currentUserProfile?.nickname) || 'Um usuário',
+      groupId: currentGroupIdToShare,
+      groupName,
+      content: `convidou você para se juntar ao grupo "${groupName}"`,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      read: false
+    });
+  });
+
+  try {
+    await batch.commit();
+    showToast('Convites enviados com sucesso!', 'success');
+    shareGroupModal.style.display = 'none';
+  } catch (e) {
+    console.error('Erro ao enviar convites de grupo:', e);
+    showToast('Ocorreu um erro ao enviar os convites.', 'error');
+  }
+}
+
 
         const groupName = shareGroupName.textContent;
         const batch = db.batch();
@@ -335,97 +419,92 @@ function createGroupCard(group, isMember) {
     return card;
 }
 
-   async function joinGroup(groupId, isPrivate, password) {
-        if (isPrivate) {
-            const enteredPassword = await showPromptModal("Grupo Privado", "Este grupo é privado. Por favor, digite a senha:", 'password');
-            if (enteredPassword === null) return; // Utilizador cancelou
-            if (enteredPassword !== password) {
-                showCustomAlert("Senha incorreta.");
-                return;
-            }
-        }
-        try {
-            await db.collection('groups').doc(groupId).update({
-                members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-            });
-            loadGroups();
-        } catch (error) {
-            console.error("Erro ao entrar no grupo:", error);
-        }
+ async function joinGroup(groupId, isPrivate, password) {
+  if (isPrivate) {
+    // Ajuste o helper conforme sua implementação: (titulo, mensagem, tipoCampo)
+    const enteredPassword = await showPromptModal(
+      'Grupo privado',
+      'Este grupo é privado. Por favor, digite a senha:',
+      'password'
+    );
+    if (enteredPassword === null) return;           // cancelou
+    if (enteredPassword !== password) { showCustomAlert('Senha incorreta.'); return; }
+  }
+
+  try {
+    await db.collection('groups').doc(groupId).update({
+      members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+    });
+    loadGroups();
+  } catch (e) {
+    console.error('Erro ao entrar no grupo:', e);
+    showToast('Não foi possível entrar no grupo.', 'error');
+  }
+}
+async function leaveGroup(groupId) {
+  const ok = await showConfirmationModal('Sair do Grupo', 'Tem certeza que deseja sair deste grupo?');
+  if (!ok) return;
+
+  try {
+    await db.collection('groups').doc(groupId).update({
+      members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+    });
+    loadGroups();
+  } catch (e) {
+    console.error('Erro ao sair do grupo:', e);
+    showToast('Não foi possível sair do grupo.', 'error');
+  }
+}
+async function deleteGroup(groupId) {
+  const ok = await showConfirmationModal(
+    'Excluir Grupo',
+    'Excluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.',
+    'Sim, Excluir',
+    'Cancelar'
+  );
+  if (!ok) return;
+
+  try {
+    const groupRef = db.collection('groups').doc(groupId);
+
+    // apaga mensagens antes
+    const msgs = await groupRef.collection('messages').get();
+    const batch = db.batch();
+    msgs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+
+    await groupRef.delete();
+    showToast('Grupo excluído com sucesso.', 'success');
+    loadGroups();
+  } catch (e) {
+    console.error('Erro ao excluir o grupo:', e);
+    showToast('Ocorreu um erro ao excluir o grupo.', 'error');
+  }
+}
+async function viewMembers(groupId) {
+  membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+  viewMembersModal.style.display = 'flex';
+
+  try {
+    const groupSnap = await db.collection('groups').doc(groupId).get();
+    const groupData = groupSnap.data() || {};
+    const members = Array.isArray(groupData.members) ? groupData.members : [];
+
+    membersList.innerHTML = '';
+    for (const uid of members) {
+      const u = await db.collection('users').doc(uid).get();
+      const data = u.data() || {};
+      const el = document.createElement('div');
+      el.className = 'member-row';
+      el.innerHTML = `<p>${data.nickname || 'Usuário'}</p>`;
+      membersList.appendChild(el);
     }
+  } catch (e) {
+    console.error('Erro ao carregar membros:', e);
+    membersList.innerHTML = '<p>Ocorreu um erro ao carregar os membros.</p>';
+  }
+}
 
-    async function leaveGroup(groupId) {
-        const confirmed = await showConfirmationModal("Sair do Grupo", "Tem a certeza que deseja sair deste grupo?");
-        if (!confirmed) return;
-
-        try {
-            await db.collection('groups').doc(groupId).update({
-                members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-            });
-            loadGroups();
-        } catch (error) {
-            console.error("Erro ao sair do grupo:", error);
-        }
-    }
-
-
-    // Excluir um Grupo
-    async function deleteGroup(groupId) {
-        
-             const confirmed = await showConfirmationModal(
-            "Excluir Grupo", 
-            "Excluir o grupo apagará permanentemente todas as mensagens e removerá todos os membros. Esta ação não pode ser desfeita.",
-            "Sim, Excluir",
-            "Cancelar"
-        );
-        if (!confirmed) return;
-
-        try {
-            const groupRef = db.collection('groups').doc(groupId);
-            
-            const messagesSnapshot = await groupRef.collection('messages').get();
-            const batch = db.batch();
-            messagesSnapshot.docs.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-            await batch.commit();
-
-            await groupRef.delete();
-
-            alert("Grupo excluído com sucesso.");
-            loadGroups();
-
-        } catch (error) {
-            console.error("Erro ao excluir o grupo:", error);
-            alert("Ocorreu um erro ao excluir o grupo.");
-        }
-    }
-
-    // Ver Membros
-    async function viewMembers(groupId) {
-        membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        viewMembersModal.style.display = 'flex';
-
-        try {
-            const groupDoc = await db.collection('groups').doc(groupId).get();
-            const groupData = groupDoc.data();
-            const members = groupData.members;
-
-            membersList.innerHTML = '';
-            for (const memberId of members) {
-                const userDoc = await db.collection('users').doc(memberId).get();
-                const userData = userDoc.data();
-                const memberElement = document.createElement('div');
-                memberElement.innerHTML = `<p>${userData.nickname}</p>`;
-                membersList.appendChild(memberElement);
-            }
-        } catch (error) {
-            console.error("Erro ao carregar membros:", error);
-            membersList.innerHTML = '<p>Ocorreu um erro ao carregar os membros.</p>';
-        }
-    }
-
-    // Lógica da Busca
     searchInput.addEventListener('input', (e) => {
         loadGroups(e.target.value);
     });

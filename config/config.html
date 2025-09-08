@@ -13,6 +13,7 @@
     <style>
         /* Estilos específicos para a página de configurações */
     </style>
+   
 </head>
 <body>
     <!-- HEADER / MENU DE NAVEGAÇÃO -->
@@ -137,6 +138,16 @@
     <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
     <a href="#" class="profile-link mobile-nav-item active"><i class="fas fa-user"></i></a>
 </div>
+<script>
+  (function() {
+    // Verifica a preferência do usuário no localStorage, que é muito rápido
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) {
+      // Aplica a classe 'dark-mode' diretamente na tag <html> antes da página carregar
+      document.documentElement.classList.add('dark-mode');
+    }
+  })();
+</script>
     <!-- Adicione os scripts do Firebase e o seu config.js aqui -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
