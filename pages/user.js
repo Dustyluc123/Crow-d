@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', function() {
     bannerFileInput.accept = 'image/*';
     bannerFileInput.style.display = 'none';
     document.body.appendChild(bannerFileInput);
+    const cropperModal = document.getElementById('cropperModal');
+    const imageToCrop = document.getElementById('imageToCrop');
+    const confirmCropBtn = document.getElementById('confirmCropBtn');
+    const cancelCropBtn = document.getElementById('cancelCropBtn');
+    let cropper; // Variável para guardar a instância do Cropper
 
     let currentUser = null;
     let currentUserProfile = null; // Perfil de quem está logado
@@ -51,6 +56,65 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastVisiblePost = null;
      let isLoadingMorePosts = false;
      let activeCommentListeners = {}; // Armazena os listeners de comentários ativos
+
+     if(editBannerBtn) {
+        editBannerBtn.addEventListener('click', () => {
+            bannerFileInput.click();
+        });
+    }
+
+     bannerFileInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageToCrop.src = e.target.result;
+                cropperModal.style.display = 'flex';
+                
+                if (cropper) {
+                    cropper.destroy(); // Destrói a instância anterior se houver
+                }
+
+                // Inicia o Cropper com a proporção de banner (3:1)
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: 3 / 1, // <<< A MUDANÇA MAIS IMPORTANTE!
+                    viewMode: 1,
+                    background: false,
+                    autoCropArea: 1
+                });
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    // Função do botão "Confirmar" no modal
+    confirmCropBtn.addEventListener('click', () => {
+        if (cropper) {
+            // Pega a imagem cortada como Base64
+            const canvas = cropper.getCroppedCanvas({
+                width: 1500, // Largura ideal para o banner
+                height: 500  // Altura ideal para o banner
+            });
+            const croppedImageBase64 = canvas.toDataURL('image/jpeg');
+            
+            // Salva o banner e fecha o modal
+            saveBanner(croppedImageBase64);
+            cropperModal.style.display = 'none';
+            cropper.destroy();
+            bannerFileInput.value = ''; // Limpa o input
+        }
+    });
+
+    // Função do botão "Cancelar" no modal
+    cancelCropBtn.addEventListener('click', () => {
+        cropperModal.style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+        }
+        bannerFileInput.value = ''; // Limpa o input
+    });
+
+
 
     // ==========================================================
     // LÓGICA PRINCIPAL DA PÁGINA
