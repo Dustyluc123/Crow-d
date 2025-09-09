@@ -31,6 +31,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutButton = document.getElementById('logout-btn');
     const postTemplate = document.getElementById('post-template');
     const commentTemplate = document.getElementById('comment-template');
+    const profileBanner = document.getElementById('profileBanner');
+    const editBannerBtn = document.getElementById('editBannerBtn');
+    // Adicione um input de arquivo escondido no seu HTML ou crie via JS
+    const bannerFileInput = document.createElement('input');
+    bannerFileInput.type = 'file';
+    bannerFileInput.accept = 'image/*';
+    bannerFileInput.style.display = 'none';
+    document.body.appendChild(bannerFileInput);
 
     let currentUser = null;
     let currentUserProfile = null; // Perfil de quem está logado
@@ -77,6 +85,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     editProfileBtn.onclick = () => { window.location.href = '../editprofile/edit-profile.html'; };
                     profileActions.appendChild(editProfileBtn);
                 }
+                if (editBannerBtn) {
+                    editBannerBtn.style.display = 'flex';
+                    editBannerBtn.onclick = () => bannerFileInput.click();
+                }
             } else {
                 if (followBtn) followBtn.style.display = 'flex';
                 if (messageBtn) messageBtn.style.display = 'flex';
@@ -98,6 +110,54 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = '../login/login.html';
         }
     });
+
+    bannerFileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            // Reutiliza o modal e a lógica do cropper que você já tem
+            // em outro arquivo (ex: edit-profile.js). Se não tiver, 
+            // você precisaria adicionar o HTML do modal e o Cropper.js
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // SIMULAÇÃO DE UM CROPPER - Idealmente, você usaria um como o Cropper.js
+                // Para simplificar, vamos apenas usar a imagem diretamente
+                const imageBase64 = e.target.result;
+                saveBanner(imageBase64);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // --- NOVA FUNÇÃO PARA SALVAR O BANNER ---
+    async function saveBanner(imageBase64) {
+        if (!currentUser) return;
+        
+        editBannerBtn.disabled = true;
+        editBannerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+
+        try {
+            const userRef = db.collection('users').doc(currentUser.uid);
+            await userRef.update({
+                bannerURL: imageBase64
+            });
+
+            // Atualiza a imagem na tela imediatamente
+            if (profileBanner) {
+                profileBanner.src = imageBase64;
+            }
+            
+            showToast("Banner atualizado com sucesso!", "success");
+
+        } catch (error) {
+            console.error("Erro ao salvar o banner:", error);
+            showCustomAlert("Não foi possível salvar seu novo banner.");
+        } finally {
+            editBannerBtn.disabled = false;
+            editBannerBtn.innerHTML = '<i class="fas fa-camera"></i> Editar Banner';
+            bannerFileInput.value = ''; // Limpa a seleção do arquivo
+        }
+    }
 
     if (logoutButton) {
         logoutButton.addEventListener('click', (e) => {
@@ -207,6 +267,10 @@ async function loadProfileUser(userId) {
             }
         }
         // --- FIM DA LÓGICA DE PRIVACIDADE ---
+         // NOVO: Carrega o banner do usuário
+         if (profileBanner && profileUser.bannerURL) {
+            profileBanner.src = profileUser.bannerURL;
+        }
 
         updateProfileUI();
     } else {

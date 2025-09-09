@@ -241,55 +241,154 @@
         border-radius: 10px;
     }
 
-    /* MODO ESCURO */
-    body.dark-mode .profile-header {
-        background-color: var(--dark-bg-secondary);
-        border-color: var(--dark-border);
+    .profile-banner-container {
+    position: relative;
+    background-color: #33404d; /* Cor de fundo enquanto a imagem carrega */
+    height: 200px;
+    width: 100%;
+    overflow: hidden;
+    /* FIX: Remove qualquer borda ou margem que possa criar o espaço */
+    border: none;
+    margin-bottom: 0;
+    /* Garante que os pixels se alinhem perfeitamente */
+    vertical-align: middle; 
+}
+
+#profileBanner {
+    width: 100%;
+    height: 100%;
+   
+}
+
+
+/* 2. Botão de Edição do Banner */
+.edit-banner-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: rgba(15, 20, 25, 0.75);
+    color: white;
+    border: none;
+    z-index: 3; /* Deve ficar acima de tudo no banner */
+}
+
+.edit-banner-btn:hover {
+    background-color: rgba(39, 44, 48, 0.75);
+}
+
+/* 3. Cabeçalho do Perfil (Onde fica a foto, nome, bio) */
+.profile-header {
+    position: relative;
+    background-color: var(--light-text);
+    padding: 15px 20px 20px;
+    border: 1px solid var(--light-border);
+    /* FIX: Força a remoção da borda e margem superior para eliminar o espaço */
+    border-top: none !important;
+    margin-top: 0 !important; 
+}
+
+/* 3. Foto de Perfil (Sobreposição) */
+.profile-photo {
+    width: 134px;
+    height: 134px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--light-text);
+    position: absolute;
+    top: -80px;
+    left: 20px;
+    z-index: 2;
+}
+
+/* 4. Informações do Perfil */
+.profile-info {
+    padding-left: 150px;
+    padding-top: 15px;
+    min-height: 60px;
+}
+
+/* --- Ajustes para o Modo Escuro --- */
+body.dark-mode .profile-header {
+    background-color: var(--dark-bg-secondary, #1c1c1e);
+    border-color: var(--dark-border, #38383a); /* Borda lateral/inferior */
+}
+
+body.dark-mode .profile-photo {
+    border-color: var(--dark-bg-secondary, #1c1c1e);
+}
+
+body.dark-mode .profile-name {
+    color: var(--light-text, #ffffff);
+}
+
+body.dark-mode .profile-school,
+body.dark-mode .user-bio {
+    color: var(--dark-text-secondary, #a0a0a0);
+}
+
+/* 5. Cor do botão "Ver mais" da bio */
+body.dark-mode #toggle-bio-btn {
+    color: var(--primary-hover, #a78bfa);
+}
+
+/* 6. Botões de Ação (Mensagem e Seguindo) */
+body.dark-mode .profile-btn.message-btn,
+body.dark-mode .profile-btn.follow-btn.following {
+    background-color: var(--dark-bg-tertiary, #2c2c2e);
+    color: var(--light-text, #ffffff);
+    border-color: var(--dark-border, #38383a);
+}
+
+body.dark-mode .profile-btn.message-btn:hover,
+body.dark-mode .profile-btn.follow-btn.following:hover {
+    background-color: #3a3a3c; /* Um cinza um pouco mais claro para o hover */
+}
+
+/* 7. Abas de navegação (Publicações / Amigos) */
+body.dark-mode .profile-tabs {
+    border-bottom-color: var(--dark-border, #38383a);
+}
+
+body.dark-mode .profile-tab {
+    color: var(--dark-text-secondary, #a0a0a0);
+}
+
+body.dark-mode .profile-tab.active {
+    color: var(--primary-hover, #a78bfa);
+    border-bottom-color: var(--primary-hover, #a78bfa);
+}
+
+body.dark-mode .profile-tab:hover:not(.active) {
+    color: var(--light-text, #ffffff);
+}
+
+
+/* --- Responsividade para Telas Menores (Celulares) --- */
+@media (max-width: 768px) {
+    .profile-header {
+        text-align: center; /* Centraliza o texto */
+        padding-top: 70px; /* Aumenta o espaço no topo para a foto */
     }
 
-    body.dark-mode .profile-name { color: var(--light-text); }
-    body.dark-mode .profile-school { color: var(--dark-text-secondary); }
-    body.dark-mode .profile-btn.message-btn {
-        background-color: var(--dark-bg-tertiary);
-        color: var(--light-text);
-        border-color: var(--dark-border);
+    .profile-photo {
+        /* Move a foto para o centro e mantém a sobreposição */
+        left: 50%;
+        transform: translateX(-50%);
+        top: -80px;
     }
-    body.dark-mode .profile-btn.message-btn:hover { background-color: #4a4b50; }
-    body.dark-mode .follow-btn.following {
-        background-color: var(--dark-bg-tertiary);
-        color: var(--light-text);
-        border: 1px solid var(--dark-border);
+
+    .profile-info {
+        padding-left: 0; /* Remove o preenchimento lateral */
+        padding-top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centraliza os elementos internos */
     }
-    body.dark-mode .profile-tabs { border-bottom-color: var(--dark-border); }
-    body.dark-mode .profile-tab { color: var(--dark-text-secondary); }
-    body.dark-mode .profile-tab.active {
-        color: var(--primary-hover);
-        border-bottom-color: var(--primary-hover);
+
+    .profile-actions {
+        justify-content: center; /* Centraliza os botões (seguir/msg) */
     }
-    body.dark-mode .profile-tab:hover:not(.active) {
-        color: var(--light-text);
-        border-bottom-color: var(--dark-border);
-    }
-    body.dark-mode .loading-indicator,
-    body.dark-mode .no-content {
-        background-color: var(--dark-bg-secondary);
-        color: var(--dark-text-secondary);
-    }
-    
-    /* Responsividade */
-    @media (max-width: 768px) {
-        .profile-header {
-            flex-direction: column;
-            text-align: center;
-        }
-        .profile-photo {
-            margin-right: 0;
-            margin-bottom: 15px;
-        }
-        .profile-actions {
-            justify-content: center;
-        }
-    }
+}
 </style>
 </head>
 <body>
@@ -313,6 +412,12 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-container">
         <main class="feed">
+            <div class="profile-banner-container">
+                <img src="../img/Design sem nome2.png" alt="Banner do usuário" id="profileBanner">
+                <button class="profile-btn edit-banner-btn" id="editBannerBtn" style="display: none;">
+                    <i class="fas fa-camera"></i> Editar Banner
+                </button>
+            </div>
             <!-- Cabeçalho do perfil -->
             <div class="profile-header">
                 <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-photo" id="profilePhoto">

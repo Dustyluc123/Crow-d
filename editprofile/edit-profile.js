@@ -117,20 +117,19 @@ document.addEventListener('DOMContentLoaded', function() {
     profileEditForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         if (!currentUser) return;
-
+    
         const nicknameValue = nicknameInput.value.trim();
         if (nicknameValue.length > 40) {
             showToast("O nome de usuário não pode ter mais de 40 caracteres.", "error");
             return;
         }
-
+    
         saveProfileBtn.disabled = true;
         saveProfileBtn.textContent = 'Salvando...';
-
+    
         try {
+            // --- Verificação de apelido (essencial) ---
             const nicknameChanged = nicknameValue !== originalProfileData.nickname;
-            
-            // --- INÍCIO DA CORREÇÃO ---
             if (nicknameChanged) {
                 const nicknameQuery = await db.collection('users').where('nickname', '==', nicknameValue).get();
                 if (!nicknameQuery.empty) {
@@ -140,44 +139,53 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
             }
-            // --- FIM DA CORREÇÃO ---
-
+    
+            // --- Preparação dos dados para salvar ---
             const photoChanged = !!croppedImageBase64;
             const needsPostUpdate = nicknameChanged || photoChanged;
-
+    
             const updatedData = {};
             if (nicknameChanged) updatedData.nickname = nicknameValue;
             if (photoChanged) updatedData.photoURL = croppedImageBase64;
             if (bioInput.value !== originalProfileData.bio) updatedData.bio = bioInput.value;
             if (schoolInput.value !== originalProfileData.school) updatedData.school = schoolInput.value;
-
+    
             const selectedHobbies = Array.from(document.querySelectorAll('input[name="hobbies"]:checked')).map(cb => cb.value);
             updatedData.hobbies = selectedHobbies;
             updatedData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-
+    
+            // --- 1. Executa a atualização principal e crítica ---
             await db.collection('users').doc(currentUser.uid).update(updatedData);
-
+    
+            // --- 2. Mostra o sucesso IMEDIATAMENTE ---
+            showToast("Perfil atualizado com sucesso!", "success");
+    
+            // --- 3. Tenta fazer as atualizações secundárias em segundo plano ---
             if (needsPostUpdate) {
                 const finalUserData = {
                     nickname: nicknameValue,
                     photoURL: croppedImageBase64 || originalProfileData.photoURL
                 };
-                await updateUserContent(currentUser.uid, finalUserData);
+                // Chama a função, mas não espera por ela e captura o erro para não quebrar a experiência
+                updateUserContent(currentUser.uid, finalUserData).catch(err => {
+                    console.error("Erro não-crítico ao atualizar conteúdo antigo:", err);
+                    // Não mostramos erro ao usuário aqui, pois o perfil já foi salvo.
+                });
             }
-
-            showToast("Perfil atualizado com sucesso!", "success");
+    
+            // --- 4. Redireciona o usuário para o perfil ---
             setTimeout(() => {
                 window.location.href = `../pages/user.html?uid=${currentUser.uid}`;
             }, 1500);
-
+    
         } catch (error) {
-            console.error("Erro ao salvar o perfil:", error);
+            // Este bloco agora só vai capturar erros da atualização principal ou da verificação de apelido
+            console.error("Erro CRÍTICO ao salvar o perfil:", error);
             showToast("Ocorreu um erro ao salvar. Tente novamente.", "error");
             saveProfileBtn.disabled = false;
             saveProfileBtn.textContent = 'Salvar Alterações';
         }
     });
-
     async function updateUserContent(userId, newProfileData) {
         console.log("Iniciando atualização de conteúdo antigo (posts, reposts e lista de amigos)...");
         const batch = db.batch();

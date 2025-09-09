@@ -21,11 +21,15 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 /* Estilo para destacar os cards de republicação */
 .repost-card {
-    background-color: var(--light-bg-secondary); /* Um fundo sutilmente diferente */
-    border-left: 3px solid var(--primary-color); /* Uma borda colorida à esquerda */
-    padding-top: 10px; /* Mais espaço para o cabeçalho "republicou" */
+    background-color: var(--light-bg-secondary);
+    /* Um fundo sutilmente diferente */
+    border-left: 3px solid var(--primary-color);
+    /* Uma borda colorida à esquerda */
+    padding-top: 10px;
+    /* Mais espaço para o cabeçalho "republicou" */
 }
 
 /* Garante que o fundo mude no modo escuro também */
@@ -45,17 +49,19 @@ html.dark-mode .repost-header {
 }
 
 body {
-    
+
     font-family: Arial, sans-serif;
     background-color: var(--light-bg);
     color: var(--dark-text);
     margin: 0;
-    padding-top: 60px; /* Espaço para o header fixo */
+    padding-top: 60px;
+    /* Espaço para o header fixo */
     transition: background-color 0.3s, color 0.3s;
 }
 
 .post-comments.active {
-    display: block; /* Mostrar quando ativo */
+    display: block;
+    /* Mostrar quando ativo */
 }
 
 /* MODO ESCURO */
@@ -70,18 +76,23 @@ body.dark-mode ::-webkit-scrollbar {
 }
 
 body.dark-mode ::-webkit-scrollbar-track {
-    background: var(--dark-bg-secondary); /* Fundo da trilha da barra de rolagem */
+    background: var(--dark-bg-secondary);
+    /* Fundo da trilha da barra de rolagem */
 }
 
 body.dark-mode ::-webkit-scrollbar-thumb {
-    background-color: #4a4b50; /* Cor da barra de rolagem */
+    background-color: #4a4b50;
+    /* Cor da barra de rolagem */
     border-radius: 4px;
-    border: 2px solid var(--dark-bg-secondary); /* Adiciona uma pequena borda para contraste */
+    border: 2px solid var(--dark-bg-secondary);
+    /* Adiciona uma pequena borda para contraste */
 }
 
 body.dark-mode ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary-hover); /* Cor ao passar o mouse */
+    background-color: var(--primary-hover);
+    /* Cor ao passar o mouse */
 }
+
 /* HEADER / MENU DE NAVEGAÇÃO */
 header {
     background-color: var(--light-text);
@@ -117,19 +128,22 @@ body.dark-mode .logo {
     color: var(--light-text);
 }
 
- .logo-img {
-height: 40px; 
-width: auto; 
-margin-right: 10px; 
+.logo-img {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
 }
 
 /* MODIFICAÇÃO 2: Centralização da navegação */
 .main-nav {
-   flex-grow: 1; /* Permite que a navegação ocupe o espaço restante */
+    flex-grow: 1;
+    /* Permite que a navegação ocupe o espaço restante */
     display: flex;
-    justify-content: center; /* Centraliza os links */
+    justify-content: center;
+    /* Centraliza os links */
     gap: 20px;
-    min-width: 0; /* Impede que os links "empurrem" os outros elementos */
+    min-width: 0;
+    /* Impede que os links "empurrem" os outros elementos */
 }
 
 .main-nav a {
@@ -145,7 +159,8 @@ body.dark-mode .main-nav a {
     color: var(--light-text);
 }
 
-.main-nav a:hover, .main-nav a.active {
+.main-nav a:hover,
+.main-nav a.active {
     background-color: var(--light-bg);
     color: var(--primary-color);
 }
@@ -159,7 +174,8 @@ body.dark-mode .main-nav a.active {
 .user-actions {
     display: flex;
     align-items: center;
-       flex-shrink: 0; /* Impede que a área do usuário encolha */
+    flex-shrink: 0;
+    /* Impede que a área do usuário encolha */
 }
 
 .logout-btn {
@@ -206,8 +222,9 @@ body.dark-mode .logout-btn:hover {
     position: sticky;
     top: 80px;
     /* Linhas adicionadas para correção: */
-    max-height: calc(100vh - 100px); /* Define uma altura máxima baseada na tela */
-    
+    max-height: calc(100vh - 100px);
+    /* Define uma altura máxima baseada na tela */
+
 }
 
 body.dark-mode .sidebar {
@@ -299,8 +316,9 @@ body.dark-mode .sidebar ul li a:hover {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    min-width: 0; /* <<< ADICIONE ESTA LINHA */
+
+    min-width: 0;
+    /* <<< ADICIONE ESTA LINHA */
 }
 
 /* CRIAR PUBLICAÇÃO */
@@ -437,7 +455,7 @@ body.dark-mode .post-action:hover {
     box-shadow: var(--box-shadow);
     padding: 20px;
     transition: background-color 0.3s, box-shadow 0.3s;
-     /* ADICIONE AS 2 LINHAS ABAIXO */
+    /* ADICIONE AS 2 LINHAS ABAIXO */
     border-bottom: 1px solid var(--light-border);
     padding-bottom: 25px;
 }
@@ -445,7 +463,7 @@ body.dark-mode .post-action:hover {
 body.dark-mode .post {
     background-color: var(--dark-bg-secondary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      /* ADICIONE ESTA LINHA PARA A COR DA BORDA NO MODO ESCURO */
+    /* ADICIONE ESTA LINHA PARA A COR DA BORDA NO MODO ESCURO */
     border-bottom-color: var(--dark-border);
 }
 
@@ -492,7 +510,8 @@ body.dark-mode .post-content {
 }
 
 .post-content p {
-    overflow-wrap: break-word; /* << ADICIONE ESTA LINHA */
+    overflow-wrap: break-word;
+    /* << ADICIONE ESTA LINHA */
     margin-bottom: 15px;
     line-height: 1.5;
 }
@@ -513,9 +532,12 @@ body.dark-mode .post-content {
     border-top: 1px solid var(--light-border);
     padding-top: 15px;
     transition: border-color 0.3s;
-    display: none; /* Inicialmente oculto */
-    max-height: 300px; /* Limitar altura */
-    overflow-y: auto; /* Adicionar scroll */
+    display: none;
+    /* Inicialmente oculto */
+    max-height: 300px;
+    /* Limitar altura */
+    overflow-y: auto;
+    /* Adicionar scroll */
 }
 
 body.dark-mode .post-comments {
@@ -539,6 +561,7 @@ body.dark-mode .post-comments {
     color: var(--dark-text);
     transition: border-color 0.3s, background-color 0.3s, color 0.3s;
 }
+
 /* Em home/home.css - Adicione estes estilos */
 
 .post-comments .comment-input {
@@ -546,15 +569,19 @@ body.dark-mode .post-comments {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 15px; /* << ADICIONE ESTA LINHA */
+    margin-bottom: 15px;
+    /* << ADICIONE ESTA LINHA */
 }
 
 .post-comments .comment-text {
-    overflow-wrap: break-word; /* << ADICIONE ESTA LINHA */
-     margin-bottom: 15px;
-    flex: 1; /* Faz o input ocupar todo o espaço restante */
+    overflow-wrap: break-word;
+    /* << ADICIONE ESTA LINHA */
+    margin-bottom: 15px;
+    flex: 1;
+    /* Faz o input ocupar todo o espaço restante */
     border: 1px solid var(--light-border);
-    border-radius: 20px; /* Bordas arredondadas */
+    border-radius: 20px;
+    /* Bordas arredondadas */
     padding: 10px 15px;
     background-color: var(--light-bg-secondary);
     outline: none;
@@ -587,31 +614,36 @@ body.dark-mode .comment-input {
 .comments-list {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Espaçamento entre comentários */
+    gap: 12px;
+    /* Espaçamento entre comentários */
 }
 
 .comment {
     display: flex;
     gap: 10px;
-    align-items: flex-start; /* Alinha ao topo para evitar desalinhamento */
+    align-items: flex-start;
+    /* Alinha ao topo para evitar desalinhamento */
 }
 
 /* Em home/home.css */
 .comment-content {
-   
-        background-color: var(--light-bg);
-        padding: 10px;
-        border-radius: var(--border-radius);
-        flex: 1;
-        transition: background-color 0.3s;
-        /* ADICIONE AS 3 LINHAS ABAIXO */
-        display: flex;
-        flex-direction: column;
-        gap: 8px; /* Esta linha cria o espaçamento! */
-    
+
+    background-color: var(--light-bg);
+    padding: 10px;
+    border-radius: var(--border-radius);
+    flex: 1;
+    transition: background-color 0.3s;
+    /* ADICIONE AS 3 LINHAS ABAIXO */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Esta linha cria o espaçamento! */
+
 }
+
 .comment-author-name {
-    font-weight: bold; /* Dar mais destaque ao nome */
+    font-weight: bold;
+    /* Dar mais destaque ao nome */
 }
 
 body.dark-mode .comment-content {
@@ -630,7 +662,7 @@ body.dark-mode .comment-author-name {
 }
 
 .comment-text {
-    
+
     font-size: 1rem;
     color: var(--dark-text);
     transition: color 0.3s;
@@ -641,7 +673,8 @@ body.dark-mode .comment-text {
 }
 
 .comment-time {
-    font-size: 0.7rem; /* Tamanho reduzido para ficar mais discreto */
+    font-size: 0.7rem;
+    /* Tamanho reduzido para ficar mais discreto */
     color: var(--light-text-secondary);
     display: block;
     margin-top: 3px;
@@ -779,21 +812,22 @@ body.dark-mode .event-info p {
     .main-container {
         flex-direction: column;
     }
-    
+
     .sidebar {
         flex: none;
         width: 100%;
-        position: static; /* Desativa sticky em telas menores */
+        position: static;
+        /* Desativa sticky em telas menores */
     }
-    
+
     .left-sidebar {
         order: 1;
     }
-    
+
     .feed {
         order: 2;
     }
-    
+
     .right-sidebar {
         order: 3;
     }
@@ -803,15 +837,15 @@ body.dark-mode .event-info p {
     .main-nav a span {
         display: none;
     }
-    
+
     .main-nav a i {
         font-size: 1.2rem;
     }
-    
+
     .post-actions {
         flex-wrap: wrap;
     }
-    
+
     .post-action {
         flex: 1;
         justify-content: center;
@@ -966,6 +1000,7 @@ body.dark-mode .friend-name {
     color: var(--light-text-secondary);
     transition: color 0.3s;
 }
+
 /* Adicione este CSS ao final de home/home.css */
 
 .hobbies-preview {
@@ -989,7 +1024,8 @@ body.dark-mode .friend-name {
     align-items: center;
     width: 30px;
     height: 30px;
-    background-color:#5b5ad3; ;
+    background-color: #5b5ad3;
+    ;
     color: #fff;
     border-radius: 50%;
     text-decoration: none;
@@ -1090,6 +1126,7 @@ body.dark-mode .no-comments,
 body.dark-mode .error-message {
     color: var(--dark-text-secondary);
 }
+
 .custom-modal {
     display: none;
     position: fixed;
@@ -1099,7 +1136,7 @@ body.dark-mode .error-message {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
 .custom-modal-content {
@@ -1113,24 +1150,30 @@ body.dark-mode .error-message {
     text-align: center;
     border-radius: 10px;
 }
+
 .comment-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto; /* Empurra o rodapé para o fundo */
+    margin-top: auto;
+    /* Empurra o rodapé para o fundo */
 }
+
 .post-comments .comment-input {
     overflow-wrap: break-word;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 15px; /* << ADICIONE ESTA LINHA */
+    margin-bottom: 15px;
+    /* << ADICIONE ESTA LINHA */
 }
+
 /* Em home/home.css */
 
 /* Estilos para o Modal de Alerta Customizado */
 .modal {
-    display: none; /* Escondido por padrão */
+    display: none;
+    /* Escondido por padrão */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -1138,7 +1181,7 @@ body.dark-mode .error-message {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.6);
+    background-color: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
 }
@@ -1149,7 +1192,7 @@ body.dark-mode .error-message {
     margin: auto;
     padding: 0;
     border-radius: var(--border-radius);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     width: 90%;
     max-width: 400px;
     animation: fadeIn 0.3s;
@@ -1202,18 +1245,28 @@ body.dark-mode .modal-content {
     background-color: var(--dark-bg-secondary);
     color: var(--light-text);
 }
+
 body.dark-mode .modal-header,
 body.dark-mode .modal-actions {
     border-color: var(--dark-border);
 }
 
 @keyframes fadeIn {
-    from {opacity: 0; transform: translateY(-20px);}
-    to {opacity: 1; transform: translateY(0);}
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
+
 #toast-container {
     position: fixed;
-    top: 80px; /* Posição abaixo do header */
+    top: 80px;
+    /* Posição abaixo do header */
     right: 20px;
     z-index: 1050;
     display: flex;
@@ -1226,7 +1279,7 @@ body.dark-mode .modal-actions {
     color: var(--light-text);
     padding: 15px 20px;
     border-radius: var(--border-radius);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -1238,15 +1291,18 @@ body.dark-mode .modal-actions {
 
 /* Tipos de Toast para diferentes mensagens */
 .toast.success {
-    background-color: #28a745; /* Verde para sucesso */
+    background-color: #28a745;
+    /* Verde para sucesso */
 }
 
 .toast.error {
-    background-color: #dc3545; /* Vermelho para erro */
+    background-color: #dc3545;
+    /* Vermelho para erro */
 }
 
 .toast.info {
-    background-color: #17a2b8; /* Azul para informação */
+    background-color: #17a2b8;
+    /* Azul para informação */
 }
 
 .toast i {
@@ -1265,6 +1321,7 @@ body.dark-mode .modal-actions {
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
         transform: translateX(100%);
@@ -1286,7 +1343,8 @@ body.dark-mode .repost-header {
 }
 
 .repost-header i {
-    color: #17bf63; /* Verde do Twitter/X */
+    color: #17bf63;
+    /* Verde do Twitter/X */
 }
 
 /* Contêiner para a postagem original dentro da republicação */
@@ -1311,14 +1369,16 @@ body.dark-mode .original-post-container {
     max-width: 700px;
     margin: 20px auto;
     padding: 20px;
-    background-color: var(--light-text); /* Variável para fundo claro */
+    background-color: var(--light-text);
+    /* Variável para fundo claro */
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 body.dark-mode #single-post-view {
-    background-color: var(--dark-bg-secondary); /* Variável para fundo escuro */
+    background-color: var(--dark-bg-secondary);
+    /* Variável para fundo escuro */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -1328,19 +1388,23 @@ body.dark-mode #single-post-view {
     align-items: center;
     margin-bottom: 20px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--light-border); /* Variável para borda clara */
+    border-bottom: 1px solid var(--light-border);
+    /* Variável para borda clara */
     transition: border-color 0.3s;
 }
 
 body.dark-mode .single-post-header {
-    border-bottom-color: var(--dark-border); /* Variável para borda escura */
+    border-bottom-color: var(--dark-border);
+    /* Variável para borda escura */
 }
 
 /* O botão de voltar */
 #back-to-feed-btn {
     background-color: transparent;
-    border: 1px solid var(--light-border); /* Variável */
-    color: var(--light-text-secondary); /* Variável para texto secundário */
+    border: 1px solid var(--light-border);
+    /* Variável */
+    color: var(--light-text-secondary);
+    /* Variável para texto secundário */
     padding: 8px 15px;
     border-radius: 20px;
     cursor: pointer;
@@ -1356,17 +1420,21 @@ body.dark-mode .single-post-header {
 }
 
 #back-to-feed-btn:hover {
-    background-color: var(--light-bg-secondary); /* Variável para hover claro */
+    background-color: var(--light-bg-secondary);
+    /* Variável para hover claro */
     color: var(--primary-color);
 }
 
 body.dark-mode #back-to-feed-btn {
-    border-color: var(--dark-border); /* Variável */
-    color: var(--dark-text-secondary); /* Variável */
+    border-color: var(--dark-border);
+    /* Variável */
+    color: var(--dark-text-secondary);
+    /* Variável */
 }
 
 body.dark-mode #back-to-feed-btn:hover {
-    background-color: var(--dark-bg-tertiary); /* Variável para hover escuro */
+    background-color: var(--dark-bg-tertiary);
+    /* Variável para hover escuro */
     color: var(--primary-hover);
 }
 
@@ -1380,36 +1448,44 @@ body.dark-mode #back-to-feed-btn:hover {
 #focused-post-container .error-message {
     text-align: center;
     padding: 40px;
-    color: var(--light-text-secondary); /* Variável */
+    color: var(--light-text-secondary);
+    /* Variável */
     font-size: 16px;
     transition: color 0.3s;
 }
 
 body.dark-mode #focused-post-container .loading-posts,
 body.dark-mode #focused-post-container .error-message {
-    color: var(--dark-text-secondary); /* Variável */
+    color: var(--dark-text-secondary);
+    /* Variável */
 }
 
 #focused-post-container .loading-posts i {
     margin-right: 10px;
 }
+
 /* Adicione este código ao seu home.css */
 
 .central-content {
-    flex: 1; /* Faz esta coluna central crescer e ocupar o espaço disponível */
+    flex: 1;
+    /* Faz esta coluna central crescer e ocupar o espaço disponível */
     display: flex;
     flex-direction: column;
     gap: 20px;
-    min-width: 0; /* Impede que o conteúdo flexível transborde */
+    min-width: 0;
+    /* Impede que o conteúdo flexível transborde */
 }
+
 /* Em home.css */
 
 /* Deixa o botão de republicar verde quando ativo */
 .post-action.repost-btn.reposted,
 .post-action.repost-btn.reposted i {
-    color: #17bf63; /* Um tom de verde, similar ao do Twitter/X */
+    color: #17bf63;
+    /* Um tom de verde, similar ao do Twitter/X */
     font-weight: bold;
 }
+
 /* ====================================================== */
 /* ESTILOS PARA O BOTÃO DE CURTIR DO COMENTÁRIO (ROXO) */
 /* ====================================================== */
@@ -1419,9 +1495,11 @@ body.dark-mode #focused-post-container .error-message {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px; /* Adiciona um espaço acima do rodapé */
+    margin-top: 10px;
+    /* Adiciona um espaço acima do rodapé */
     padding-top: 8px;
-    border-top: 1px solid var(--light-border); /* Linha sutil de separação */
+    border-top: 1px solid var(--light-border);
+    /* Linha sutil de separação */
     transition: border-color 0.3s;
 }
 
@@ -1434,13 +1512,16 @@ body.dark-mode .comment-footer {
 .comment-like-btn {
     background: none;
     border: none;
-    color: var(--light-text-secondary); /* Cor padrão do texto/ícone */
+    color: var(--light-text-secondary);
+    /* Cor padrão do texto/ícone */
     cursor: pointer;
     padding: 5px;
-    border-radius: 50%; /* Deixa o fundo do hover redondo */
+    border-radius: 50%;
+    /* Deixa o fundo do hover redondo */
     display: flex;
     align-items: center;
-    gap: 5px; /* Espaço entre o ícone e o número */
+    gap: 5px;
+    /* Espaço entre o ícone e o número */
     font-size: 0.9em;
     transition: background-color 0.2s, color 0.2s;
 }
@@ -1451,25 +1532,32 @@ body.dark-mode .comment-like-btn {
 
 /* Efeito ao passar o mouse - ALTERAÇÃO PARA ROXO */
 .comment-like-btn:hover {
-    background-color: rgba(167, 139, 250, 0.15); /* Roxo claro e sutil */
-    color: #a78bfa; /* Roxo claro */
+    background-color: rgba(167, 139, 250, 0.15);
+    /* Roxo claro e sutil */
+    color: #a78bfa;
+    /* Roxo claro */
 }
 
 /* Estilo do botão QUANDO FOI CURTIDO - ALTERAÇÃO PARA ROXO */
 .comment-like-btn.liked {
-    color: #8b5cf6; /* Roxo mais vibrante */
-    font-weight: bold; /* Deixa o número em negrito */
+    color: #8b5cf6;
+    /* Roxo mais vibrante */
+    font-weight: bold;
+    /* Deixa o número em negrito */
 }
 
 /* Garante que o ícone também fique roxo - ALTERAÇÃO PARA ROXO */
 .comment-like-btn.liked i {
-    font-weight: 900; /* Ícone preenchido do Font Awesome */
-    color: #8b5cf6; /* Roxo mais vibrante */
+    font-weight: 900;
+    /* Ícone preenchido do Font Awesome */
+    color: #8b5cf6;
+    /* Roxo mais vibrante */
 }
 
 /* Efeito ao passar o mouse */
 .post-actions-bar .save-btn:hover {
-    background-color: rgba(59, 130, 246, 0.1); /* Fundo azul bem sutil */
+    background-color: rgba(59, 130, 246, 0.1);
+    /* Fundo azul bem sutil */
     color: #5b5ad3;
 }
 
@@ -1482,8 +1570,10 @@ body.dark-mode .comment-like-btn {
 /* Garante que o ícone também fique azul e preenchido */
 .post-action.save-btn.saved i {
     font-family: "Font Awesome 6 Free";
-    font-weight: 900; /* Ícone preenchido (sólido) */
+    font-weight: 900;
+    /* Ícone preenchido (sólido) */
 }
+
 .notification-link-wrapper {
     display: flex;
     justify-content: space-between;
@@ -1495,15 +1585,18 @@ body.dark-mode .comment-like-btn {
 .notification-badge {
     height: 10px;
     width: 10px;
-    background-color: var(--primary-color); /* Usa sua cor primária roxa */
+    background-color: var(--primary-color);
+    /* Usa sua cor primária roxa */
     border-radius: 50%;
-    border: 2px solid var(--light-text); /* Borda para destacar do fundo */
+    border: 2px solid var(--light-text);
+    /* Borda para destacar do fundo */
 }
 
 /* Ajuste da borda para o Dark Mode */
 body.dark-mode .notification-badge {
     border-color: var(--dark-bg-secondary);
 }
+
 /* Em home.css, adicione no final */
 
 /* Estilo para o ícone de upload de imagem */
@@ -1522,7 +1615,8 @@ body.dark-mode .notification-badge {
 .image-preview-container {
     position: relative;
     margin-top: 10px;
-    max-width: 150px; /* Tamanho da pré-visualização */
+    max-width: 150px;
+    /* Tamanho da pré-visualização */
 }
 
 #post-image-preview {
@@ -1556,11 +1650,13 @@ body.dark-mode .notification-badge {
 /* Estilo da imagem dentro de um post no feed */
 .post-image {
     width: 100%;
-    max-height: 500px; /* Evita que imagens muito altas quebrem o layout */
+    max-height: 500px;
+    /* Evita que imagens muito altas quebrem o layout */
     object-fit: cover;
     border-radius: 8px;
     margin-top: 10px;
 }
+
 /* Em home.css, adicione no final */
 
 .delete-btn {
@@ -1571,12 +1667,15 @@ body.dark-mode .notification-badge {
     font-size: 0.9rem;
     padding: 5px 8px;
     border-radius: 50%;
-    margin-left: auto; /* Joga o botão para a direita */
+    margin-left: auto;
+    /* Joga o botão para a direita */
 }
 
 .delete-btn:hover {
-    background-color: #ff4d4d20; /* Fundo avermelhado fraco */
-    color: #ff4d4d; /* Cor vermelha */
+    background-color: #ff4d4d20;
+    /* Fundo avermelhado fraco */
+    color: #ff4d4d;
+    /* Cor vermelha */
 }
 
 /* Para o cabeçalho do comentário */
@@ -1586,6 +1685,7 @@ body.dark-mode .notification-badge {
     align-items: center;
 
 }
+
 /* Em home/page-styles.css */
 
 .danger-zone {
@@ -1612,52 +1712,58 @@ body.dark-mode .notification-badge {
 }
 
 /* ================================== */
-    /* ADICIONE ESTE BLOCO NO FINAL DO SEU CSS */
-    /* ================================== */
+/* ADICIONE ESTE BLOCO NO FINAL DO SEU CSS */
+/* ================================== */
 
-    /* --- ESTILOS PARA A BIO (VERSÃO DEFINITIVA) --- */
-    .user-bio {
-        line-height: 1.6;
-        /* Força a quebra de palavras muito longas */
-        overflow-wrap: break-word;
-        word-wrap: break-word; 
+/* --- ESTILOS PARA A BIO (VERSÃO DEFINITIVA) --- */
+.user-bio {
+    line-height: 1.6;
+    /* Força a quebra de palavras muito longas */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 
-        /* Lógica para esconder o texto que transborda */
-        max-height: 4.8em; /* Limita a altura para aprox. 3 linhas */
-        overflow: hidden;
-        transition: max-height 0.35s ease-out;
-    }
+    /* Lógica para esconder o texto que transborda */
+    max-height: 4.8em;
+    /* Limita a altura para aprox. 3 linhas */
+    overflow: hidden;
+    transition: max-height 0.35s ease-out;
+}
 
-    /* Classe que o JavaScript adiciona para expandir a biografia */
-    .user-bio.expanded {
-        max-height: 1000px; /* Um valor alto para garantir que todo o texto apareça */
-    }
+/* Classe que o JavaScript adiciona para expandir a biografia */
+.user-bio.expanded {
+    max-height: 1000px;
+    /* Um valor alto para garantir que todo o texto apareça */
+}
 
-    #toggle-bio-btn {
-        background: none;
-        border: none;
-        color: var(--primary-color);
-        cursor: pointer;
-        font-weight: bold;
-        padding: 4px 0;
-        margin-top: 5px;
-        display: none; /* O JavaScript irá mostrar o botão se for necessário */
-    }
+#toggle-bio-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: bold;
+    padding: 4px 0;
+    margin-top: 5px;
+    display: none;
+    /* O JavaScript irá mostrar o botão se for necessário */
+}
 
-    body.dark-mode #toggle-bio-btn {
-        color: var(--primary-hover);
-    }
-    /* --- Estilos para Modais Dinâmicos --- */
+body.dark-mode #toggle-bio-btn {
+    color: var(--primary-hover);
+}
+
+/* --- Estilos para Modais Dinâmicos --- */
 .modal .secondary-btn {
     background-color: var(--light-bg-secondary);
     color: var(--dark-text);
     border: 1px solid var(--light-border);
 }
+
 body.dark-mode .modal .secondary-btn {
     background-color: var(--dark-bg-tertiary);
     color: var(--light-text);
     border-color: var(--dark-border);
 }
+
 .modal-input {
     width: 100%;
     padding: 10px;
@@ -1666,11 +1772,13 @@ body.dark-mode .modal .secondary-btn {
     border: 1px solid var(--light-border);
     background-color: var(--light-bg-secondary);
 }
+
 body.dark-mode .modal-input {
     background-color: var(--dark-bg-tertiary);
     border-color: var(--dark-border);
     color: var(--light-text);
 }
+
 /* ====================================================== */
 /* ESTILOS PARA RESPONSIVIDADE (TABLETS E TELEMÓVEIS) */
 /* ====================================================== */
@@ -1680,23 +1788,28 @@ body.dark-mode .modal-input {
     .main-container {
         /* Empilha as colunas verticalmente */
         flex-direction: column;
-        padding: 0 15px; /* Reduz o espaçamento lateral */
+        padding: 0 15px;
+        /* Reduz o espaçamento lateral */
         margin-top: 15px;
     }
 
     .sidebar {
         /* Faz com que as barras laterais ocupem a largura total */
         width: 100%;
-        position: static; /* Remove o efeito "sticky" */
-        order: 3; /* Coloca as barras laterais depois do feed */
+        position: static;
+        /* Remove o efeito "sticky" */
+        order: 3;
+        /* Coloca as barras laterais depois do feed */
     }
 
     .feed {
-        order: 2; /* Coloca o feed no meio */
+        order: 2;
+        /* Coloca o feed no meio */
     }
 
     .left-sidebar {
-        order: 1; /* Coloca os atalhos rápidos primeiro */
+        order: 1;
+        /* Coloca os atalhos rápidos primeiro */
     }
 }
 
@@ -1708,33 +1821,41 @@ body.dark-mode .modal-input {
     }
 
     header {
-        height: 70px; /* Altura do header ajustada para telemóveis */
+        height: 70px;
+        /* Altura do header ajustada para telemóveis */
         padding: 0 15px;
     }
 
     .logo-img {
-        height: 60px; /* Reduz o logo para caber melhor */
+        height: 60px;
+        /* Reduz o logo para caber melhor */
     }
 
     .logo span {
-        display: none; /* Esconde o texto "Crow-d" para ganhar espaço */
+        display: none;
+        /* Esconde o texto "Crow-d" para ganhar espaço */
     }
 
     .main-nav a {
-        padding: 8px; /* Menos espaçamento nos botões de navegação */
+        padding: 8px;
+        /* Menos espaçamento nos botões de navegação */
     }
 
     .main-nav a span {
-        display: none; /* Esconde o texto dos links, mostrando só os ícones */
+        display: none;
+        /* Esconde o texto dos links, mostrando só os ícones */
     }
 
     .main-nav a i {
-        font-size: 1.3rem; /* Aumenta um pouco o tamanho do ícone */
+        font-size: 1.3rem;
+        /* Aumenta um pouco o tamanho do ícone */
         margin: 0 5px;
     }
 
     /* Ajusta as grelhas para uma coluna */
-    .friends-grid, .groups-container, .events-container {
+    .friends-grid,
+    .groups-container,
+    .events-container {
         grid-template-columns: 1fr;
     }
 
@@ -1746,11 +1867,14 @@ body.dark-mode .modal-input {
         flex-grow: 1;
         justify-content: center;
     }
+
     /* Espaçamento extra para o botão Sair em telas menores */
     .user-actions {
-        margin-left: 15px; /* Adiciona um espaço à esquerda do botão */
+        margin-left: 15px;
+        /* Adiciona um espaço à esquerda do botão */
     }
 }
+
 /* ====================================================== */
 /* ESTILOS PARA NAVEGAÇÃO MOBILE INFERIOR                 */
 /* ====================================================== */
@@ -1762,6 +1886,7 @@ body.dark-mode .modal-input {
 
 /* Estilos aplicados em telas de até 768px (celulares) */
 @media (max-width: 768px) {
+
     /* Esconde a navegação principal do header em telas pequenas */
     .main-nav {
         display: none;
@@ -1785,7 +1910,7 @@ body.dark-mode .modal-input {
     /* Estilos da barra para o modo escuro */
     body.dark-mode #mobile-bottom-nav {
         background-color: var(--dark-bg-secondary);
-        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
     }
 
     /* Estilo dos ícones/botões da barra */
@@ -1793,7 +1918,8 @@ body.dark-mode .modal-input {
         background: none;
         border: none;
         color: var(--dark-text);
-        font-size: 1.5rem; /* Tamanho maior para fácil clique */
+        font-size: 1.5rem;
+        /* Tamanho maior para fácil clique */
         cursor: pointer;
         padding: 10px;
         border-radius: 50%;
@@ -1817,20 +1943,23 @@ body.dark-mode .modal-input {
     }
 
     /* Transforma as sidebars em menus laterais que surgem na tela */
-    .left-sidebar, .right-sidebar {
-        display: flex; /* Garante que o JS possa encontrá-las */
+    .left-sidebar,
+    .right-sidebar {
+        display: flex;
+        /* Garante que o JS possa encontrá-las */
         position: fixed;
         top: 0;
         height: 100%;
-        width: 280px; /* Largura do menu lateral */
+        width: 280px;
+        /* Largura do menu lateral */
         z-index: 1001;
         background-color: var(--light-text);
-        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         overflow-y: auto;
         transition: transform 0.3s ease-in-out;
         padding-top: 20px;
     }
-    
+
     body.dark-mode .left-sidebar,
     body.dark-mode .right-sidebar {
         background-color: var(--dark-bg-secondary);
@@ -1856,12 +1985,14 @@ body.dark-mode .modal-input {
         transform: translateX(0);
     }
 }
-    @media (min-width: 769px) {
-          #mobile-bottom-nav {
-                display: none;
-          }
-     }
-     /* --- Estilo para Seção de Anúncio --- */
+
+@media (min-width: 769px) {
+    #mobile-bottom-nav {
+        display: none;
+    }
+}
+
+/* --- Estilo para Seção de Anúncio --- */
 .announcement-section {
     background: linear-gradient(45deg, #5b5ad3, #8483de);
     border: 2px solid #ffffff44;
@@ -1876,9 +2007,10 @@ body.dark-mode .modal-input {
 .announcement-section h2 {
     margin: 0;
     font-size: 1.1rem;
-    color: #ffffff; /* Texto branco para melhor contraste */
+    color: #ffffff;
+    /* Texto branco para melhor contraste */
     font-weight: 600;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Ajustes para o Modo Escuro (opcional, mas recomendado) */
@@ -1892,10 +2024,12 @@ body.dark-mode .announcement-section {
         transform: scale(1);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     }
+
     50% {
         transform: scale(1.02);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 4px 15px rgba(34, 2, 2, 0.4);
@@ -1905,96 +2039,181 @@ body.dark-mode .announcement-section {
 /* No mobile, a sidebar já ocupa a largura total, então o ajuste é mínimo */
 @media (max-width: 992px) {
     .announcement-section {
-        margin-top: 15px; /* Adiciona um espaço no topo em telas menores */
+        margin-top: 15px;
+        /* Adiciona um espaço no topo em telas menores */
         padding: 15px;
     }
+
     .announcement-section h2 {
-        font-size: 1rem; /* Diminui um pouco a fonte no mobile */
+        font-size: 1rem;
+        /* Diminui um pouco a fonte no mobile */
     }
 }
+
 /* --- Sidebar Esquerda (quando aberta no mobile) --- */
 @media (max-width: 992px) {
     .left-sidebar {
         /* Garante que a sidebar ocupe 100% da altura e fique sobreposta */
-        position: fixed; /* Ou 'absolute' dependendo do seu layout */
+        position: fixed;
+        /* Ou 'absolute' dependendo do seu layout */
         top: 0;
         left: 0;
         height: 100%;
-        width: 250px; /* Largura da sidebar no mobile */
-/* Cor de fundo da sidebar */
-        transform: translateX(-100%); /* Escondida por padrão */
+        width: 250px;
+        /* Largura da sidebar no mobile */
+        /* Cor de fundo da sidebar */
+        transform: translateX(-100%);
+        /* Escondida por padrão */
         transition: transform 0.3s ease-in-out;
-        z-index: 1000; /* Garante que fique acima de outros conteúdos */
-        overflow-y: auto; /* Adiciona scroll se o conteúdo for muito longo */
-        padding-top: 20px; /* Espaço no topo */
-        padding-bottom: 80px; /* Espaço para não cobrir a nav-bottom */
+        z-index: 1000;
+        /* Garante que fique acima de outros conteúdos */
+        overflow-y: auto;
+        /* Adiciona scroll se o conteúdo for muito longo */
+        padding-top: 20px;
+        /* Espaço no topo */
+        padding-bottom: 80px;
+        /* Espaço para não cobrir a nav-bottom */
 
-        display: flex; /* Adicione flexbox para organizar os itens */
-        flex-direction: column; /* Coloca os itens um abaixo do outro */
-        align-items: stretch; /* Faz com que os itens ocupem toda a largura */
+        display: flex;
+        /* Adicione flexbox para organizar os itens */
+        flex-direction: column;
+        /* Coloca os itens um abaixo do outro */
+        align-items: stretch;
+        /* Faz com que os itens ocupem toda a largura */
     }
 
     .left-sidebar.active {
-        transform: translateX(0); /* Mostra a sidebar */
-        box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        transform: translateX(0);
+        /* Mostra a sidebar */
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
     }
 
     /* Garante que as seções internas da sidebar ocupem a largura total */
     .left-sidebar .sidebar-section {
-        width: 100%; /* Ocupa a largura total da sidebar */
-        box-sizing: border-box; /* Inclui padding e border na largura */
-        margin-bottom: 15px; /* Espaçamento entre as seções */
-        padding: 0 20px; /* Adiciona padding lateral para o conteúdo */
+        width: 100%;
+        /* Ocupa a largura total da sidebar */
+        box-sizing: border-box;
+        /* Inclui padding e border na largura */
+        margin-bottom: 15px;
+        /* Espaçamento entre as seções */
+        padding: 0 20px;
+        /* Adiciona padding lateral para o conteúdo */
     }
 
     /* Ajuste específico para o anúncio no mobile */
     .announcement-section {
-        margin-top: 0; /* Remove a margem superior que adicionei antes, não é necessária aqui */
-        margin-bottom: 20px; /* Espaço inferior para separar dos atalhos */
-        border-radius: 0; /* Opcional: remover border-radius para preencher a largura */
-        box-shadow: none; /* Opcional: remover sombra para um visual mais limpo na sidebar */
-        padding: 15px 20px; /* Ajusta padding para dentro da sidebar */
+        margin-top: 0;
+        /* Remove a margem superior que adicionei antes, não é necessária aqui */
+        margin-bottom: 20px;
+        /* Espaço inferior para separar dos atalhos */
+        border-radius: 0;
+        /* Opcional: remover border-radius para preencher a largura */
+        box-shadow: none;
+        /* Opcional: remover sombra para um visual mais limpo na sidebar */
+        padding: 15px 20px;
+        /* Ajusta padding para dentro da sidebar */
     }
 }
+
 /* ========== Instagram Notes (enxuto) ========== */
-.notes-bar{
-  display:flex; gap:12px; overflow-x:auto; padding:8px 2px;
+.notes-bar {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 8px 2px;
 }
-.note-tile{
-  position:relative; width:72px; display:flex; flex-direction:column; align-items:center; gap:6px; flex:0 0 auto;
+
+.note-tile {
+    position: relative;
+    width: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
 }
-.note-avatar{
-  width:56px; height:56px; border-radius:50%; padding:2px;
-  background:linear-gradient(45deg,#5b5ad3,#8483de);
+
+.note-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    padding: 2px;
+    background: linear-gradient(45deg, #5b5ad3, #8483de);
 }
-.note-avatar img{
-  width:100%; height:100%; border-radius:50%; object-fit:cover; background:#000;
+
+.note-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #000;
 }
-.note-bubble{
-  max-width:72px; font-size:.75rem; line-height:1.2; text-align:center; padding:6px 8px;
-  border-radius:12px; background:var(--light-bg-secondary,#f0f0f0); color:var(--dark-text,#333);
-  white-space:normal; word-break:break-word;
+
+.note-bubble {
+    max-width: 72px;
+    font-size: .75rem;
+    line-height: 1.2;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 12px;
+    background: var(--light-bg-secondary, #f0f0f0);
+    color: var(--dark-text, #333);
+    white-space: normal;
+    word-break: break-word;
 }
-.note-bubble.muted{opacity:.6}
-.note-bubble.spotify{
-  padding:2px; background:transparent;
+
+.note-bubble.muted {
+    opacity: .6
 }
-.note-bubble.spotify img{
-  width:56px; height:56px; border-radius:10px; object-fit:cover; display:block;
+
+.note-bubble.spotify {
+    padding: 2px;
+    background: transparent;
 }
-.note-owner{
-  font-size:.72rem; color:var(--light-text-secondary,#777); max-width:72px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+
+.note-bubble.spotify img {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
+}
+
+.note-owner {
+    font-size: .72rem;
+    color: var(--light-text-secondary, #777);
+    max-width: 72px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* botão excluir na sua própria nota */
-.note-del{
-  position:absolute; top:-6px; right:-6px; width:20px; height:20px; border:none; border-radius:50%;
-  background:#dc3545; color:#fff; cursor:pointer; font-weight:700; line-height:20px;
+.note-del {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: #dc3545;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+    line-height: 20px;
 }
 
 /* Dark mode um pouco mais preto */
-body.dark-mode .note-bubble{ background:#202227; color:#ffffff; }
-body.dark-mode .note-owner{ color:#aaaaaa; }
+body.dark-mode .note-bubble {
+    background: #202227;
+    color: #ffffff;
+}
+
+body.dark-mode .note-owner {
+    color: #aaaaaa;
+}
 
 
 .sidebar {
@@ -2008,23 +2227,30 @@ body.dark-mode .note-owner{ color:#aaaaaa; }
     position: sticky;
     top: 80px;
     /* Linhas adicionadas para correção: */
-    max-height: calc(100vh - 100px); /* Define uma altura máxima baseada na tela */
-    overflow-y: auto;               /* Adiciona a barra de rolagem quando necessário */
-    
+    max-height: calc(100vh - 100px);
+    /* Define uma altura máxima baseada na tela */
+    overflow-y: auto;
+    /* Adiciona a barra de rolagem quando necessário */
+
 }
+
 /* Estilização da barra de rolagem para o modo escuro */
 body.dark-mode .sidebar::-webkit-scrollbar-track {
-    background: var(--dark-bg-secondary); /* Fundo da barra de rolagem escuro */
+    background: var(--dark-bg-secondary);
+    /* Fundo da barra de rolagem escuro */
 }
 
 body.dark-mode .sidebar::-webkit-scrollbar-thumb {
-    background-color: var(--dark-border); /* Cor da barra de rolagem escura */
+    background-color: var(--dark-border);
+    /* Cor da barra de rolagem escura */
     border-radius: 4px;
 }
 
 body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary-hover); /* Cor ao passar o mouse */
+    background-color: var(--primary-hover);
+    /* Cor ao passar o mouse */
 }
+
 /* Em home/home.css */
 
 /* Novo estilo para a foto de quem republicou */
@@ -2033,24 +2259,30 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     height: 24px;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid var(--border-color); /* Borda sutil */
+    border: 1px solid var(--border-color);
+    /* Borda sutil */
 }
 
 /* Garante que o cabeçalho fique bem alinhado */
 .repost-header {
     display: flex;
     align-items: center;
-    gap: 8px; /* Espaçamento entre os itens (ícone, foto, nome) */
+    gap: 8px;
+    /* Espaçamento entre os itens (ícone, foto, nome) */
 }
-.follow-btn.is-pending{
-  background: rgba(99,102,241,.18);
-  cursor: default;
-  pointer-events: none;
+
+.follow-btn.is-pending {
+    background: rgba(99, 102, 241, .18);
+    cursor: default;
+    pointer-events: none;
 }
 
 .suggestion .suggestion-name-link,
-.suggestion .suggestion-photo-link{
-  color: inherit;
-  text-decoration: none;
+.suggestion .suggestion-photo-link {
+    color: inherit;
+    text-decoration: none;
 }
-.suggestion .suggestion-name-link:hover{ text-decoration: underline; }
+
+.suggestion .suggestion-name-link:hover {
+    text-decoration: underline;
+}
