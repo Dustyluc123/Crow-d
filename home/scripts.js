@@ -37,8 +37,104 @@ document.addEventListener("DOMContentLoaded", function () {
     const singlePostView = document.getElementById("single-post-view");
     const focusedPostContainer = document.getElementById("focused-post-container");
     const backToFeedBtn = document.getElementById("back-to-feed-btn");
+    // === INÍCIO - NOVO CÓDIGO PARA HOBBIES ===
+    const addHobbyBtn = document.getElementById("add-hobby-btn");
+    const hobbyModal = document.getElementById("hobby-modal");
+    const closeHobbyModalBtn = document.getElementById("close-hobby-modal");
+    const confirmHobbiesBtn = document.getElementById("confirm-hobbies-btn");
+    const hobbyListContainer = document.getElementById("hobby-list-container");
+    const selectedHobbiesContainer = document.getElementById("selected-hobbies-container");
 
-function toast(m,t="info"){ try{ window.createToast?.(m,t) }catch(_){} }
+    let selectedHobbiesForPost = []; // Guarda os hobbies para o post atual
+
+    const hobbiesList = {
+        "🎨 Artes": ["Desenho", "Pintura", "Fotografia", "Dança", "Escultura", "Arte Digital", "Teatro", "Caligrafia", "Cerâmica"],
+        "🎵 Música": ["Ouvir música", "Tocar instrumento", "Cantar", "Shows", "Produção Musical", "Compor", "DJing", "Colecionar Discos"],
+        "💻 Tecnologia": ["Programação", "Jogos", "Robótica", "Design", "Edição de Vídeo", "Streaming", "Montagem de PC", "Cibersegurança"],
+        "📚 Cultura Pop": ["Filmes", "Séries", "Animes", "Livros", "Quadrinhos/Mangás", "Ficção Científica", "Fantasia", "Poesia"],
+        "🌍 Estilo de Vida & Outros": ["Culinária", "Viagens", "Idiomas", "Voluntariado", "Jardinagem", "Acampar", "Astronomia", "Animais de Estimação"]
+    };
+
+    // Função para renderizar a lista de hobbies no modal
+    function renderHobbyList() {
+        hobbyListContainer.innerHTML = '';
+        for (const category in hobbiesList) {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'hobby-category';
+
+            const categoryTitle = document.createElement('h3');
+            categoryTitle.textContent = category;
+            categoryDiv.appendChild(categoryTitle);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'hobby-options';
+
+            hobbiesList[category].forEach(hobby => {
+                const label = document.createElement('label');
+                label.className = 'hobby-label';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = hobby;
+                // Mantém o checkbox marcado se já foi selecionado antes
+                if (selectedHobbiesForPost.includes(hobby)) {
+                    checkbox.checked = true;
+                }
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(` ${hobby}`));
+                optionsDiv.appendChild(label);
+            });
+
+            categoryDiv.appendChild(optionsDiv);
+            hobbyListContainer.appendChild(categoryDiv);
+        }
+    }
+
+    // Função para mostrar os hobbies selecionados na área de criação do post
+    function updateSelectedHobbiesUI() {
+        selectedHobbiesContainer.innerHTML = '';
+        selectedHobbiesForPost.forEach(hobby => {
+            const tag = document.createElement('span');
+            tag.className = 'selected-hobby-tag';
+            tag.textContent = hobby;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-hobby-btn';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.onclick = () => {
+                selectedHobbiesForPost = selectedHobbiesForPost.filter(h => h !== hobby);
+                updateSelectedHobbiesUI(); // Atualiza a UI novamente
+            };
+
+            tag.appendChild(removeBtn);
+            selectedHobbiesContainer.appendChild(tag);
+        });
+    }
+
+    // Event Listeners para o modal de hobbies
+    if (addHobbyBtn) {
+        addHobbyBtn.addEventListener('click', () => {
+            renderHobbyList();
+            hobbyModal.style.display = 'block';
+        });
+    }
+    if (closeHobbyModalBtn) {
+        closeHobbyModalBtn.addEventListener('click', () => {
+            hobbyModal.style.display = 'none';
+        });
+    }
+    if (confirmHobbiesBtn) {
+        confirmHobbiesBtn.addEventListener('click', () => {
+            selectedHobbiesForPost = [];
+            const checkboxes = hobbyListContainer.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                selectedHobbiesForPost.push(cb.value);
+            });
+            updateSelectedHobbiesUI();
+            hobbyModal.style.display = 'none';
+        });
+    }
+
+    function toast(m, t = "info") { try { window.createToast?.(m, t) } catch (_) { } }
 
     // Variáveis globais
     let currentUser = null;
@@ -123,6 +219,10 @@ function toast(m,t="info"){ try{ window.createToast?.(m,t) }catch(_){} }
         postImageInput.value = '';
         postImagePreview.src = '#';
         postImagePreviewContainer.style.display = 'none';
+
+        // Limpa também os hobbies
+        selectedHobbiesForPost = [];
+        updateSelectedHobbiesUI()
     }
 
     // O que acontece quando o utilizador escolhe uma imagem
@@ -156,7 +256,7 @@ function toast(m,t="info"){ try{ window.createToast?.(m,t) }catch(_){} }
         });
     }
 
-    
+
 
     // Botões para fechar/cancelar e remover
     if (closeEditorModalBtn) closeEditorModalBtn.addEventListener('click', closeImageEditor);
@@ -217,109 +317,109 @@ function toast(m,t="info"){ try{ window.createToast?.(m,t) }catch(_){} }
             postsListener = null; // Limpa a variável
         }
     }
-    async function createFriendRequest(toUid){
-  const me = auth.currentUser;
-  if(!me){ toast("Entre para seguir.","error"); return false; }
-  if(!toUid || toUid===me.uid){ toast("Usuário inválido.","error"); return false; }
+    async function createFriendRequest(toUid) {
+        const me = auth.currentUser;
+        if (!me) { toast("Entre para seguir.", "error"); return false; }
+        if (!toUid || toUid === me.uid) { toast("Usuário inválido.", "error"); return false; }
 
-  const from = me.uid, to = toUid;
-  const reqId = [from,to].sort().join("_");
-  const reqRef = db.collection("friendRequests").doc(reqId);
+        const from = me.uid, to = toUid;
+        const reqId = [from, to].sort().join("_");
+        const reqRef = db.collection("friendRequests").doc(reqId);
 
-  try{
-    await reqRef.set({
-      from, to, status:"pending",
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge:false });
-  }catch(err){
-    if(err?.code==="permission-denied"){
-      try{
-        const snap = await reqRef.get();
-        if(snap.exists){
-          const r = snap.data()||{};
-          if(r.status==="pending"){
-            if(r.from===from) throw new Error("Solicitação já enviada.");
-            if(r.to===from) throw new Error("Essa pessoa já te enviou — aceite nas notificações.");
-          }
-          if(r.status==="accepted") throw new Error("Vocês já são amigos.");
-          if(r.status==="declined") throw new Error("Pedido foi recusado. Cancele antes de reenviar.");
+        try {
+            await reqRef.set({
+                from, to, status: "pending",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: false });
+        } catch (err) {
+            if (err?.code === "permission-denied") {
+                try {
+                    const snap = await reqRef.get();
+                    if (snap.exists) {
+                        const r = snap.data() || {};
+                        if (r.status === "pending") {
+                            if (r.from === from) throw new Error("Solicitação já enviada.");
+                            if (r.to === from) throw new Error("Essa pessoa já te enviou — aceite nas notificações.");
+                        }
+                        if (r.status === "accepted") throw new Error("Vocês já são amigos.");
+                        if (r.status === "declined") throw new Error("Pedido foi recusado. Cancele antes de reenviar.");
+                    }
+                } catch (_) { }
+            }
+            throw err;
         }
-      }catch(_){}
+
+        // notificação para o destinatário
+        try {
+            await db.collection("users").doc(to).collection("notifications").add({
+                type: "friend_request",
+                requestId: reqId,
+                fromUserId: from,
+                content: "enviou uma solicitação de amizade",
+                status: "pending",
+                read: false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+        } catch (_) { }
+
+        toast("Solicitação enviada!", "success");
+        return true;
     }
-    throw err;
-  }
+    function wireSuggestionActionsIndex() {
+        document.addEventListener("click", async (e) => {
+            const btn = e.target.closest(".follow-btn, .friend-btn, .send-request-btn");
+            if (!btn) return;
 
-  // notificação para o destinatário
-  try{
-    await db.collection("users").doc(to).collection("notifications").add({
-      type:"friend_request",
-      requestId:reqId,
-      fromUserId: from,
-      content:"enviou uma solicitação de amizade",
-      status:"pending",
-      read:false,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-  }catch(_) {}
+            const host = btn.closest("[data-user-id]");
+            const toUid = btn.getAttribute("data-user-id") || host?.getAttribute("data-user-id");
+            if (!toUid) return;
 
-  toast("Solicitação enviada!","success");
-  return true;
-}
-function wireSuggestionActionsIndex(){
-  document.addEventListener("click", async (e)=>{
-    const btn = e.target.closest(".follow-btn, .friend-btn, .send-request-btn");
-    if(!btn) return;
+            const initial = btn.textContent;
+            btn.disabled = true; btn.textContent = "Enviando…";
 
-    const host = btn.closest("[data-user-id]");
-    const toUid = btn.getAttribute("data-user-id") || host?.getAttribute("data-user-id");
-    if(!toUid) return;
-
-    const initial = btn.textContent;
-    btn.disabled = true; btn.textContent = "Enviando…";
-
-    try{
-      const ok = await createFriendRequest(toUid);
-      if(ok){
-        btn.textContent = "Pendente";
-        btn.classList.add("is-pending");
-      }else{
-        btn.textContent = initial; btn.disabled = false;
-      }
-    }catch(err){
-      toast(err?.message || "Não foi possível enviar.","error");
-      btn.textContent = initial; btn.disabled = false;
+            try {
+                const ok = await createFriendRequest(toUid);
+                if (ok) {
+                    btn.textContent = "Pendente";
+                    btn.classList.add("is-pending");
+                } else {
+                    btn.textContent = initial; btn.disabled = false;
+                }
+            } catch (err) {
+                toast(err?.message || "Não foi possível enviar.", "error");
+                btn.textContent = initial; btn.disabled = false;
+            }
+        });
     }
-  });
-}
 
-document.addEventListener("DOMContentLoaded", wireSuggestionActionsIndex);
-function getUserPagePath(){
-  // no index.html da raiz, user fica em /pages/
-  return 'pages/user.html';
-}
+    document.addEventListener("DOMContentLoaded", wireSuggestionActionsIndex);
+    function getUserPagePath() {
+        // no index.html da raiz, user fica em /pages/
+        return 'pages/user.html';
+    }
 
-function wireSuggestionNavigationIndex(){
-  const box = document.getElementById('suggestions-container');
-  if(!box) return;
+    function wireSuggestionNavigationIndex() {
+        const box = document.getElementById('suggestions-container');
+        if (!box) return;
 
-  // não interfere no botão de seguir
-  box.addEventListener('click', (e)=>{
-    if (e.target.closest('.follow-btn, .friend-btn, .send-request-btn')) return;
+        // não interfere no botão de seguir
+        box.addEventListener('click', (e) => {
+            if (e.target.closest('.follow-btn, .friend-btn, .send-request-btn')) return;
 
-    // só navega se clicou no NOME ou na FOTO
-    const hit = e.target.closest('.suggestion-photo, .suggestion-name');
-    if(!hit) return;
+            // só navega se clicou no NOME ou na FOTO
+            const hit = e.target.closest('.suggestion-photo, .suggestion-name');
+            if (!hit) return;
 
-    const card = hit.closest('.suggestion[data-user-id]');
-    const uid  = card?.dataset.userId;
-    if(!uid) return;
+            const card = hit.closest('.suggestion[data-user-id]');
+            const uid = card?.dataset.userId;
+            if (!uid) return;
 
-    const userPage = getUserPagePath();
-    window.location.href = `${userPage}?uid=${encodeURIComponent(uid)}`;
-  });
-}
+            const userPage = getUserPagePath();
+            window.location.href = `${userPage}?uid=${encodeURIComponent(uid)}`;
+        });
+    }
 
-document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
+    document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
 
 
     function formatTimestamp(date) {
@@ -771,10 +871,21 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
             }
         }
     }
-    // Em scripts.js, substitua a função createPost
 
-    // Em home/scripts.js, substitua a função createPost inteira
+    function handleScroll() {
+        // Se não há mais posts para carregar ou se já estamos carregando, não faz nada.
+        if (noMorePosts || isLoadingMorePosts) {
+            return;
+        }
 
+        // Calcula a posição da rolagem
+        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+        // Se o usuário rolou até 500 pixels do final da página, carrega mais posts.
+        if (scrollTop + clientHeight >= scrollHeight - 500) {
+            loadMorePosts();
+        }
+    }
     async function createPost(content) {
         try {
             if (!currentUser || !currentUserProfile) {
@@ -782,8 +893,9 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
                 return;
             }
 
-            if (!content && !postImageBase64) {
-                showCustomAlert("Escreva algo ou adicione uma imagem para publicar.");
+            // Validação que inclui texto, imagem ou hobbies
+            if (!content && !postImageBase64 && selectedHobbiesForPost.length === 0) {
+                showCustomAlert("Escreva algo, adicione uma imagem ou selecione um hobby para publicar.");
                 return;
             }
 
@@ -801,22 +913,25 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
                 likes: 0,
                 likedBy: [],
                 commentCount: 0,
-                imageURL: postImageBase64
+                imageURL: postImageBase64,
+                hobbies: selectedHobbiesForPost // Inclui os hobbies no post
             };
 
             const docRef = await db.collection("posts").add(postData);
-
-            // Após criar, busca o post completo para adicionar no DOM
             const newPostDoc = await docRef.get();
             const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
 
-            // ▼▼▼ AQUI ESTÁ A CORREÇÃO ▼▼▼
-            // Adiciona o novo post no topo do feed, passando 'true' para o parâmetro 'prepend'
-            addPostToDOM(newPostData, false, true);
+            // 1. Chama a função addPostToDOM, que retorna um elemento HTML
+            const postElement = addPostToDOM(newPostData);
 
-            // Limpa os campos de input
+            // 2. Verifica se o elemento foi criado e o adiciona no início do feed
+            if (postElement) {
+                postsContainer.prepend(postElement);
+            }
+
+            // 3. Limpa os campos do formulário
             postInput.value = "";
-            clearPostImage();
+            clearPostImage(); // Esta função já limpa a imagem e os hobbies
 
         } catch (error) {
             console.error("Erro ao criar post:", error);
@@ -828,29 +943,8 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
             }
         }
     }
-    // Adicione esta função ao seu scripts.js
-
-    /**
-     * Controla o evento de rolagem da página para carregar mais posts.
-     */
-    function handleScroll() {
-        // Se não há mais posts para carregar ou se já estamos carregando, não faz nada.
-        if (noMorePosts || isLoadingMorePosts) {
-            return;
-        }
-
-        // Calcula a posição da rolagem
-        const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-
-        // Se o usuário rolou até 500 pixels do final da página, carrega mais posts.
-        if (scrollTop + clientHeight >= scrollHeight - 500) {
-            loadMorePosts();
-        }
-    }
-
     // Garanta que o listener do botão de voltar seja adicionado aqui.
     backToFeedBtn.addEventListener('click', hideSinglePostView);
-    // Em scripts.js
 
     function addPostToDOM(post, isSingleView = false) {
         if (!postTemplate) {
@@ -881,13 +975,11 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
             const repostHeader = document.createElement('div');
             repostHeader.className = 'repost-header';
 
-            // --- AQUI ESTÁ A ALTERAÇÃO ---
-            // Adicionamos a tag <img> para a foto de quem republicou.
             repostHeader.innerHTML = `
-            <i class="fas fa-retweet"></i>
-            <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
-            <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
-        `;
+                <i class="fas fa-retweet"></i>
+                <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
+                <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
+            `;
             postElement.prepend(repostHeader);
 
             if (actionsContainer) {
@@ -910,6 +1002,28 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
         } else {
             mediaContainer.style.display = 'none';
         }
+
+        // ==========================================================
+        // === INÍCIO - NOVO CÓDIGO PARA EXIBIR HOBBIES NO POST ===
+        // ==========================================================
+        const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
+        // Usamos 'basePost' aqui para que os hobbies do post original apareçam na republicação
+        if (basePost.hobbies && basePost.hobbies.length > 0) {
+            hobbiesContainer.innerHTML = ''; // Limpa o container
+            hobbiesContainer.style.display = 'flex'; // Garante que o container esteja visível
+            basePost.hobbies.forEach(hobby => {
+                const hobbyTag = document.createElement('span');
+                hobbyTag.className = 'post-hobby-tag';
+                hobbyTag.textContent = hobby;
+                hobbiesContainer.appendChild(hobbyTag);
+            });
+        } else {
+            // Esconde o container se não houver hobbies
+            hobbiesContainer.style.display = 'none';
+        }
+        // ==========================================================
+        // === FIM - NOVO CÓDIGO PARA EXIBIR HOBBIES NO POST ===
+        // ==========================================================
 
         // Configura os botões APENAS se não for uma republicação
         if (!post.isRepost && actionsContainer) {
@@ -1047,60 +1161,7 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
         history.pushState({}, '', url);
         loadInitialPosts();
     }
-    async function createPost(content) {
-        try {
-            if (!currentUser || !currentUserProfile) {
-                showCustomAlert("Você precisa estar logado para publicar.");
-                return;
-            }
 
-            if (!content && !postImageBase64) {
-                showCustomAlert("Escreva algo ou adicione uma imagem para publicar.");
-                return;
-            }
-
-            if (postButton) {
-                postButton.disabled = true;
-                postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-            }
-
-            const postData = {
-                content,
-                authorId: currentUser.uid,
-                authorName: currentUserProfile.nickname || "Usuário",
-                authorPhoto: currentUserProfile.photoURL || null,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                likes: 0,
-                likedBy: [],
-                commentCount: 0,
-                imageURL: postImageBase64
-            };
-
-            const docRef = await db.collection("posts").add(postData);
-            const newPostDoc = await docRef.get();
-            const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
-
-            // Cria o elemento do post com a função já corrigida
-            const postElement = addPostToDOM(newPostData);
-
-            if (postElement) {
-                // Usa prepend para adicionar no topo do container de posts
-                postsContainer.prepend(postElement);
-            }
-
-            postInput.value = "";
-            clearPostImage();
-
-        } catch (error) {
-            console.error("Erro ao criar post:", error);
-            showCustomAlert("Erro ao criar publicação. Tente novamente.");
-        } finally {
-            if (postButton) {
-                postButton.disabled = false;
-                postButton.textContent = "Publicar";
-            }
-        }
-    }
     function redirectToUserProfile(userId) {
         window.location.href = `pages/user.html?uid=${userId}`;
     }
@@ -1587,26 +1648,26 @@ document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
         // --- FIM DA CORREÇÃO DE HOBBIES ---
 
         const profileLink = `pages/user.html?uid=${encodeURIComponent(user.id)}`;
-const nameEl = suggestionClone.querySelector('.suggestion-name');
-const imgEl  = suggestionClone.querySelector('.suggestion-photo');
+        const nameEl = suggestionClone.querySelector('.suggestion-name');
+        const imgEl = suggestionClone.querySelector('.suggestion-photo');
 
-// wrap do NOME
-if (nameEl) {
-  const aName = document.createElement('a');
-  aName.href = profileLink;
-  aName.className = 'suggestion-name-link';
-  nameEl.replaceWith(aName);
-  aName.appendChild(nameEl);
-}
+        // wrap do NOME
+        if (nameEl) {
+            const aName = document.createElement('a');
+            aName.href = profileLink;
+            aName.className = 'suggestion-name-link';
+            nameEl.replaceWith(aName);
+            aName.appendChild(nameEl);
+        }
 
-// wrap da FOTO
-if (imgEl) {
-  const aImg = document.createElement('a');
-  aImg.href = profileLink;
-  aImg.className = 'suggestion-photo-link';
-  imgEl.replaceWith(aImg);
-  aImg.appendChild(imgEl);
-}
+        // wrap da FOTO
+        if (imgEl) {
+            const aImg = document.createElement('a');
+            aImg.href = profileLink;
+            aImg.className = 'suggestion-photo-link';
+            imgEl.replaceWith(aImg);
+            aImg.appendChild(imgEl);
+        }
 
 
         followButton.addEventListener("click", async function () {
