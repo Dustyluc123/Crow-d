@@ -57,11 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
      let isLoadingMorePosts = false;
      let activeCommentListeners = {}; // Armazena os listeners de comentários ativos
 
-     if(editBannerBtn) {
-        editBannerBtn.addEventListener('click', () => {
-            bannerFileInput.click();
-        });
-    }
+    
 
      bannerFileInput.addEventListener('change', (event) => {
         const files = event.target.files;
@@ -90,14 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função do botão "Confirmar" no modal
     confirmCropBtn.addEventListener('click', () => {
         if (cropper) {
-            // Pega a imagem cortada como Base64
-            const canvas = cropper.getCroppedCanvas({
-                width: 1500, // Largura ideal para o banner
-                height: 500  // Altura ideal para o banner
-            });
-            const croppedImageBase64 = canvas.toDataURL('image/jpeg');
-            
-            // Salva o banner e fecha o modal
+            // 1. Pega a imagem cortada com a resolução original (sem redimensionar)
+            const canvas = cropper.getCroppedCanvas();
+    
+            // 2. Converte para Base64 em alta qualidade
+            const croppedImageBase64 = canvas.toDataURL('image/jpeg', 1.0);
+    
+            // 3. Salva o banner e fecha o modal
             saveBanner(croppedImageBase64);
             cropperModal.style.display = 'none';
             cropper.destroy();
@@ -175,23 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    bannerFileInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            // Reutiliza o modal e a lógica do cropper que você já tem
-            // em outro arquivo (ex: edit-profile.js). Se não tiver, 
-            // você precisaria adicionar o HTML do modal e o Cropper.js
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // SIMULAÇÃO DE UM CROPPER - Idealmente, você usaria um como o Cropper.js
-                // Para simplificar, vamos apenas usar a imagem diretamente
-                const imageBase64 = e.target.result;
-                saveBanner(imageBase64);
-            };
-            reader.readAsDataURL(file);
-        }
-    });
+    
 
     // --- NOVA FUNÇÃO PARA SALVAR O BANNER ---
     async function saveBanner(imageBase64) {
