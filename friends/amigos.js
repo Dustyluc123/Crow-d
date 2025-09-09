@@ -5,11 +5,11 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const htmlEscape = (s) => String(s ?? "")
-    .replaceAll("&", "&")
-    .replaceAll("<", "<")
-    .replaceAll(">", ">")
-    .replaceAll('"', '"')
-    .replaceAll("'", "'");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 
   function toast(msg, type = "info", ms = 2800) {
     const cont = $("#toast-container") || createToastContainer();
@@ -48,7 +48,7 @@
     modal: () => $("#addFriendModal"),
     modalCloseBtns: () => $$(".close-modal, .close-modal-btn"),
     modalForm: () => $("#addFriendModal form"),
-    modalFriendInput: () => $("#friendEmail"),
+    modalFriendInput: () => $("#friendEmail"), // Assumindo que este input é para o nickname
     logoutBtn: () => $("#logout-btn"),
     leftSidebarToggle: () => $("#left-sidebar-toggle"),
     leftSidebar: () => $(".left-sidebar"),
@@ -68,6 +68,67 @@
   let lastVisibleFriend = null;
   let isFetchingFriends = false;
   let _friendsCache = [];
+
+  // ================= INÍCIO DAS ALTERAÇÕES =================
+
+  // Função para encontrar usuário por nickname no Firestore
+  async function findUserByNickname(db, nickname) {
+    const usersSnap = await db.collection('users').where('nickname', '==', nickname).limit(1).get();
+    if (usersSnap.empty) {
+      return null;
+    }
+    const doc = usersSnap.docs[0];
+    return { id: doc.id, ...doc.data() };
+  }
+
+  // Função para controlar o modal e o formulário de adicionar amigo
+  function wireAddFriendModal(auth, db) {
+    const form = refs.modalForm();
+    const modal = refs.modal();
+    if (!form || !modal) return;
+
+    // Lógica do formulário de submissão
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nickname = refs.modalFriendInput()?.value.trim();
+      if (!nickname) {
+        toast('Por favor, insira um apelido.', 'error');
+        return;
+      }
+
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.textContent = 'Buscando...';
+
+      try {
+        const userToFind = await findUserByNickname(db, nickname);
+        if (!userToFind) {
+          throw new Error(`Usuário "${htmlEscape(nickname)}" não encontrado.`);
+        }
+        
+        // Utiliza a função `createFriendRequest` já existente no seu script
+        await createFriendRequest(auth, db, userToFind.id);
+        toast('Solicitação de amizade enviada!', 'success');
+        
+        modal.style.display = 'none';
+        form.reset();
+
+      } catch (err) {
+        console.error(err);
+        toast(err.message || 'Falha ao enviar solicitação.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar Solicitação';
+      }
+    });
+
+    // Lógica para abrir e fechar o modal
+    refs.addFriendBtn()?.addEventListener('click', () => { modal.style.display = 'flex'; });
+    refs.modalCloseBtns().forEach(b => b.addEventListener('click', () => { modal.style.display = 'none'; }));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+
+  // ================= FIM DAS ALTERAÇÕES =================
 
   // ---------------------- Amigos: lista ----------------------
   async function loadFriendsList(auth, db) {
@@ -428,7 +489,7 @@ function wireSuggestionActions(auth, db) {
       const profilePromises = friendIds.map(fid => fetchUserProfile(db, fid));
       const profiles = await Promise.all(profilePromises);
 
-     const tiles = profiles
+  const tiles = profiles
   .filter(profile => profile.uid === me.uid || activeNotesCache[profile.uid]) // Mostra você sempre, amigos só se tiverem nota
   .map(profile => {
       const note = activeNotesCache[profile.uid];
@@ -488,7 +549,12 @@ function wireSuggestionActions(auth, db) {
   document.addEventListener('DOMContentLoaded', async () => {
     let auth, db; try { ({ auth, db } = ensureFirebase()); } catch (e) { toast(e.message, 'error'); console.error(e); return; }
 
-    wireSearch(); wireLeftSidebarToggle(); wireLogout(auth); setupNotesUI();
+    // Ativa as funcionalidades da UI
+    wireAddFriendModal(auth, db);
+    wireSearch(); 
+    wireLeftSidebarToggle(); 
+    wireLogout(auth); 
+    setupNotesUI();
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
