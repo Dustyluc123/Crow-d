@@ -2286,3 +2286,254 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 .suggestion .suggestion-name-link:hover {
     text-decoration: underline;
 }
+/* ========================================================== */
+/* === CSS Específico para a Funcionalidade de Hobbies (#) === */
+/* ========================================================== */
+
+/* --- 1. Janela e Barra de Pesquisa de Hobbies --- */
+
+/* Ajusta o conteúdo do modal de hobbies */
+#hobby-modal .modal-content {
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Container da barra de pesquisa */
+.hobby-search-container {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+/* Campo de input da pesquisa */
+.hobby-search-container input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border-radius: 25px;
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+/* Ícone de lupa dentro da barra */
+.hobby-search-container .fa-search {
+    position: absolute;
+    left: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-color-secondary);
+}
+
+
+/* --- 2. Lista de Hobbies (Categorias e Opções) --- */
+
+/* Área com rolagem para a lista */
+#hobby-list-container {
+    overflow-y: auto;
+    padding: 1rem 1.5rem;
+}
+
+/* Título de cada categoria (Artes, Música, etc.) */
+.hobby-category h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color-secondary);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Container das opções de hobbies */
+.hobby-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Estilo de cada hobby clicável ("tag") */
+.hobby-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: var(--background-color);
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.9rem;
+    user-select: none; /* Impede seleção de texto ao clicar */
+}
+
+/* Efeito ao passar o mouse */
+.hobby-label:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color-light);
+}
+
+/* Esconde o checkbox padrão */
+.hobby-label input[type="checkbox"] {
+    display: none;
+}
+
+/* Estilo para a tag quando o hobby está selecionado */
+.hobby-label.selected {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+}
+
+
+/* --- 3. Tags de Preview (na criação do post) --- */
+
+/* Área onde as tags selecionadas aparecem */
+.selected-hobbies-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 15px 10px 15px;
+}
+
+/* A tag selecionada antes de publicar */
+.selected-hobby-tag {
+    background-color: var(--primary-color-light);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Botão 'x' para remover a tag */
+.remove-hobby-btn {
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, transform 0.2s;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.remove-hobby-btn:hover {
+    background-color: #c82333; /* Vermelho mais escuro */
+    transform: scale(1.1);
+}
+
+
+/* --- 4. Tags Finais (no post publicado) --- */
+
+/* A tag que aparece no post do feed */
+.post-hobby-tag {
+    background-color: var(--background-color-secondary);
+    color: var(--text-color-secondary);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.post-hobby-tag:hover {
+    background-color: var(--border-color);
+}
+/* ========================================================== */
+/* === CSS CORRIGIDO E APRIMORADO PARA SISTEMA DE HOBBIES === */
+/* ========================================================== */
+
+/* --- 1. Deixa o botão de Hobby (#) mais bonito --- */
+.post-actions .post-action-icon {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary); /* Cor cinza padrão para ícones */
+    font-size: 1.25rem; /* Tamanho do ícone */
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
+}
+
+.post-actions .post-action-icon:hover {
+    color: var(--primary-color); /* Cor principal ao passar o mouse */
+    background-color: var(--primary-color-light); /* Fundo leve ao passar o mouse */
+}
+
+
+#hobby-modal .modal-content {
+    /* Reduz o tamanho máximo da janela */
+    max-width: 600px; 
+    max-height: 80vh; /* Ocupa no máximo 80% da altura da tela */
+    
+    /* Outras propriedades para manter a aparência */
+    width: 90%;
+    
+    /* CORREÇÃO APLICADA AQUI com uma cor escura de fallback */
+    background-color: var(--background-color, #2c2c34); 
+
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+/* --- 3. Destaca o hobby selecionado (grifado) --- */
+/* Esta classe '.selected' será controlada pelo JavaScript */
+.hobby-label.selected {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Garante que o hover não interfira na cor do texto quando selecionado */
+.hobby-label.selected:hover {
+    color: #fff;
+    background-color: var(--primary-color-dark);
+}
+
+
+/* --- 4. Deixa o hobby no post final com "algo em volta" --- */
+.post-hobby-tag {
+    background-color: #5b5ad3;
+    border: 1px solid var(--border-color); /* Borda sutil */
+    color: var(--text-color-secondary);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 4px; /* Espaçamento caso quebre a linha */
+}
+
+.post-hobby-tag:hover {
+    background-color: var(--border-color);
+    border-color: var(--primary-color-light);
+}
+.hobby-label.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--background-color-secondary);
+}
+
+.hobby-label.disabled:hover {
+    border-color: var(--border-color); /* Impede a mudança de cor da borda no hover */
+}
+
+/* (O restante do CSS anterior para a busca e layout do modal continua válido e pode ser mantido) */

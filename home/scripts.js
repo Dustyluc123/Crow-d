@@ -54,38 +54,83 @@ document.addEventListener("DOMContentLoaded", function () {
         "📚 Cultura Pop": ["Filmes", "Séries", "Animes", "Livros", "Quadrinhos/Mangás", "Ficção Científica", "Fantasia", "Poesia"],
         "🌍 Estilo de Vida & Outros": ["Culinária", "Viagens", "Idiomas", "Voluntariado", "Jardinagem", "Acampar", "Astronomia", "Animais de Estimação"]
     };
-
-    // Função para renderizar a lista de hobbies no modal
     function renderHobbyList() {
         hobbyListContainer.innerHTML = '';
+        if (document.getElementById('hobby-search-input')) {
+            document.getElementById('hobby-search-input').value = '';
+        }
+    
+        // NOVO: Função para verificar e aplicar o limite de seleção
+        const checkHobbyLimit = () => {
+            const allCheckboxes = hobbyListContainer.querySelectorAll('input[type="checkbox"]');
+            const checkedCount = hobbyListContainer.querySelectorAll('input[type="checkbox"]:checked').length;
+    
+            // Se 3 hobbies foram selecionados...
+            if (checkedCount >= 3) {
+                // ...desativa todos os checkboxes que NÃO estão marcados.
+                allCheckboxes.forEach(cb => {
+                    if (!cb.checked) {
+                        cb.disabled = true;
+                        // Adiciona uma classe para deixar a label com aparência de desativada
+                        cb.parentElement.classList.add('disabled');
+                    }
+                });
+            } else {
+                // ...senão, garante que todos os checkboxes estejam ativos.
+                allCheckboxes.forEach(cb => {
+                    cb.disabled = false;
+                    cb.parentElement.classList.remove('disabled');
+                });
+            }
+        };
+    
         for (const category in hobbiesList) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'hobby-category';
-
+    
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = category;
             categoryDiv.appendChild(categoryTitle);
-
+    
             const optionsDiv = document.createElement('div');
             optionsDiv.className = 'hobby-options';
-
+    
             hobbiesList[category].forEach(hobby => {
                 const label = document.createElement('label');
                 label.className = 'hobby-label';
+                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = hobby;
-                // Mantém o checkbox marcado se já foi selecionado antes
+    
+                const span = document.createElement('span');
+                span.textContent = hobby;
+    
                 if (selectedHobbiesForPost.includes(hobby)) {
                     checkbox.checked = true;
+                    label.classList.add('selected');
                 }
+    
+                checkbox.addEventListener('change', () => {
+                    label.classList.toggle('selected', checkbox.checked);
+                    // NOVO: Chama a função de verificação sempre que um hobby for alterado
+                    checkHobbyLimit();
+                });
+    
                 label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(` ${hobby}`));
+                label.appendChild(span);
                 optionsDiv.appendChild(label);
             });
-
+    
             categoryDiv.appendChild(optionsDiv);
             hobbyListContainer.appendChild(categoryDiv);
+        }
+        
+        // NOVO: Executa a verificação uma vez ao abrir o modal, caso já haja hobbies selecionados
+        checkHobbyLimit();
+    
+        if (typeof filterHobbies === 'function') {
+            filterHobbies();
         }
     }
 
@@ -213,17 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
         postImageInput.value = ''; // Limpa a seleção do ficheiro
     }
 
-    // Função para LIMPAR a pré-visualização da imagem
-    function clearPostImage() {
-        postImageBase64 = null;
-        postImageInput.value = '';
-        postImagePreview.src = '#';
-        postImagePreviewContainer.style.display = 'none';
 
-        // Limpa também os hobbies
-        selectedHobbiesForPost = [];
-        updateSelectedHobbiesUI()
-    }
 
     // O que acontece quando o utilizador escolhe uma imagem
     if (postImageInput) {
@@ -289,12 +324,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function clearPostImage() {
-        postImageBase64 = null;
-        postImageInput.value = ''; // Limpa o input de arquivo
+  // home/scripts.js
+
+// SUBSTITUA AS DUAS FUNÇÕES ANTIGAS POR ESTA VERSÃO ÚNICA E CORRETA
+function clearPostImage() {
+    // Parte que limpa a IMAGEM
+    postImageBase64 = null;
+    if (postImageInput) {
+        postImageInput.value = '';
+    }
+    if (imagePreviewContainer) {
         imagePreviewContainer.style.display = 'none';
+    }
+    if (imagePreview) {
         imagePreview.src = '#';
     }
+
+    // Parte que limpa os HOBBIES
+    selectedHobbiesForPost = [];
+    updateSelectedHobbiesUI(); // Esta função limpa as tags da tela
+}
 
     if (removeImageBtn) {
         removeImageBtn.addEventListener('click', clearPostImage);
@@ -2012,7 +2061,43 @@ document.addEventListener("DOMContentLoaded", function () {
     function basePostId(post) {
         return post?.repostOfId || post?.originalPostId || post?.id;
     }
+// 1. Adicione esta referência no topo do seu arquivo, junto com as outras
+const hobbySearchInput = document.getElementById("hobby-search-input");
 
+
+// 2. Adicione esta função de filtro em qualquer lugar antes dos "Event Listeners" do modal
+function filterHobbies() {
+    const searchTerm = hobbySearchInput.value.toLowerCase().trim();
+    const allCategories = hobbyListContainer.querySelectorAll('.hobby-category');
+
+    allCategories.forEach(category => {
+        const labels = category.querySelectorAll('.hobby-label');
+        let visibleHobbiesInCategory = 0;
+
+        labels.forEach(label => {
+            const hobbyText = label.textContent.toLowerCase();
+            if (hobbyText.includes(searchTerm)) {
+                label.style.display = 'flex';
+                visibleHobbiesInCategory++;
+            } else {
+                label.style.display = 'none';
+            }
+        });
+
+        // Esconde o título da categoria se nenhum hobby corresponder à pesquisa
+        if (visibleHobbiesInCategory > 0) {
+            category.style.display = 'block';
+        } else {
+            category.style.display = 'none';
+        }
+    });
+}
+
+
+// 3. Adicione este event listener junto com os outros do modal de hobbies
+if (hobbySearchInput) {
+    hobbySearchInput.addEventListener('input', filterHobbies);
+}
     /**
      * Renderiza os botões de Republicar/Desfazer corretamente.
      * - Em REPUBLICAÇÕES: NUNCA mostra "Republicar". Só mostra "Desfazer" se a republicação for SUA.
