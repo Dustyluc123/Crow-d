@@ -1,585 +1,570 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amigos - Crow-d</title>
-      <script src="../config/global.js"></script>
-    <link rel="stylesheet" href="amigos.css">
-    <link rel="stylesheet" href="../css/global.css">
-    <link rel="stylesheet" href="../home/home.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-      <link rel="icon" type="image/png" href="../img/corvo.png">
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
-    
-    <style>
+<!DOCTYPE html> 
+ <html lang="pt-BR"> 
+ <head> 
+ 	<meta charset="UTF-8"> 
+ 	<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+ 	<title>Amigos - Crow-d</title> 
+ 	  <script src="../config/global.js"></script> 
+ 	<link rel="stylesheet" href="amigos.css"> 
+ 	<link rel="stylesheet" href="../css/global.css"> 
+ 	<link rel="stylesheet" href="../home/home.css"> 
+ 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+ 	  <link rel="icon" type="image/png" href="../img/corvo.png"> 
+ 	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script> 
+ 	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> 
+ 	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script> 
+ 	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
+ 	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script> 
+ 	 
+ 	<style> 
 
-        /* ======================================================= */
-        /* AJUSTES NO ÍCONE DE LÁPIS (DIMINUÍDO)                   */
-        /* ======================================================= */
-        #notesBar .note-action[data-action="edit"] {
-            background-color: var(--bg-hover) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--primary-color) !important;
-            width: 25px !important; /* Diminuído de 36px para 30px */
-            height: 25px !important; /* Diminuído de 36px para 30px */
-            border-radius: 50% !important;
-            cursor: pointer !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 13px !important; /* Tamanho da fonte ligeiramente menor */
-            transition: all 0.2s ease-in-out !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-            flex-shrink: 0;
-            margin-left: auto; 
-        }
+ 		/* ======================================================= */ 
+ 		/* AJUSTES NO ÍCONE DE LÁPIS (DIMINUÍDO) 				   */ 
+ 		/* ======================================================= */ 
+ 		#notesBar .note-action[data-action="edit"] { 
+ 			background-color: var(--bg-hover) !important; 
+ 			border: 1px solid var(--border-color) !important; 
+ 			color: var(--primary-color) !important; 
+ 			width: 25px !important; /* Diminuído de 36px para 30px */ 
+ 			height: 25px !important; /* Diminuído de 36px para 30px */ 
+ 			border-radius: 50% !important; 
+ 			cursor: pointer !important; 
+ 			display: flex !important; 
+ 			align-items: center !important; 
+ 			justify-content: center !important; 
+ 			font-size: 13px !important; /* Tamanho da fonte ligeiramente menor */ 
+ 			transition: all 0.2s ease-in-out !important; 
+ 			box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; 
+ 			flex-shrink: 0; 
+ 			margin-left: auto;  
+ 		} 
 
-        #notesBar .note-action[data-action="edit"]:hover {
-            transform: scale(1.1) !important;
-            background-color: var(--primary-color) !important;
-            color: white !important;
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
-        }
+ 		#notesBar .note-action[data-action="edit"]:hover { 
+ 			transform: scale(1.1) !important; 
+ 			background-color: var(--primary-color) !important; 
+ 			color: white !important; 
+ 			border-color: var(--primary-color) !important; 
+ 			box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important; 
+ 		} 
 
-        /* ======================================================= */
-        /* AJUSTES NO CONTÊINER DA NOTA (PARA ALINHAR O "VOCÊ")    */
-        /* ======================================================= */
-        .user-note-card {
-            display: flex;
-            align-items: center; /* Mantém o alinhamento vertical dos itens */
-            gap: 15px;
-            padding: 15px;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-            position: relative;
-        }
+ 		/* ======================================================= */ 
+ 		/* AJUSTES NO CONTÊINER DA NOTA (PARA ALINHAR O "VOCÊ") 	*/ 
+ 		/* ======================================================= */ 
+ 		.user-note-card { 
+ 			display: flex; 
+ 			align-items: center; /* Mantém o alinhamento vertical dos itens */ 
+ 			gap: 15px; 
+ 			padding: 15px; 
+ 			background-color: var(--bg-secondary); 
+ 			border-radius: 10px; 
+ 			box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+ 			margin-bottom: 15px; 
+ 			position: relative; 
+ 		} 
 
-        .user-note-card .note-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-            /* Alinhar o avatar com o topo do texto se necessário, mas 'align-items: center' já resolve a maioria */
-        }
+ 		.user-note-card .note-avatar { 
+ 			width: 50px; 
+ 			height: 50px; 
+ 			border-radius: 50%; 
+ 			object-fit: cover; 
+ 			flex-shrink: 0; 
+ 			/* Alinhar o avatar com o topo do texto se necessário, mas 'align-items: center' já resolve a maioria */ 
+ 		} 
 
-        .user-note-card .note-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            /* Remover margin-right fixo para que o flexbox gerencie o espaço */
-            position: relative; 
-            /* Para que o botão edit possa ser posicionado em relação a este contêiner */
-            justify-content: center; /* Centraliza o conteúdo verticalmente dentro do note-content */
-            min-height: 50px; /* Garante que o note-content tenha altura mínima para o alinhamento */
-        }
+ 		.user-note-card .note-content { 
+ 			flex-grow: 1; 
+ 			display: flex; 
+ 			flex-direction: column; 
+ 			/* Remover margin-right fixo para que o flexbox gerencie o espaço */ 
+ 			position: relative;  
+ 			/* Para que o botão edit possa ser posicionado em relação a este contêiner */ 
+ 			justify-content: center; /* Centraliza o conteúdo verticalmente dentro do note-content */ 
+ 			min-height: 50px; /* Garante que o note-content tenha altura mínima para o alinhamento */ 
+ 		} 
 
-        .user-note-card .note-owner-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 3px;
-            line-height: 1.2; /* Ajuste a altura da linha para um melhor alinhamento */
-        }
+ 		.user-note-card .note-owner-name { 
+ 			font-weight: 600; 
+ 			color: var(--text-primary); 
+ 			margin-bottom: 3px; 
+ 			line-height: 1.2; /* Ajuste a altura da linha para um melhor alinhamento */ 
+ 		} 
 
-        .user-note-card .note-text {
-            color: var(--text-secondary);
-            margin: 0;
-            word-break: break-word;
-            line-height: 1.2; /* Ajuste a altura da linha para um melhor alinhamento */
-        }
-        
-        /* Ajuste para o botão dentro do note-content para acomodar o novo tamanho */
-        .user-note-card .note-content .note-action[data-action="edit"] {
-            position: absolute;
-            right: -45px; /* Ajuste para compensar o novo tamanho e manter na lateral */
-            top: 50%;
-            transform: translateY(-50%);
-            margin-left: 0;
-        }
+ 		.user-note-card .note-text { 
+ 			color: var(--text-secondary); 
+ 			margin: 0; 
+ 			word-break: break-word; 
+ 			line-height: 1.2; /* Ajuste a altura da linha para um melhor alinhamento */ 
+ 		} 
+ 		 
+ 		/* Ajuste para o botão dentro do note-content para acomodar o novo tamanho */ 
+ 		.user-note-card .note-content .note-action[data-action="edit"] { 
+ 			position: absolute; 
+ 			right: -45px; /* Ajuste para compensar o novo tamanho e manter na lateral */ 
+ 			top: 50%; 
+ 			transform: translateY(-50%); 
+ 			margin-left: 0; 
+ 		} 
 
 
-        #suggestionsContainer {
-            max-height: 400px; 
-            overflow-y: auto;
-            padding-right: 8px;
-        }
-        #suggestionsContainer::-webkit-scrollbar {
-            width: 8px;
-        }
-        #suggestionsContainer::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #suggestionsContainer::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-            border-radius: 4px;
-        }
-        #suggestionsContainer::-webkit-scrollbar-thumb:hover {
-            background-color: var(--primary-color);
-        }
-        body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb {
-            background-color: #555;
-        }
+ 		#suggestionsContainer { 
+ 			max-height: 400px;  
+ 			overflow-y: auto; 
+ 			padding-right: 8px; 
+ 		} 
+ 		#suggestionsContainer::-webkit-scrollbar { 
+ 			width: 8px; 
+ 		} 
+ 		#suggestionsContainer::-webkit-scrollbar-track { 
+ 			background: transparent; 
+ 		} 
+ 		#suggestionsContainer::-webkit-scrollbar-thumb { 
+ 			background-color: var(--border-color); 
+ 			border-radius: 4px; 
+ 		} 
+ 		#suggestionsContainer::-webkit-scrollbar-thumb:hover { 
+ 			background-color: var(--primary-color); 
+ 		} 
+ 		body.dark-mode #suggestionsContainer::-webkit-scrollbar-thumb { 
+ 			background-color: #555; 
+ 		} 
 
-        /* Estilos específicos para a página de amigos */
-        .friends-section {
-            margin-bottom: 30px;
-        }
-        .friends-section h2 {
-            display: flex;
-            align-items: center;
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-        }
-        .friends-section h2 i {
-            margin-right: 10px;
-            color: var(--primary-color);
-        }
-        .text-success {
-            color: #4CAF50 !important;
-        }
-        .friends-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .friend-card {
-            display: flex;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-        .friend-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        .friend-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 15px;
-            cursor: pointer;
-            border: 3px solid var(--border-color);
-            transition: border-color 0.2s;
-        }
-        .friend-avatar:hover {
-            border-color: var(--primary-color);
-        }
-        .friend-info {
-            flex: 1;
-        }
-        .friend-name {
-            margin: 0 0 5px;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            cursor: pointer;
-        }
-        .friend-name:hover {
-            color: var(--primary-color);
-        }
-        .friend-status {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        .status-online {
-            background-color: #4CAF50;
-        }
-        .status-offline {
-            background-color: #9e9e9e;
-        }
-        .friend-hobbies {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        .hobby-tag {
-            background-color: var(--bg-hover);
-            color: var(--text-secondary);
-            padding: 3px 8px;
-            border-radius: 15px;
-            font-size: 12px;
-            display: inline-block;
-        }
-        .friend-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .friend-btn {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            transition: background-color 0.2s;
-        }
-        .friend-btn:hover {
-            background-color: var(--primary-color-dark);
-        }
-        .profile-btn {
-            background-color: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .profile-btn:hover {
-            background-color: var(--bg-tertiary);
-        }
-        .request-card {
-            display: flex;
-            align-items: center;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .request-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 15px;
-        }
-        .request-info {
-            flex: 1;
-        }
-        .request-name {
-            margin: 0 0 5px;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .request-mutual {
-            margin: 0;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .request-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .request-btn {
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            transition: background-color 0.2s;
-        }
-        .request-btn:hover {
-            background-color: var(--primary-color-dark);
-        }
-        .request-btn.secondary {
-            background-color: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .request-btn.secondary:hover {
-            background-color: var(--bg-tertiary);
-        }
-        .action-buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
-        }
-        .action-btn {
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            display: flex;
-            align-items: center;
-            transition: background-color 0.2s;
-        }
-        .action-btn i {
-            margin-right: 5px;
-        }
-        .action-btn:hover {
-            background-color: var(--primary-color-dark);
-        }
-        .search-bar {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px 0 0 5px;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-        .search-bar button {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-left: none;
-            border-radius: 0 5px 5px 0;
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: var(--bg-primary);
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .modal-header h2 {
-            margin: 0;
-            font-size: 20px;
-            color: var(--text-primary);
-        }
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
-        .modal-form {
-            padding: 20px;
-        }
-        .input-group {
-            margin-bottom: 20px;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            font-size: 14px;
-        }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .no-friends, .no-requests, .no-suggestions, .loading-indicator, .error-message {
-            text-align: center;
-            padding: 20px;
-            background-color: var(--bg-secondary);
-            border-radius: 10px;
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-        }
-        @media (max-width: 768px) {
-            .friends-grid {
-                grid-template-columns: 1fr;
-            }
-            .friend-actions {
-                flex-direction: column;
-            }
-            .request-actions {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="toast-container"></div>
-    <header>
-        <div class="logo">
-            <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
-            <span>Crow-d</span>
-        </div>
-        <nav class="main-nav">
-            <a href="../index.html"><i class="fas fa-home"></i> Feed</a>
-            <a href="../friends/amigos.html" class="active"><i class="fas fa-user-friends"></i> Amigos</a>
-            <a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i> Mensagens</a>
-            <a href="#" class="profile-link"><i class="fas fa-user"></i> Perfil</a>
-        </nav>
-        <div class="user-actions">
-            <a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a>
-        </div>
-    </header>
+ 		/* Estilos específicos para a página de amigos */ 
+ 		.friends-section { 
+ 			margin-bottom: 30px; 
+ 		} 
+ 		.friends-section h2 { 
+ 			display: flex; 
+ 			align-items: center; 
+ 			font-size: 20px; 
+ 			margin-bottom: 15px; 
+ 			color: var(--text-primary); 
+ 		} 
+ 		.friends-section h2 i { 
+ 			margin-right: 10px; 
+ 			color: var(--primary-color); 
+ 		} 
+ 		.text-success { 
+ 			color: #4CAF50 !important; 
+ 		} 
+ 		.friends-grid { 
+ 			display: grid; 
+ 			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+ 			gap: 20px; 
+ 		} 
+ 		.friend-card { 
+ 			display: flex; 
+ 			background-color: var(--bg-secondary); 
+ 			border-radius: 10px; 
+ 			padding: 15px; 
+ 			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+ 			transition: transform 0.2s; 
+ 		} 
+ 		.friend-card:hover { 
+ 			transform: translateY(-5px); 
+ 			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); 
+ 		} 
+ 		.friend-avatar { 
+ 			width: 80px; 
+ 			height: 80px; 
+ 			border-radius: 50%; 
+ 			object-fit: cover; 
+ 			margin-right: 15px; 
+ 			cursor: pointer; 
+ 			border: 3px solid var(--border-color); 
+ 			transition: border-color 0.2s; 
+ 		} 
+ 		.friend-avatar:hover { 
+ 			border-color: var(--primary-color); 
+ 		} 
+ 		.friend-info { 
+ 			flex: 1; 
+ 		} 
+ 		.friend-name { 
+ 			margin: 0 0 5px; 
+ 			font-size: 18px; 
+ 			font-weight: 600; 
+ 			color: var(--text-primary); 
+ 			cursor: pointer; 
+ 		} 
+ 		.friend-name:hover { 
+ 			color: var(--primary-color); 
+ 		} 
+ 		.friend-status { 
+ 			display: flex; 
+ 			align-items: center; 
+ 			margin-bottom: 10px; 
+ 			font-size: 14px; 
+ 			color: var(--text-secondary); 
+ 		} 
+ 		.status-indicator { 
+ 			width: 8px; 
+ 			height: 8px; 
+ 			border-radius: 50%; 
+ 			margin-right: 5px; 
+ 		} 
+ 		.status-online { 
+ 			background-color: #4CAF50; 
+ 		} 
+ 		.status-offline { 
+ 			background-color: #9e9e9e; 
+ 		} 
+ 		.friend-hobbies { 
+ 			display: flex; 
+ 			flex-wrap: wrap; 
+ 			gap: 5px; 
+ 			margin-bottom: 10px; 
+ 		} 
+ 		.hobby-tag { 
+ 			background-color: var(--bg-hover); 
+ 			color: var(--text-secondary); 
+ 			padding: 3px 8px; 
+ 			border-radius: 15px; 
+ 			font-size: 12px; 
+ 			display: inline-block; 
+ 		} 
+ 		.friend-actions { 
+ 			display: flex; 
+ 			gap: 10px; 
+ 		} 
+ 		.friend-btn { 
+ 			padding: 5px 10px; 
+ 			border-radius: 5px; 
+ 			font-size: 14px; 
+ 			cursor: pointer; 
+ 			background-color: var(--primary-color); 
+ 			color: white; 
+ 			border: none; 
+ 			transition: background-color 0.2s; 
+ 		} 
+ 		.friend-btn:hover { 
+ 			background-color: var(--primary-color-dark); 
+ 		} 
+ 		.profile-btn { 
+ 			background-color: var(--bg-hover); 
+ 			color: var(--text-primary); 
+ 		} 
+ 		.profile-btn:hover { 
+ 			background-color: var(--bg-tertiary); 
+ 		} 
+ 		.request-card { 
+ 			display: flex; 
+ 			align-items: center; 
+ 			background-color: var(--bg-secondary); 
+ 			border-radius: 10px; 
+ 			padding: 15px; 
+ 			margin-bottom: 15px; 
+ 			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+ 		} 
+ 		.request-avatar { 
+ 			width: 60px; 
+ 			height: 60px; 
+ 			border-radius: 50%; 
+ 			object-fit: cover; 
+ 			margin-right: 15px; 
+ 		} 
+ 		.request-info { 
+ 			flex: 1; 
+ 		} 
+ 		.request-name { 
+ 			margin: 0 0 5px; 
+ 			font-size: 16px; 
+ 			font-weight: 600; 
+ 			color: var(--text-primary); 
+ 		} 
+ 		.request-mutual { 
+ 			margin: 0; 
+ 			font-size: 14px; 
+ 			color: var(--text-secondary); 
+ 		} 
+ 		.request-actions { 
+ 			display: flex; 
+ 			gap: 10px; 
+ 		} 
+ 		.request-btn { 
+ 			padding: 8px 15px; 
+ 			border-radius: 5px; 
+ 			font-size: 14px; 
+ 			cursor: pointer; 
+ 			background-color: var(--primary-color); 
+ 			color: white; 
+ 			border: none; 
+ 			transition: background-color 0.2s; 
+ 		} 
+ 		.request-btn:hover { 
+ 			background-color: var(--primary-color-dark); 
+ 		} 
+ 		.request-btn.secondary { 
+ 			background-color: var(--bg-hover); 
+ 			color: var(--text-primary); 
+ 		} 
+ 		.request-btn.secondary:hover { 
+ 			background-color: var(--bg-tertiary); 
+ 		} 
+ 		.action-buttons { 
+ 			display: flex; 
+ 			justify-content: flex-end; 
+ 			margin-bottom: 20px; 
+ 		} 
+ 		.action-btn { 
+ 			padding: 8px 15px; 
+ 			border-radius: 5px; 
+ 			font-size: 14px; 
+ 			cursor: pointer; 
+ 			background-color: var(--primary-color); 
+ 			color: white; 
+ 			border: none; 
+ 			display: flex; 
+ 			align-items: center; 
+ 			transition: background-color 0.2s; 
+ 		} 
+ 		.action-btn i { 
+ 			margin-right: 5px; 
+ 		} 
+ 		.action-btn:hover { 
+ 			background-color: var(--primary-color-dark); 
+ 		} 
+ 		.search-bar { 
+ 			display: flex; 
+ 			margin-bottom: 20px; 
+ 		} 
+ 		.search-bar input { 
+ 			flex: 1; 
+ 			padding: 10px 15px; 
+ 			border: 1px solid var(--border-color); 
+ 			border-radius: 5px 0 0 5px; 
+ 			background-color: var(--bg-secondary); 
+ 			color: var(--text-primary); 
+ 			font-size: 14px; 
+ 		} 
+ 		.search-bar button { 
+ 			padding: 10px 15px; 
+ 			border: 1px solid var(--border-color); 
+ 			border-left: none; 
+ 			border-radius: 0 5px 5px 0; 
+ 			background-color: var(--primary-color); 
+ 			color: white; 
+ 			cursor: pointer; 
+ 		} 
+ 		.modal { 
+ 			display: none; 
+ 			position: fixed; 
+ 			top: 0; 
+ 			left: 0; 
+ 			width: 100%; 
+ 			height: 100%; 
+ 			background-color: rgba(0, 0, 0, 0.5); 
+ 			z-index: 1000; 
+ 			justify-content: center; 
+ 			align-items: center; 
+ 		} 
+ 		.modal-content { 
+ 			background-color: var(--bg-primary); 
+ 			border-radius: 10px; 
+ 			width: 90%; 
+ 			max-width: 500px; 
+ 			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+ 		} 
+ 		.modal-header { 
+ 			display: flex; 
+ 			justify-content: space-between; 
+ 			align-items: center; 
+ 			padding: 15px 20px; 
+ 			border-bottom: 1px solid var(--border-color); 
+ 		} 
+ 		.modal-header h2 { 
+ 			margin: 0; 
+ 			font-size: 20px; 
+ 			color: var(--text-primary); 
+ 		} 
+ 		.close-modal { 
+ 			background: none; 
+ 			border: none; 
+ 			font-size: 24px; 
+ 			color: var(--text-secondary); 
+ 			cursor: pointer; 
+ 		} 
+ 		.modal-form { 
+ 			padding: 20px; 
+ 		} 
+ 		.input-group { 
+ 			margin-bottom: 20px; 
+ 		} 
+ 		.input-group label { 
+ 			display: block; 
+ 			margin-bottom: 5px; 
+ 			font-size: 14px; 
+ 			color: var(--text-secondary); 
+ 		} 
+ 		.input-group input { 
+ 			width: 100%; 
+ 			padding: 10px; 
+ 			border: 1px solid var(--border-color); 
+ 			border-radius: 5px; 
+ 			background-color: var(--bg-secondary); 
+ 			color: var(--text-primary); 
+ 			font-size: 14px; 
+ 		} 
+ 		.modal-actions { 
+ 			display: flex; 
+ 			justify-content: flex-end; 
+ 			gap: 10px; 
+ 		} 
+ 		.no-friends, .no-requests, .no-suggestions, .loading-indicator, .error-message { 
+ 			text-align: center; 
+ 			padding: 20px; 
+ 			background-color: var(--bg-secondary); 
+ 			border-radius: 10px; 
+ 			color: var(--text-secondary); 
+ 			margin-bottom: 15px; 
+ 		} 
+ 		@media (max-width: 768px) { 
+ 			.friends-grid { 
+ 				grid-template-columns: 1fr; 
+ 			} 
+ 			.friend-actions { 
+ 				flex-direction: column; 
+ 			} 
+ 			.request-actions { 
+ 				flex-direction: column; 
+ 			} 
+ 		} 
+ 	</style> 
+ </head> 
+ <body> 
+ 	<div id="toast-container"></div> 
+ 	<header> 
+ 		<div class="logo"> 
+ 			<img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img"> 
+ 			<span>Crow-d</span> 
+ 		</div> 
+ 		<nav class="main-nav"> 
+ 			<a href="../index.html"><i class="fas fa-home"></i> Feed</a> 
+ 			<a href="../friends/amigos.html" class="active"><i class="fas fa-user-friends"></i> Amigos</a> 
+ 			<a href="../mensagen/mensagens.html"><i class="fas fa-comment"></i> Mensagens</a> 
+ 			<a href="#" class="profile-link"><i class="fas fa-user"></i> Perfil</a> 
+ 		</nav> 
+ 		<div class="user-actions"> 
+ 			<a href="#" id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Sair</a> 
+ 		</div> 
+ 	</header> 
 
-    <div class="main-container">
-        <aside class="sidebar left-sidebar">
-            <div class="sidebar-section">
-                <h3>Atalhos Rápidos</h3>
-                <ul>
-                    
-                    <li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li>
-                 <li><a href="../pages/notificacao.html" class="notification-nav-link">
-    <i class="fas fa-bell"></i>
-    <span>Notificação</span>
-    <span class="notification-badge" id="header-notification-badge" style="display: none;"></span>
-</a></li>   
-                    <li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
-                    <li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
-                    <li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li>
-                </ul>
-            </div>
-          
-        </aside>
+ 	<div class="main-container"> 
+ 		<aside class="sidebar left-sidebar"> 
+ 			<div class="sidebar-section"> 
+ 				<h3>Atalhos Rápidos</h3> 
+ 				<ul> 
+ 					 
+ 					<li><a href="../Club/grupos.html"><i class="fas fa-users"></i> Grupos</a></li> 
+ 				   <li><a href="../pages/notificacao.html" class="notification-nav-link"> 
+ 	<i class="fas fa-bell"></i> 
+ 	<span>Notificação</span> 
+ 	<span class="notification-badge" id="header-notification-badge" style="display: none;"></span> 
+ </a></li>   
+ 					<li><a href="../salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li> 
+ 					<li><a href="../events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li> 
+ 					<li><a href="../config/config.html"><i class="fas fa-cog"></i> Configurações</a></li> 
+ 				</ul> 
+ 			</div> 
+ 		  
+ 		</aside> 
 
-        <main class="feed">
-            <h1 class="page-title"><i class="fas fa-user-friends"></i> Amigos</h1>
-            
-            <div class="action-buttons">
-                <button class="action-btn" id="addFriendBtn"><i class="fas fa-user-plus"></i> Adicionar Amigo</button>
-            </div>
-            
-            <div class="search-bar">
-                <input type="text" id="searchFriends" placeholder="Buscar amigos entre sua lista amigos por nome...">
-                <button><i class="fas fa-search"></i></button>
-            </div>
-            
-           <section class="notes-section">
-              <div class="notes-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <h2 style="margin:0;display:flex;align-items:center;gap:8px"><i class="fas fa-sticky-note"></i> Notas</h2>
-                <button id="addNoteBtn" class="action-btn"><i class="fas fa-plus"></i> Nova nota</button>
-              </div>
-              <div id="notesBar" class="notes-bar">
-                <div class="user-note-card">
-                    <img src="https://via.placeholder.com/50" alt="Avatar Você" class="note-avatar">
-                    <div class="note-content">
-                        <span class="note-owner-name">Você</span>
-                        <p class="note-text">Sem nota</p>
-                        <i class="fas fa-pencil-alt note-action" data-action="edit"></i>
-                    </div>
-                </div>
-                <div class="friend-note-card">
-                    <img src="https://via.placeholder.com/50" alt="Avatar Barreto" class="note-avatar">
-                    <div class="note-content">
-                        <span class="note-owner-name">Barreto</span>
-                        <p class="note-text">Zx z xz</p>
-                    </div>
-                </div>
-              </div>
-            </section>
-            
-            <div id="noteModal" class="modal" style="display:none">
-              <div class="modal-content" style="max-width:420px">
-                <div class="modal-header">
-                  <h2>Postar nota</h2>
-                  <button class="close-modal note-close">×</button>
-                </div>
-                <div class="modal-body">
-                   <div id="tab-text" class="note-tab active">
-                        <label for="noteText">Sua nota (máx. 60 caracteres)</label>
-                        <textarea id="noteText" class="modal-input" maxlength="60" rows="3" placeholder="ex.: estudando hoje..."></textarea>
-                   </div>
-                </div>
-                <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end">
-                  <button class="secondary-btn close-note-modal">Cancelar</button>
-                  <button id="submitNoteBtn" class="primary-btn">Postar</button>
-                </div>
-              </div>
-            </div>
+ 		<main class="feed"> 
+ 			<h1 class="page-title"><i class="fas fa-user-friends"></i> Amigos</h1> 
+ 			 
+ 			<div class="action-buttons"> 
+ 				<button class="action-btn" id="addFriendBtn"><i class="fas fa-user-plus"></i> Adicionar Amigo</button> 
+ 			</div> 
+ 			 
+ 			<div class="search-bar"> 
+ 				<input type="text" id="searchFriends" placeholder="Buscar amigos entre sua lista amigos por nome..."> 
+ 				<button><i class="fas fa-search"></i></button> 
+ 			</div> 
+ 			 
+ 		   <section class="notes-section"> 
+ 				<div class="notes-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"> 
+ 					<h2 style="margin:0;display:flex;align-items:center;gap:8px"><i class="fas fa-sticky-note"></i> Notas</h2> 
+ 					<button id="addNoteBtn" class="action-btn"><i class="fas fa-plus"></i> Nova nota</button> 
+ 				</div> 
+ 				<div id="notesBar" class="notes-bar"> 
+ 					</div> 
+ 			</section> 
+ 			 
+ 			<div id="noteModal" class="modal" style="display:none"> 
+ 				<div class="modal-content" style="max-width:420px"> 
+ 					<div class="modal-header"> 
+ 						<h2>Postar nota</h2> 
+ 						<button class="close-modal note-close">×</button> 
+ 					</div> 
+ 					<div class="modal-body"> 
+ 						  <div id="tab-text" class="note-tab active"> 
+ 								<label for="noteText">Sua nota (máx. 60 caracteres)</label> 
+ 								<textarea id="noteText" class="modal-input" maxlength="60" rows="3" placeholder="ex.: estudando hoje..."></textarea> 
+ 						  </div> 
+ 					</div> 
+ 					<div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end"> 
+ 						<button class="secondary-btn close-note-modal">Cancelar</button> 
+ 						<button id="submitNoteBtn" class="primary-btn">Postar</button> 
+ 					</div> 
+ 				</div> 
+ 			</div> 
 
-            
-          <div class="friends-section">
-            <h2><i class="fas fa-users"></i> Todos os seus Amigos</h2>
+ 			 
+ 		  <div class="friends-section"> 
+ 			<h2><i class="fas fa-users"></i> Todos os seus Amigos</h2> 
 
-            <div class="friends-grid" id="allFriendsGrid">
-                <div class="loading-indicator">
-                    <i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos...
-                </div>
-            </div>
+ 			<div class="friends-grid" id="allFriendsGrid"> 
+ 				<div class="loading-indicator"> 
+ 					<i class="fas fa-spinner fa-spin"></i> Carregando todos os amigos... 
+ 				</div> 
+ 			</div> 
 
-      
-        </div>
-        </main>
+ 	   
+ 		  </div> 
+ 		</main> 
 
-        <aside class="sidebar right-sidebar">
-            <div class="sidebar-section">
-                <h3>Sugestões de Amizade</h3>
-                <p class="section-subtitle">Baseado nos seus hobbies</p>
-                
-                <div id="suggestionsContainer">
-                    <div class="loading-indicator">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando sugestões...
-                    </div>
-                </div>
-            
-            </div>
-        </aside>
-    </div>
+ 		<aside class="sidebar right-sidebar"> 
+ 			<div class="sidebar-section"> 
+ 				<h3>Sugestões de Amizade</h3> 
+ 				<p class="section-subtitle">Baseado nos seus hobbies</p> 
+ 				 
+ 				<div id="suggestionsContainer"> 
+ 					<div class="loading-indicator"> 
+ 						<i class="fas fa-spinner fa-spin"></i> Carregando sugestões... 
+ 					</div> 
+ 				</div> 
+ 			 
+ 			</div> 
+ 		</aside> 
+ 	</div> 
 
-    <div class="modal" id="addFriendModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Adicionar Amigo</h2>
-                <button class="close-modal">×</button>
-            </div>
-            <form class="modal-form">
-                <div class="input-group">
-                    <label for="friendEmail">E-mail ou Nome de Usuário</label>
-                    <input type="text" id="friendEmail" placeholder="Digite o e-mail ou nome de usuário" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="request-btn secondary close-modal-btn">Cancelar</button>
-                    <button type="submit" class="request-btn">Enviar Solicitação</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div id="mobile-bottom-nav">
-    <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
-    <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
-    <a href="../friends/amigos.html" class="mobile-nav-item active"><i class="fas fa-user-friends"></i></a>
-    <a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a>
-    <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
-</div>
+ 	<div class="modal" id="addFriendModal"> 
+ 		<div class="modal-content"> 
+ 			<div class="modal-header"> 
+ 				<h2>Adicionar Amigo</h2> 
+ 				<button class="close-modal">×</button> 
+ 			</div> 
+ 			<form class="modal-form"> 
+ 				<div class="input-group"> 
+ 					<label for="friendEmail">E-mail ou Nome de Usuário</label> 
+ 					<input type="text" id="friendEmail" placeholder="Digite o e-mail ou nome de usuário" required> 
+ 				</div> 
+ 				<div class="modal-actions"> 
+ 					<button type="button" class="request-btn secondary close-modal-btn">Cancelar</button> 
+ 					<button type="submit" class="request-btn">Enviar Solicitação</button> 
+ 				</div> 
+ 			</form> 
+ 		</div> 
+ 	</div> 
+ 	<div id="mobile-bottom-nav"> 
+ 	<button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button> 
+ 	<a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a> 
+ 	<a href="../friends/amigos.html" class="mobile-nav-item active"><i class="fas fa-user-friends"></i></a> 
+ 	<a href="../mensagen/mensagens.html" class="mobile-nav-item"><i class="fas fa-comment"></i></a> 
+ 	<a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a> 
+ </div> 
 
-<script src="amigos.js" defer></script> 
-    <script src="../config/darkmode.js"></script>
-    <script src="../config/global-notifications.js" defer></script>
-</body>
-</html>
+ <script src="amigos.js" defer></script>  
+ 	<script src="../config/darkmode.js"></script> 
+ 	<script src="../config/global-notifications.js" defer></script> 
+ </body> 
+ </html>
