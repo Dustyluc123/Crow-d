@@ -140,3 +140,19 @@ body:not(.dark-mode) #noteModal .secondary-btn:hover {
 .notes-bar::-webkit-scrollbar-thumb:hover { 
     background: #aaa; 
 }
+
+/* Alinhamento especial para o "Você" */
+.note-tile.is-self .note-name {
+    text-align: center;
+    width: 100%;
+  }
+
+  /* Corrige alinhamento do "Você" para ficar igual aos outros nomes */
+.user-note-card .note-name {
+  margin: 0;
+  padding: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+}

@@ -1711,6 +1711,10 @@ body.dark-mode .notification-badge {
     background-color: #c82333;
 }
 
+.note-name { 
+    text-align: center;
+}
+
 /* ================================== */
 /* ADICIONE ESTE BLOCO NO FINAL DO SEU CSS */
 /* ================================== */
@@ -2286,6 +2290,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 .suggestion .suggestion-name-link:hover {
     text-decoration: underline;
 }
+
 /* ========================================================== */
 /* === CSS Específico para a Funcionalidade de Hobbies (#) === */
 /* ========================================================== */
@@ -2365,7 +2370,8 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     border-radius: 20px;
     transition: all 0.2s ease-in-out;
     font-size: 0.9rem;
-    user-select: none; /* Impede seleção de texto ao clicar */
+    user-select: none;
+    /* Impede seleção de texto ao clicar */
 }
 
 /* Efeito ao passar o mouse */
@@ -2429,7 +2435,8 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .remove-hobby-btn:hover {
-    background-color: #c82333; /* Vermelho mais escuro */
+    background-color: #c82333;
+    /* Vermelho mais escuro */
     transform: scale(1.1);
 }
 
@@ -2451,6 +2458,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 .post-hobby-tag:hover {
     background-color: var(--border-color);
 }
+
 /* ========================================================== */
 /* === CSS CORRIGIDO E APRIMORADO PARA SISTEMA DE HOBBIES === */
 /* ========================================================== */
@@ -2459,8 +2467,10 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 .post-actions .post-action-icon {
     background: none;
     border: none;
-    color: var(--text-color-secondary); /* Cor cinza padrão para ícones */
-    font-size: 1.25rem; /* Tamanho do ícone */
+    color: var(--text-color-secondary);
+    /* Cor cinza padrão para ícones */
+    font-size: 1.25rem;
+    /* Tamanho do ícone */
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
@@ -2468,24 +2478,27 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .post-actions .post-action-icon:hover {
-    color: var(--primary-color); /* Cor principal ao passar o mouse */
-    background-color: var(--primary-color-light); /* Fundo leve ao passar o mouse */
+    color: var(--primary-color);
+    /* Cor principal ao passar o mouse */
+    background-color: var(--primary-color-light);
+    /* Fundo leve ao passar o mouse */
 }
 
 
 #hobby-modal .modal-content {
     /* Reduz o tamanho máximo da janela */
-    max-width: 600px; 
-    max-height: 80vh; /* Ocupa no máximo 80% da altura da tela */
-    
+    max-width: 600px;
+    max-height: 80vh;
+    /* Ocupa no máximo 80% da altura da tela */
+
     /* Outras propriedades para manter a aparência */
     width: 90%;
-    
+
     /* CORREÇÃO APLICADA AQUI com uma cor escura de fallback */
-    background-color: var(--background-color, #2c2c34); 
+    background-color: var(--background-color, #2c2c34);
 
     border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -2511,7 +2524,8 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 /* --- 4. Deixa o hobby no post final com "algo em volta" --- */
 .post-hobby-tag {
     background-color: #5b5ad3;
-    border: 1px solid var(--border-color); /* Borda sutil */
+    border: 1px solid var(--border-color);
+    /* Borda sutil */
     color: var(--text-color-secondary);
     padding: 5px 12px;
     border-radius: 15px;
@@ -2519,13 +2533,15 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin-bottom: 4px; /* Espaçamento caso quebre a linha */
+    margin-bottom: 4px;
+    /* Espaçamento caso quebre a linha */
 }
 
 .post-hobby-tag:hover {
     background-color: var(--border-color);
     border-color: var(--primary-color-light);
 }
+
 .hobby-label.disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -2533,7 +2549,8 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 .hobby-label.disabled:hover {
-    border-color: var(--border-color); /* Impede a mudança de cor da borda no hover */
+    border-color: var(--border-color);
+    /* Impede a mudança de cor da borda no hover */
 }
 
 /* (O restante do CSS anterior para a busca e layout do modal continua válido e pode ser mantido) */
