@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = null;
   let currentUserProfile = null;
   let currentGroupIdToShare = null;
+  let isModalOpen = false;
 
   // ================================
   // Referências de DOM
@@ -103,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Funções Principais
   // ================================
   async function loadGroups(searchTerm = '') {
+    if (isModalOpen) return;
     if (!myGroupsContainer || !suggestedGroupsContainer) return;
 
     myGroupsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
@@ -213,7 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function joinGroup(groupId, isPrivate, password) {
     if (isPrivate) {
+      isModalOpen = true; // <-- Adicionar: Avisa que o modal vai abrir
       const enteredPassword = await showPromptModal('Grupo privado', 'Este grupo é privado. Digite a senha:', 'password');
+      isModalOpen = false; // <-- Adicionar: Avisa que o modal fechou
+
       if (enteredPassword === null) return;
       if (enteredPassword !== password) { showCustomAlert('Senha incorreta.'); return; }
     }
@@ -221,12 +226,18 @@ document.addEventListener('DOMContentLoaded', () => {
       await db.collection('groups').doc(groupId).update({
         members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
       });
-      await loadGroups(searchInput?.value || '');
+
+      // Mantém a boa prática de limpar a busca após entrar no grupo
+      if (searchInput) {
+          searchInput.value = '';
+      }
+      await loadGroups();
+
     } catch (e) {
       console.error('Erro ao entrar no grupo:', e);
       showToast('Não foi possível entrar no grupo.', 'error');
     }
-  }
+}
 
   async function leaveGroup(groupId) {
     const ok = await showConfirmationModal('Sair do Grupo', 'Tem certeza que deseja sair deste grupo?');
