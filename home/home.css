@@ -1188,7 +1188,7 @@ body.dark-mode .error-message {
 
 .modal-content {
     background-color: var(--light-text);
-    color: var(--dark-text);
+    color: white;
     margin: auto;
     padding: 0;
     border-radius: var(--border-radius);
