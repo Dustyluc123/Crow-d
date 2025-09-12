@@ -295,12 +295,6 @@ body.dark-mode .sidebar ul li a:hover {
     color: var(--primary-hover);
 }
 
-/* HOBBY TAGS */
-.hobby-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
 
 .hobby-tag {
     background-color: var(--primary-color);
@@ -1010,13 +1004,7 @@ body.dark-mode .friend-name {
     align-items: center;
 }
 
-.hobby-tag {
-    background-color: var(--secondary-color);
-    border: 1px solid var(--border-color);
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.85rem;
-}
+
 
 .hobby-add-btn {
     display: flex;
