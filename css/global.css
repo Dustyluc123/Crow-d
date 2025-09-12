@@ -33,10 +33,6 @@ body.light-mode {
     --hover-color: #e9ecef;
 }
 
-a {
-    color: white;
-    text-decoration: none;
-}
 
 /* Estrutura Principal da Página */
 .page-container {
