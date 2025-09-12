@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     width: 800, // Define uma largura máxima para a imagem final
                     height: 800,
                 });
-                postImageBase64 = canvas.toDataURL('image/jpeg'); // Converte para texto (Base64)
+                postImageBase64 = canvas.toDataURL('image/jpeg', 1.0); // Converte para texto (Base64)
 
                 // Mostra a imagem cortada na pré-visualização do post
                 postImagePreview.src = postImageBase64;

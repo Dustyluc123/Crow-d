@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     confirmCropBtn.addEventListener('click', () => {
         const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
-        croppedImageBase64 = canvas.toDataURL('image/jpeg');
+        croppedImageBase64 = canvas.toDataURL('image/jpeg', 1.0);
         profileImagePreview.src = croppedImageBase64;
         cropperModal.style.display = 'none';
         cropper.destroy();

@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = cropper.getCroppedCanvas({
                 width: 512, height: 512, imageSmoothingQuality: 'high'
             });
-            photoBase64 = canvas.toDataURL('image/jpeg');
+            photoBase64 = canvas.toDataURL('image/jpeg', 1.0);
             photoPreview.src = photoBase64;
             cropperModal.style.display = 'none';
             cropper.destroy();
