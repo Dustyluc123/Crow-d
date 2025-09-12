@@ -1,9 +1,9 @@
 :root {
-    --primary-color: #5b5ad3;
+    --primary-color: #7021C4;
     --primary-hover: #8483de;
-    --dark-bg: #222326;
+    --dark-bg: #3A2E46;
     --dark-bg-secondary: #13141a;
-    --dark-bg-tertiary: #171718;
+    --dark-bg-tertiary: #13141a;
     --light-text: #ffffff;
     --dark-text: #333333;
     --light-bg: #f9f9f9;
@@ -1012,7 +1012,7 @@ body.dark-mode .friend-name {
     align-items: center;
     width: 30px;
     height: 30px;
-    background-color: #5b5ad3;
+    background-color: #7021C4;
     ;
     color: #fff;
     border-radius: 50%;
@@ -1551,7 +1551,7 @@ body.dark-mode .comment-like-btn {
 
 /* Estilo do botão quando o post ESTÁ SALVO */
 .post-action.save-btn.saved {
-    color: #5b5ad3;
+    color: #7021C4;
     font-weight: bold;
 }
 
@@ -1986,7 +1986,7 @@ body.dark-mode .modal-input {
 
 /* --- Estilo para Seção de Anúncio --- */
 .announcement-section {
-    background: linear-gradient(45deg, #5b5ad3, #8483de);
+    background: linear-gradient(45deg, #7021C4, #8483de);
     border: 2px solid #ffffff44;
     border-radius: var(--border-radius);
     padding: 20px;
@@ -2007,7 +2007,7 @@ body.dark-mode .modal-input {
 
 /* Ajustes para o Modo Escuro (opcional, mas recomendado) */
 body.dark-mode .announcement-section {
-    background: linear-gradient(45deg, #5b5ad3, #8483de);
+    background: linear-gradient(45deg, #7021C4, #8483de);
 }
 
 /* Animação de pulso para chamar a atenção */
@@ -2130,7 +2130,7 @@ body.dark-mode .announcement-section {
     height: 56px;
     border-radius: 50%;
     padding: 2px;
-    background: linear-gradient(45deg, #5b5ad3, #8483de);
+    background: linear-gradient(45deg, #7021C4, #8483de);
 }
 
 .note-avatar img {
@@ -2511,7 +2511,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 
 /* --- 4. Deixa o hobby no post final com "algo em volta" --- */
 .post-hobby-tag {
-    background-color: #5b5ad3;
+    background-color: #7021C4;
     border: 1px solid var(--border-color);
     /* Borda sutil */
     color: var(--text-color-secondary);
