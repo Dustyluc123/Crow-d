@@ -194,6 +194,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
     let activeCommentListeners = {};
     let activeFeedType = 'main'; // 'main' ou 'friends'
+   
     // scripts.js
 
     // ... (todo o seu código existente) ...
@@ -224,6 +225,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const postImagePreviewContainer = document.getElementById('post-image-preview-container');
     const postImagePreview = document.getElementById('post-image-preview');
     const removePostImageBtn = document.getElementById('remove-post-image-btn');
+    const feedTabButtons = document.querySelectorAll('.feed-tab-btn');
+    feedTabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove a classe 'active' de todos os botões e adiciona ao que foi clicado
+            feedTabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Atualiza a variável de controlo e recarrega os posts
+            activeFeedType = this.dataset.feedType;
+            loadInitialPosts(); 
+        });
+    });
 
     // Função para ABRIR o editor
     function openImageEditor(file) {
@@ -735,7 +748,6 @@ function clearPostImage() {
     async function loadInitialPosts() {
         if (!postsContainer || !currentUser) return;
     
-        // Limpa tudo e mostra o indicador de carregamento
         postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
         isLoadingMorePosts = true;
         noMorePosts = false;
@@ -744,31 +756,41 @@ function clearPostImage() {
         try {
             let query = db.collection("posts");
     
+            // NOVO: Filtro para o Feed de Amigos
             if (activeFeedType === 'friends') {
-                // Se for o feed de amigos, primeiro busca a lista de amigos
                 const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
                 const friendIds = friendsSnapshot.docs.map(doc => doc.id);
     
                 if (friendIds.length === 0) {
-                    postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos. Adicione alguns para ver as publicações deles aqui.</div>';
+                    postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos para ver as publicações deles aqui.</div>';
                     isLoadingMorePosts = false;
                     return;
                 }
-    
-                // Modifica a query para buscar posts APENAS dos IDs dos amigos
                 query = query.where('authorId', 'in', friendIds);
             }
+            // NOVO: Filtro para o Feed de Hobbies
+            else if (activeFeedType === 'hobbies') {
+                const userHobbies = currentUserProfile.hobbies || [];
+                if (userHobbies.length === 0) {
+                    postsContainer.innerHTML = '<div class="info-message">Adicione hobbies ao seu perfil para ver publicações relacionadas.</div>';
+                    isLoadingMorePosts = false;
+                    return;
+                }
+                // Usa 'array-contains-any' para buscar posts que contenham qualquer um dos seus hobbies
+                query = query.where('hobbies', 'array-contains-any', userHobbies);
+            }
     
-            // Ordena e limita a query (para ambos os feeds)
             const finalQuery = query.orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
             const snapshot = await finalQuery.get();
     
-            postsContainer.innerHTML = ''; // Limpa o "carregando"
+            postsContainer.innerHTML = ''; 
     
             if (snapshot.empty) {
                 noMorePosts = true;
                 if (activeFeedType === 'friends') {
-                    postsContainer.innerHTML = '<div class="info-message">Nenhum de seus amigos publicou ainda.</div>';
+                    postsContainer.innerHTML = '<div class="info-message">Nenhum dos seus amigos publicou ainda.</div>';
+                } else if (activeFeedType === 'hobbies') {
+                    postsContainer.innerHTML = '<div class="info-message">Nenhum post encontrado com os seus hobbies.</div>';
                 } else {
                     postsContainer.innerHTML = '<div class="info-message">Nenhum post encontrado.</div>';
                 }
@@ -776,7 +798,6 @@ function clearPostImage() {
                 return;
             }
     
-            // Renderiza os posts
             for (const doc of snapshot.docs) {
                 const postData = { id: doc.id, ...doc.data() };
                 const postElement = addPostToDOM(postData);
@@ -794,6 +815,7 @@ function clearPostImage() {
             isLoadingMorePosts = false;
         }
     }
+    
     async function loadMorePosts() {
         if (noMorePosts || isLoadingMorePosts || !lastVisiblePost) return;
     
@@ -803,15 +825,25 @@ function clearPostImage() {
         try {
             let query = db.collection("posts");
     
+            // NOVO: Aplica os mesmos filtros da carga inicial
             if (activeFeedType === 'friends') {
                 const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
                 const friendIds = friendsSnapshot.docs.map(doc => doc.id);
     
-                if (friendIds.length === 0) {
+                if (friendIds.length > 0) {
+                    query = query.where('authorId', 'in', friendIds);
+                } else {
                     noMorePosts = true;
                     return;
                 }
-                query = query.where('authorId', 'in', friendIds);
+            } else if (activeFeedType === 'hobbies') {
+                const userHobbies = currentUserProfile.hobbies || [];
+                if (userHobbies.length > 0) {
+                    query = query.where('hobbies', 'array-contains-any', userHobbies);
+                } else {
+                    noMorePosts = true;
+                    return;
+                }
             }
     
             const finalQuery = query.orderBy("timestamp", "desc").startAfter(lastVisiblePost).limit(POSTS_PER_PAGE);
