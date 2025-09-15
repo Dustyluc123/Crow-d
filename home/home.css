@@ -6,7 +6,7 @@
     --dark-bg-tertiary: #13141a;
     --light-text: #ffffff;
     --dark-text: #333333;
-    --light-bg: #f9f9f9;
+    --light-bg: #d9ceff;
     --light-bg-secondary: #f0f0f0;
     --border-radius: 8px;
     --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -20,6 +20,40 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+/* Estilos para as abas de seleção de feed */
+.feed-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--light-border);
+}
+
+body.dark-mode .feed-tabs {
+    border-bottom-color: var(--dark-border);
+}
+
+.feed-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--light-text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+body.dark-mode .feed-tab-btn {
+    color: var(--dark-text-secondary);
+}
+
+.feed-tab-btn.active {
+    text-align: center;
+
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
 }
 
 /* Estilo para destacar os cards de republicação */

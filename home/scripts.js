@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
     const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
     let activeCommentListeners = {};
-
+    let activeFeedType = 'main'; // 'main' ou 'friends'
     // scripts.js
 
     // ... (todo o seu código existente) ...
@@ -732,109 +732,105 @@ function clearPostImage() {
         }
         return post;
     }
-    // home/scripts.js
-
     async function loadInitialPosts() {
-        if (!postsContainer) return;
-
-        // Limpa o registo de duplicados sempre que o feed é recarregado do zero
-        displayedReposts.clear();
-
+        if (!postsContainer || !currentUser) return;
+    
+        // Limpa tudo e mostra o indicador de carregamento
         postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
         isLoadingMorePosts = true;
         noMorePosts = false;
         lastVisiblePost = null;
-
+    
         try {
-            const query = db.collection("posts").orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
-            const snapshot = await query.get();
-
-            postsContainer.innerHTML = '';
-
+            let query = db.collection("posts");
+    
+            if (activeFeedType === 'friends') {
+                // Se for o feed de amigos, primeiro busca a lista de amigos
+                const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+                const friendIds = friendsSnapshot.docs.map(doc => doc.id);
+    
+                if (friendIds.length === 0) {
+                    postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos. Adicione alguns para ver as publicações deles aqui.</div>';
+                    isLoadingMorePosts = false;
+                    return;
+                }
+    
+                // Modifica a query para buscar posts APENAS dos IDs dos amigos
+                query = query.where('authorId', 'in', friendIds);
+            }
+    
+            // Ordena e limita a query (para ambos os feeds)
+            const finalQuery = query.orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
+            const snapshot = await finalQuery.get();
+    
+            postsContainer.innerHTML = ''; // Limpa o "carregando"
+    
             if (snapshot.empty) {
                 noMorePosts = true;
-                postsContainer.innerHTML = '<div class="info-message">Nenhum post encontrado.</div>';
+                if (activeFeedType === 'friends') {
+                    postsContainer.innerHTML = '<div class="info-message">Nenhum de seus amigos publicou ainda.</div>';
+                } else {
+                    postsContainer.innerHTML = '<div class="info-message">Nenhum post encontrado.</div>';
+                }
+                isLoadingMorePosts = false;
                 return;
             }
-
+    
+            // Renderiza os posts
             for (const doc of snapshot.docs) {
-                let postData = { id: doc.id, ...doc.data() };
-
-                if (postData.isRepost && postData.originalPostId) {
-                    const repostKey = `${postData.authorId}_${postData.originalPostId}`;
-                    if (displayedReposts.has(repostKey)) {
-                        continue;
-                    }
-                    displayedReposts.add(repostKey);
-
-                    const originalPostRef = db.collection('posts').doc(postData.originalPostId);
-                    const originalPostDoc = await originalPostRef.get();
-
-                    if (originalPostDoc.exists) {
-                        postData.originalPost = { id: originalPostDoc.id, ...originalPostDoc.data() };
-                    } else {
-                        postData.originalPost = {};
-                    }
-                }
-
+                const postData = { id: doc.id, ...doc.data() };
                 const postElement = addPostToDOM(postData);
                 if (postElement) {
                     postsContainer.appendChild(postElement);
                 }
             }
-
+    
             lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+    
         } catch (error) {
-            console.error("Erro ao carregar posts iniciais:", error);
-            postsContainer.innerHTML = '<div class="error-message">Erro ao carregar posts.</div>';
+            console.error("Erro ao carregar posts:", error);
+            postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
         } finally {
             isLoadingMorePosts = false;
         }
     }
-    // home/scripts.js
-
     async function loadMorePosts() {
         if (noMorePosts || isLoadingMorePosts || !lastVisiblePost) return;
-
+    
         isLoadingMorePosts = true;
         loadingMoreIndicator.style.display = 'block';
-
+    
         try {
-            const query = db.collection("posts").orderBy("timestamp", "desc").startAfter(lastVisiblePost).limit(POSTS_PER_PAGE);
-            const snapshot = await query.get();
-
+            let query = db.collection("posts");
+    
+            if (activeFeedType === 'friends') {
+                const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+                const friendIds = friendsSnapshot.docs.map(doc => doc.id);
+    
+                if (friendIds.length === 0) {
+                    noMorePosts = true;
+                    return;
+                }
+                query = query.where('authorId', 'in', friendIds);
+            }
+    
+            const finalQuery = query.orderBy("timestamp", "desc").startAfter(lastVisiblePost).limit(POSTS_PER_PAGE);
+            const snapshot = await finalQuery.get();
+    
             if (snapshot.empty) {
                 noMorePosts = true;
                 return;
             }
-
+    
             for (const doc of snapshot.docs) {
-                let postData = { id: doc.id, ...doc.data() };
-
-                if (postData.isRepost && postData.originalPostId) {
-                    const repostKey = `${postData.authorId}_${postData.originalPostId}`;
-                    if (displayedReposts.has(repostKey)) {
-                        continue;
-                    }
-                    displayedReposts.add(repostKey);
-
-                    const originalPostRef = db.collection('posts').doc(postData.originalPostId);
-                    const originalPostDoc = await originalPostRef.get();
-
-                    if (originalPostDoc.exists) {
-                        postData.originalPost = { id: originalPostDoc.id, ...originalPostDoc.data() };
-                    } else {
-                        postData.originalPost = {};
-                    }
-                }
-
-                const postElement = addPostToDOM(postData);
+                const postElement = addPostToDOM({ id: doc.id, ...doc.data() });
                 if (postElement) {
                     postsContainer.appendChild(postElement);
                 }
             }
-
+    
             lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+    
         } catch (error) {
             console.error("Erro ao carregar mais posts:", error);
         } finally {
@@ -1051,6 +1047,20 @@ function clearPostImage() {
         } else {
             mediaContainer.style.display = 'none';
         }
+        // Listeners para as abas de feed
+const feedTabButtons = document.querySelectorAll('.feed-tab-btn');
+feedTabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        // Remove a classe 'active' de todos os botões
+        feedTabButtons.forEach(btn => btn.classList.remove('active'));
+        // Adiciona 'active' apenas ao botão clicado
+        this.classList.add('active');
+
+        // Atualiza o tipo de feed ativo e recarrega os posts
+        activeFeedType = this.dataset.feedType;
+        loadInitialPosts(); // Esta função será modificada a seguir
+    });
+});
 
         // ==========================================================
         // === INÍCIO - NOVO CÓDIGO PARA EXIBIR HOBBIES NO POST ===
