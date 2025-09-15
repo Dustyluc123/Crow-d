@@ -69,6 +69,9 @@
   let isFetchingFriends = false; 
   let _friendsCache = []; 
 
+
+  
+
   // ================= INÍCIO DAS ALTERAÇÕES ================= 
 
   // Função para encontrar usuário por nickname no Firestore 
@@ -396,40 +399,100 @@
   const NOTE_MAX_LEN = 60; 
   const NOTE_TTL_MS = 24 * 60 * 60 * 1000; 
 
-  function setupNotesUI() { 
-    const addBtn = refs.addNoteBtn(); 
-    const modal = refs.noteModal(); 
-    if (!addBtn || !modal) return; 
+  async function deleteNote(userId) {
+    const { auth, db } = ensureFirebase();
+    const me = auth.currentUser;
+    if (!me || me.uid !== userId) {
+      toast('Você só pode excluir sua própria nota.', 'error');
+      return;
+    }
 
-    addBtn.addEventListener('click', () => { modal.style.display = 'flex'; }); 
-    refs.noteCloseBtns().forEach(b => b.addEventListener('click', () => { modal.style.display = 'none'; })); 
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; }); 
+    // Pede confirmação ao utilizador (agora vai funcionar!)
+    const confirmed = await showConfirmationModal(
+      'Excluir Nota',
+      'Tem certeza de que deseja excluir sua nota? Esta ação não pode ser desfeita.'
+    );
 
-    refs.noteSubmitBtn()?.addEventListener('click', async () => { 
-      try { 
-        const { auth, db } = ensureFirebase(); 
-        const me = auth.currentUser; if (!me) { toast('Faça login para postar notas.', 'error'); return; } 
-        const text = (refs.noteTextArea()?.value || '').trim(); 
-        if (!text) { toast('Escreva algo.', 'error'); return; } 
-        if (text.length > NOTE_MAX_LEN) { toast(`Máximo de ${NOTE_MAX_LEN} caracteres.`, 'error'); return; } 
+    if (confirmed) {
+      try {
+        await db.collection('users').doc(userId).collection('notes').doc('latest').delete();
+        toast('Nota excluída com sucesso!', 'success');
+        refs.noteModal().style.display = 'none'; // Fecha o modal após excluir
+        await loadNotesBar(); // Atualiza a barra de notas
+      } catch (e) {
+        console.error("Erro ao apagar nota:", e);
+        toast('Não foi possível excluir a nota.', 'error');
+      }
+    }
+  }
 
-        const now = Date.now(); 
-        await firebase.firestore().collection('users').doc(me.uid).collection('notes').doc('latest').set({ 
-          text, 
-          createdAt: now, 
-          expireAt: now + NOTE_TTL_MS, 
-        }); 
+  function setupNotesUI() {
+    const addBtn = refs.addNoteBtn();
+    const modal = refs.noteModal();
+    const deleteBtn = $('#deleteNoteBtn');
+    if (!addBtn || !modal) return;
 
-        refs.noteTextArea().value = ''; 
-        refs.noteModal().style.display = 'none'; 
-        toast('Nota publicada!', 'success'); 
-        await loadNotesBar(); 
-      } catch (e) { 
-        console.error(e); 
-        toast('Não foi possível postar a nota.', 'error'); 
-      } 
-    }); 
-  } 
+    // Abrir modal para ADICIONAR uma nota nova
+    addBtn.addEventListener('click', () => {
+      modal.dataset.editingNoteOwner = ''; // Limpa o dono da nota
+      if (deleteBtn) deleteBtn.style.display = 'none'; // Garante que o botão de apagar está escondido
+      refs.noteTextArea().value = ''; // Limpa o texto
+      modal.style.display = 'flex';
+    });
+    
+    // Fechar o modal
+    refs.noteCloseBtns().forEach(b => b.addEventListener('click', () => { modal.style.display = 'none'; }));
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+
+    // Ação de ENVIAR a nota
+    refs.noteSubmitBtn()?.addEventListener('click', async () => {
+      try {
+        const { auth, db } = ensureFirebase();
+        const me = auth.currentUser; if (!me) { toast('Faça login para postar notas.', 'error'); return; }
+        const text = (refs.noteTextArea()?.value || '').trim();
+        if (!text) { toast('Escreva algo.', 'error'); return; }
+        if (text.length > NOTE_MAX_LEN) { toast(`Máximo de ${NOTE_MAX_LEN} caracteres.`, 'error'); return; }
+
+        const now = Date.now();
+        await db.collection('users').doc(me.uid).collection('notes').doc('latest').set({
+          text,
+          createdAt: now,
+          expireAt: now + NOTE_TTL_MS,
+        });
+
+        refs.noteTextArea().value = '';
+        refs.noteModal().style.display = 'none';
+        toast('Nota publicada!', 'success');
+        await loadNotesBar();
+      } catch (e) {
+        console.error(e);
+        toast('Não foi possível postar a nota.', 'error');
+      }
+    });
+
+    // Ação de APAGAR a nota
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        const ownerId = modal.dataset.editingNoteOwner;
+        if (ownerId) {
+          deleteNote(ownerId);
+        }
+      });
+    }
+  }
+
+  // Garante que o botão de deletar some ao abrir o modal para criar uma nova nota
+  const addBtn = refs.addNoteBtn();
+  if (addBtn) {
+      addBtn.addEventListener('click', () => {
+          const modal = refs.noteModal();
+          const deleteBtn = $('#deleteNoteBtn');
+          if (modal) modal.style.display = 'flex';
+          if (deleteBtn) deleteBtn.style.display = 'none'; // Esconde o botão ao criar
+      });
+  }
+
+  
 
   let noteListeners = []; 
   let activeNotesCache = {}; 
@@ -540,14 +603,31 @@
       </div>`; 
   } 
 
-  function wireNoteTileActions() { 
-    $$(".note-action[data-action='edit']").forEach(btn => { 
-      btn.addEventListener('click', () => { 
-        const modal = refs.noteModal(); 
-        if (modal) modal.style.display = 'flex'; 
-      }); 
-    }); 
-  } 
+  function wireNoteTileActions() {
+    // Ação de clique no botão de editar (abrir modal para EDITAR)
+    $$(".note-action[data-action='edit']").forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = refs.noteModal();
+        const deleteBtn = $('#deleteNoteBtn');
+        const ownerId = btn.dataset.ownerId;
+        const tile = btn.closest('.note-tile');
+        const noteText = tile ? (tile.querySelector('.note-bubble')?.textContent || '') : '';
+
+        if (modal && currentUser) {
+          modal.dataset.editingNoteOwner = ownerId;
+          refs.noteTextArea().value = noteText.trim() === 'Sem nota' ? '' : noteText;
+          modal.style.display = 'flex';
+
+          if (deleteBtn && ownerId === currentUser.uid) {
+            deleteBtn.style.display = 'inline-block';
+          } else if (deleteBtn) {
+            deleteBtn.style.display = 'none';
+          }
+        }
+      });
+    });
+  }
+
 
   // ---------------------- Boot ---------------------- 
   document.addEventListener('DOMContentLoaded', async () => { 

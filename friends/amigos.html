@@ -15,6 +15,7 @@
  	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script> 
  	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script> 
  	<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script> 
+	<script src="../config/global-modals.js"></script>
  	 
  	<style> 
 
@@ -489,25 +490,25 @@
  					</div> 
  			</section> 
  			 
- 			<div id="noteModal" class="modal" style="display:none"> 
- 				<div class="modal-content" style="max-width:420px"> 
- 					<div class="modal-header"> 
- 						<h2>Postar nota</h2> 
- 						<button class="close-modal note-close">×</button> 
- 					</div> 
- 					<div class="modal-body"> 
- 						  <div id="tab-text" class="note-tab active"> 
- 								<label for="noteText">Sua nota (máx. 60 caracteres)</label> 
- 								<textarea id="noteText" class="modal-input" maxlength="60" rows="3" placeholder="ex.: estudando hoje..."></textarea> 
- 						  </div> 
- 					</div> 
- 					<div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end"> 
- 						<button class="secondary-btn close-note-modal">Cancelar</button> 
- 						<button id="submitNoteBtn" class="primary-btn">Postar</button> 
- 					</div> 
- 				</div> 
- 			</div> 
-
+ 			<div id="noteModal" class="modal" style="display:none">
+				<div class="modal-content" style="max-width:420px">
+					<div class="modal-header">
+						<h2>Postar nota</h2>
+						<button class="close-modal note-close">×</button>
+					</div>
+					<div class="modal-body">
+						<div id="tab-text" class="note-tab active">
+							<label for="noteText">Sua nota (máx. 60 caracteres)</label>
+							<textarea id="noteText" class="modal-input" maxlength="60" rows="3" placeholder="ex.: estudando hoje..."></textarea>
+						</div>
+					</div>
+					<div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end">
+						<button class="secondary-btn close-note-modal">Cancelar</button>
+						<button id="submitNoteBtn" class="primary-btn">Postar</button>
+						<button id="deleteNoteBtn" class="danger-btn" style="display: none; background-color: #dc3545; color: white;">Excluir Nota</button>
+					</div>
+				</div>
+			</div>
  			 
  		  <div class="friends-section"> 
  			<h2><i class="fas fa-users"></i> Todos os seus Amigos</h2> 
@@ -566,5 +567,6 @@
  <script src="amigos.js" defer></script>  
  	<script src="../config/darkmode.js"></script> 
  	<script src="../config/global-notifications.js" defer></script> 
+	 <script src="../config/global-modals.js"></script>
  </body> 
  </html>
