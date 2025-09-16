@@ -25,7 +25,47 @@
 /* =================================================== */
 /* === SELETOR DE FEED PÍLULA (VERSÃO FINAL COMPACTA) ==== */
 /* =================================================== */
-
+/* --- Replies no feed --- */
+.reply-context {
+    font-size: 0.85rem;
+    color: var(--light-text-secondary);
+    margin-top: 2px;
+  }
+  body.dark-mode .reply-context {
+    color: var(--dark-text-secondary);
+  }
+  .reply-context .reply-actor { font-weight: 600; }
+  .reply-context .reply-target { color: var(--primary-color); }
+  
+  .quoted-parent {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--light-border);
+    border-radius: 12px;
+    background: var(--light-bg);
+    margin-bottom: 10px;
+  }
+  body.dark-mode .quoted-parent {
+    border-color: var(--dark-border);
+    background: var(--dark-bg-tertiary);
+  }
+  .quoted-bar {
+    width: 3px;
+    border-radius: 3px;
+    background: var(--primary-color);
+  }
+  .quoted-body { flex: 1; }
+  .quoted-author {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .quoted-text {
+    font-size: .95rem;
+    color: var(--dark-text);
+  }
+  body.dark-mode .quoted-text { color: var(--light-text); }
+  
 .feed-tabs {
     position: relative;
     display: flex;

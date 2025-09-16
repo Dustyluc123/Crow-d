@@ -881,73 +881,114 @@ function clearPostImage() {
 
     async function deletePost(postId) {
         const confirmed = await showConfirmationModal(
-            "Excluir Publicação",
-            "Tem a certeza que deseja excluir esta publicação? Todas as suas republicações também serão removidas permanentemente.",
-            "Sim, Excluir Tudo",
-            "Cancelar"
+          "Excluir Publicação",
+          "Tem certeza que deseja excluir? Comentários e republicações ligados a ela também serão removidos.",
+          "Sim, excluir tudo",
+          "Cancelar"
         );
-
-        if (confirmed) {
-            try {
-                const batch = db.batch();
-
-                // 1. Adiciona a publicação original ao lote de exclusão
-                const postRef = db.collection('posts').doc(postId);
-                batch.delete(postRef);
-
-                // 2. Encontra todas as republicações que apontam para o post original
-                const repostsQuery = db.collection('posts').where('originalPostId', '==', postId);
-                const repostsSnapshot = await repostsQuery.get();
-
-                // 3. Adiciona cada republicação encontrada ao mesmo lote de exclusão
-                repostsSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-
-                // 4. Executa todas as exclusões de uma só vez
-                await batch.commit();
-
-                showToast("Publicação e todas as suas republicações foram excluídas.", "success");
-
-                // 5. Remove todos os elementos relacionados da tela imediatamente
-                const postElements = document.querySelectorAll(
-                    `.post[data-post-id="${postId}"], .post[data-base-post-id="${postId}"]`
-                );
-                postElements.forEach(el => el.remove());
-
-            } catch (error) {
-                console.error("Erro ao excluir publicação e republicações:", error);
-                showCustomAlert("Ocorreu um erro ao tentar excluir a publicação.");
-            }
+        if (!confirmed) return;
+      
+        try {
+          const postRef = db.collection('posts').doc(postId);
+          const postSnap = await postRef.get();
+          if (!postSnap.exists) return;
+          const data = postSnap.data();
+      
+          // Se o post em si é um "comentário no feed", espelha a exclusão no comentário original
+          if (data.type === "comment" && data.parentPostId && data.commentId) {
+            const parentRef = db.collection('posts').doc(data.parentPostId);
+            const commentRef = parentRef.collection('comments').doc(data.commentId);
+      
+            const batch1 = db.batch();
+            batch1.delete(postRef);           // apaga o doc do feed (type: "comment")
+            batch1.delete(commentRef);        // apaga o comentário na subcoleção do post pai
+            batch1.update(parentRef, {        // decrementa a contagem do pai
+              commentCount: firebase.firestore.FieldValue.increment(-1),
+            });
+            await batch1.commit();
+      
+            // remove da UI
+            document.querySelectorAll(`.post[data-post-id="${postId}"]`).forEach(el => el.remove());
+            showToast("Comentário removido do feed e do post.", "info");
+            return;
+          }
+      
+          // Caso contrário, é um post normal: apague tudo que depende dele (reposts, comentários e posts de comentário)
+          const batch = db.batch();
+          batch.delete(postRef);
+      
+          // 1) apagar republicações (você já fazia)
+          const repostsSnapshot = await db.collection('posts')
+            .where('originalPostId', '==', postId)
+            .get();
+          repostsSnapshot.forEach(doc => batch.delete(doc.ref));
+      
+          // 2) apagar todos os comentários da subcoleção
+          const commentsSnap = await db.collection('posts').doc(postId).collection('comments').get();
+          commentsSnap.forEach(doc => batch.delete(doc.ref));
+      
+          // 3) apagar todos os "posts de comentário" no feed ligados a este post
+          const commentPostsSnap = await db.collection('posts')
+            .where('type', '==', 'comment')
+            .where('parentPostId', '==', postId)
+            .get();
+          commentPostsSnap.forEach(doc => batch.delete(doc.ref));
+      
+          await batch.commit();
+      
+          showToast("Publicação, comentários, republicações e entradas no feed excluídos.", "success");
+      
+          // limpa da UI (post e possíveis clones com base/base-post-id)
+          document.querySelectorAll(
+            `.post[data-post-id="${postId}"], .post[data-base-post-id="${postId}"]`
+          ).forEach(el => el.remove());
+      
+        } catch (error) {
+          console.error("Erro ao excluir publicação e dependências:", error);
+          showCustomAlert("Ocorreu um erro ao tentar excluir a publicação.");
         }
-    }
+      }
+      
     /**
      * Exclui um comentário de uma publicação.
      * @param {string} postId O ID da publicação pai.
      * @param {string} commentId O ID do comentário a ser excluído.
      */
     async function deleteComment(postId, commentId) {
-        const confirmed = await showConfirmationModal("Excluir Comentário", "Tem a certeza que deseja excluir este comentário?");
-
-        if (confirmed) {
-            try {
-                const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
-                await commentRef.delete();
-
-                // Decrementa a contagem de comentários no post
-                const postRef = db.collection('posts').doc(postId);
-                await postRef.update({
-                    commentCount: firebase.firestore.FieldValue.increment(-1)
-                });
-
-                showToast("Comentário excluído.", "info");
-                // O onSnapshot dos comentários cuidará de remover da tela.
-            } catch (error) {
-                console.error("Erro ao excluir comentário:", error);
-                showCustomAlert("Ocorreu um erro ao excluir o comentário.");
-            }
+        const confirmed = await showConfirmationModal("Excluir Comentário", "Tem certeza que deseja excluir este comentário?");
+        if (!confirmed) return;
+      
+        try {
+          // apaga o comentário na subcoleção
+          const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+          await commentRef.delete();
+      
+          // decrementa a contagem do post pai
+          const postRef = db.collection('posts').doc(postId);
+          await postRef.update({
+            commentCount: firebase.firestore.FieldValue.increment(-1)
+          });
+      
+          // apaga o doc do feed (type: "comment") que espelha este comentário
+          const mirrorSnap = await db.collection('posts')
+            .where('type', '==', 'comment')
+            .where('parentPostId', '==', postId)
+            .where('commentId', '==', commentId)
+            .get();
+      
+          const batch = db.batch();
+          mirrorSnap.forEach(doc => batch.delete(doc.ref));
+          await batch.commit();
+      
+          showToast("Comentário excluído no post e no feed.", "info");
+          // os onSnapshot removem a UI da lista de comentários; no feed, o card do espelho some ao ser excluído
+      
+        } catch (error) {
+          console.error("Erro ao excluir comentário:", error);
+          showCustomAlert("Ocorreu um erro ao excluir o comentário.");
         }
-    }
+      }
+      
 
     function handleScroll() {
         // Se não há mais posts para carregar ou se já estamos carregando, não faz nada.
@@ -1073,6 +1114,41 @@ function addPostToDOM(post, isSingleView = false) {
     if (basePost.timestamp?.toDate) {
         postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
     }
+    // ...dentro de addPostToDOM, depois de setar nome/horário e antes de mídia/ações...
+
+const isReply = post.type === "comment";
+if (isReply) {
+  // Cabeçalho "Fulano respondeu a Sicrano"
+  const info = postElement.querySelector(".post-info");
+  const replyCtx = document.createElement("div");
+  replyCtx.className = "reply-context";
+  // Ex.: "Fulano respondeu a Sicrano"
+  replyCtx.innerHTML = `<span class="reply-actor">${post.authorName}</span> respondeu a <span class="reply-target">${post.parentAuthorName || "usuário"}</span>`;
+  info.appendChild(replyCtx);
+
+  // Mostra um "quoted preview" do post original
+  const contentBox = postElement.querySelector(".post-content");
+  const quoted = document.createElement("div");
+  quoted.className = "quoted-parent";
+  quoted.innerHTML = `
+    <div class="quoted-bar"></div>
+    <div class="quoted-body">
+      <div class="quoted-author">${post.parentAuthorName || "Usuário"}</div>
+      <div class="quoted-text">${(post.parentSnippet || "").replace(/\n/g,"<br>")}</div>
+    </div>
+  `;
+  quoted.style.cursor = "pointer";
+quoted.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (post.parentPostId) {
+    showSinglePostView(post.parentPostId);
+  }
+});
+
+  // O texto principal do post vira o corpo do comentário (já existe .post-text)
+  contentBox.prepend(quoted);
+}
+
 
     const mediaContainer = postElement.querySelector(".post-media");
     if (basePost.imageURL) {
@@ -1547,6 +1623,33 @@ function addPostToDOM(post, isSingleView = false) {
 
             const postDoc = await db.collection("posts").doc(postId).get();
             const postData = postDoc.data();
+            // Dentro de addComment(postId, content), depois de:
+// const postDoc = await db.collection("posts").doc(postId).get();
+// const postData = postDoc.data();
+
+await db.collection("posts").add({
+    type: "comment",              // <- chave para renderização diferenciada
+    content,                      // texto do comentário
+    authorId: currentUser.uid,
+    authorName: currentUserProfile.nickname || "Usuário",
+    authorPhoto: currentUserProfile.photoURL || null,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+  
+    // relação com o post/autor respondido
+    parentPostId: postId,
+    parentAuthorId: postData.authorId || null,
+    parentAuthorName: postData.authorName || "Usuário",
+    parentSnippet: (postData.content || "").slice(0, 160),
+  
+    // opcionalmente mantenha contadores para respostas a comentários (threads)
+    likes: 0,
+    likedBy: [],
+    commentCount: 0,
+  
+    // para localizar o comentário original se precisar
+    commentId: commentRef.id
+  });
+  
 
             if (postData && postData.authorId !== currentUser.uid) {
                 await db.collection("users").doc(postData.authorId).collection("notifications").add({
