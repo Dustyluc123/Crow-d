@@ -128,6 +128,66 @@ body.dark-mode .hobby-option {
         display: block;
         height: 100%;
     }
+
+    /* Estilo para o container do 'switch' */
+.input-group.switch-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-color);
+    margin-top: 10px;
+}
+
+.input-group.switch-container label {
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
+.switch-label {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.switch-label input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 28px;
+    transition: .4s;
+}
+
+.switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+.switch-label input:checked + .switch-slider {
+    background-color: var(--primary-color);
+}
+
+.switch-label input:checked + .switch-slider:before {
+    transform: translateX(22px);
+}
 </style>
 
 <body>
@@ -229,115 +289,19 @@ body.dark-mode .hobby-option {
                 <div class="input-group">
                     <label>Tags do Evento (selecione uma ou mais)</label>
                     <div class="tag-selection-container">
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Futebol"><span
-                                class="hobby-name">Futebol</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Basquete"><span
-                                class="hobby-name">Basquete</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Vôlei"><span
-                                class="hobby-name">Vôlei</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Corrida"><span
-                                class="hobby-name">Corrida</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Ciclismo"><span
-                                class="hobby-name">Ciclismo</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Natação"><span
-                                class="hobby-name">Natação</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Skate"><span
-                                class="hobby-name">Skate</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Artes Marciais"><span class="hobby-name">Artes Marciais</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Tênis"><span
-                                class="hobby-name">Tênis</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Handebol"><span
-                                class="hobby-name">Handebol</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Yoga"><span
-                                class="hobby-name">Yoga</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Academia"><span
-                                class="hobby-name">Academia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Desenho"><span
-                                class="hobby-name">Desenho</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Pintura"><span
-                                class="hobby-name">Pintura</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Fotografia"><span
-                                class="hobby-name">Fotografia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Dança"><span
-                                class="hobby-name">Dança</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Escultura"><span
-                                class="hobby-name">Escultura</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Arte Digital"><span
-                                class="hobby-name">Arte Digital</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Teatro"><span
-                                class="hobby-name">Teatro</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Caligrafia"><span
-                                class="hobby-name">Caligrafia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Cerâmica"><span
-                                class="hobby-name">Cerâmica</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Ouvir música"><span
-                                class="hobby-name">Ouvir música</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Tocar instrumento"><span class="hobby-name">Tocar instrumento</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Cantar"><span
-                                class="hobby-name">Cantar</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Shows"><span
-                                class="hobby-name">Shows</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Produção Musical"><span class="hobby-name">Produção Musical</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Compor"><span
-                                class="hobby-name">Compor</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="DJing"><span
-                                class="hobby-name">DJing</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Colecionar Discos"><span class="hobby-name">Colecionar Discos</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Programação"><span
-                                class="hobby-name">Programação</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Jogos"><span
-                                class="hobby-name">Jogos</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Robótica"><span
-                                class="hobby-name">Robótica</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Design"><span
-                                class="hobby-name">Design</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Edição de Vídeo"><span class="hobby-name">Edição de Vídeo</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Streaming"><span
-                                class="hobby-name">Streaming</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Montagem de PC"><span class="hobby-name">Montagem de PC</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Cibersegurança"><span class="hobby-name">Cibersegurança</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Filmes"><span
-                                class="hobby-name">Filmes</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Séries"><span
-                                class="hobby-name">Séries</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Animes"><span
-                                class="hobby-name">Animes</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Livros"><span
-                                class="hobby-name">Livros</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Quadrinhos/Mangás"><span class="hobby-name">Quadrinhos/Mangás</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Ficção Científica"><span class="hobby-name">Ficção Científica</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Fantasia"><span
-                                class="hobby-name">Fantasia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Poesia"><span
-                                class="hobby-name">Poesia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Culinária"><span
-                                class="hobby-name">Culinária</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Viagens"><span
-                                class="hobby-name">Viagens</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Idiomas"><span
-                                class="hobby-name">Idiomas</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Voluntariado"><span
-                                class="hobby-name">Voluntariado</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Jardinagem"><span
-                                class="hobby-name">Jardinagem</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Acampar"><span
-                                class="hobby-name">Acampar</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Astronomia"><span
-                                class="hobby-name">Astronomia</span></label>
-                        <label class="hobby-option"><input type="checkbox" name="event-tags"
-                                value="Animais de Estimação"><span class="hobby-name">Animais de
-                                Estimação</span></label>
-                    </div>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Futebol"><span class="hobby-name">Futebol</span></label>
+                        <label class="hobby-option"><input type="checkbox" name="event-tags" value="Basquete"><span class="hobby-name">Basquete</span></label>
+                        </div>
                 </div>
+    
+                <div class="input-group switch-container">
+                    <label for="isFriendsOnly">Apenas para Amigos</label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="isFriendsOnly">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+    
                 <div class="modal-actions">
                     <button type="button" class="event-btn secondary close-modal-btn">Cancelar</button>
                     <button type="submit" class="event-btn">Criar Evento</button>

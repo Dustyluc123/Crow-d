@@ -72,45 +72,69 @@ document.addEventListener('DOMContentLoaded', function () {
      * Carrega todos os eventos, os populares e os do usuário.
      */
     async function loadEvents() {
+        // Exibe indicadores de carregamento
         eventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando eventos...</div>';
-        popularEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        if (myEventsContainer) myEventsContainer.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i></li>';
-
+        if (popularEventsContainer) {
+            popularEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+        }
+        if (myEventsContainer) {
+            myEventsContainer.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i></li>';
+        }
+    
         try {
+            // --- INÍCIO DA LÓGICA DE FILTRAGEM ---
+    
+            // 1. Pega a lista de IDs de amigos do usuário atual.
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            const friendIds = friendsSnapshot.docs.map(doc => doc.id);
+            
+            // 2. Adiciona o próprio ID do usuário à lista.
+            // Isso garante que o usuário sempre veja seus próprios eventos, mesmo os privados.
+            friendIds.push(currentUser.uid);
+    
+            // 3. Busca todos os eventos no banco de dados, ordenados por data.
             const snapshot = await db.collection('events')
                 .orderBy('eventDateTime', 'asc')
                 .get();
-
-            if (snapshot.empty) {
-                eventsContainer.innerHTML = '<p>Nenhum evento futuro encontrado.</p>';
-                popularEventsContainer.innerHTML = '<p>Nenhum evento popular.</p>';
-                if (myEventsContainer) myEventsContainer.innerHTML = '<li><p>Nenhum evento para mostrar.</p></li>';
-                return;
-            }
-
-            eventsContainer.innerHTML = '';
-
-            const allEvents = [];
-            snapshot.forEach(doc => {
-                const eventData = { id: doc.id, ...doc.data() };
-                allEvents.push(eventData);
-                addEventToDOM(eventData);
+    
+            const allEventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+            // 4. Filtra a lista de todos os eventos para encontrar apenas os que o usuário pode ver.
+            const visibleEvents = allEventsData.filter(event => {
+                // A condição para um evento ser visível é:
+                // - O evento NÃO é "só para amigos" (é público), OU
+                // - O evento É "só para amigos" E o ID do criador está na lista de amigos do usuário.
+                return !event.isFriendsOnly || (event.isFriendsOnly && friendIds.includes(event.creatorId));
             });
-
-            // Lógica dos eventos populares
-            const sortedByPopularity = [...allEvents].sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0));
-            displayPopularEvents(sortedByPopularity.slice(0, 3));
-
-            // Nova Lógica para "Meus Eventos"
-            const myEvents = allEvents.filter(event => event.participants && event.participants.includes(currentUser.uid));
-            displayMyEvents(myEvents);
-
+    
+            // --- FIM DA LÓGICA DE FILTRAGEM ---
+    
+            // 5. Limpa a área de exibição e mostra os eventos filtrados.
+            eventsContainer.innerHTML = '';
+            if (visibleEvents.length === 0) {
+                eventsContainer.innerHTML = '<p>Nenhum evento futuro encontrado.</p>';
+            } else {
+                visibleEvents.forEach(event => {
+                    addEventToDOM(event);
+                });
+            }
+    
+            // 6. Atualiza as seções "Populares" e "Meus Eventos" com base nos eventos visíveis.
+            const sortedByPopularity = [...visibleEvents].sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0));
+            if (popularEventsContainer) {
+                 displayPopularEvents(sortedByPopularity.slice(0, 3));
+            }
+    
+            const myEvents = visibleEvents.filter(event => event.participants && event.participants.includes(currentUser.uid));
+            if (myEventsContainer) {
+                displayMyEvents(myEvents);
+            }
+    
         } catch (error) {
-            console.error("Erro ao carregar eventos:", error);
-            eventsContainer.innerHTML = '<p>Ocorreu um erro ao carregar os eventos.</p>';
+            console.error("Erro detalhado ao carregar eventos:", error);
+            eventsContainer.innerHTML = '<p>Ocorreu um erro ao carregar os eventos. Tente novamente mais tarde.</p>';
         }
     }
-
     /**
         * Exibe os eventos do usuário na barra lateral.
         * @param {Array} myEvents - Uma lista com os eventos que o usuário participa.
@@ -261,33 +285,34 @@ async function checkUpcomingEventNotifications() {
         const eventCardWrapper = document.createElement('a');
         eventCardWrapper.className = 'event-card-link';
         eventCardWrapper.href = `single-event.html?id=${event.id}`;
-
+    
         const eventCard = document.createElement('div');
         eventCard.className = 'event-card';
-
+    
         const eventDate = event.eventDateTime.toDate();
         const formattedDate = eventDate.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit' });
         const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
+    
         const isParticipating = event.participants && event.participants.includes(currentUser.uid);
         const isCreator = event.creatorId === currentUser.uid;
-
+    
+        // Adiciona um ícone se o evento for apenas para amigos
+        const friendsOnlyIcon = event.isFriendsOnly ?
+            '<i class="fas fa-user-friends" title="Apenas para amigos" style="margin-left: 8px; color: var(--text-secondary); opacity: 0.8;"></i>' : '';
+    
         const deleteButtonHTML = isCreator ?
             `<button class="event-btn delete-btn" style="background-color: #dc3545;"><i class="fas fa-trash"></i> Excluir</button>` : '';
-
-        // --- LÓGICA DO "VER MAIS" ---
+    
         const description = event.description;
-        const DESCRIPTION_LIMIT = 100; // Limite de caracteres antes de mostrar "Ver mais"
+        const DESCRIPTION_LIMIT = 100;
         let descriptionHTML = `<p class="event-description">${description}</p>`;
-
         if (description.length > DESCRIPTION_LIMIT) {
             descriptionHTML += `<div class="event-see-more-container"><span class="event-see-more">Ver mais...</span></div>`;
         }
-        // --- FIM DA LÓGICA ---
-
+    
         eventCard.innerHTML = `
         <div class="event-header">
-            <h3>${event.eventName}</h3>
+            <h3>${event.eventName}${friendsOnlyIcon}</h3>
             <div class="event-date-display">
                 <i class="fas fa-calendar"></i> ${formattedDate}
             </div>
@@ -309,8 +334,8 @@ async function checkUpcomingEventNotifications() {
                 ${deleteButtonHTML}
             </div>
         </div>
-    `;
-
+        `;
+    
         // Adiciona listeners aos botões
         const participateBtn = eventCard.querySelector('.participate-btn');
         participateBtn.addEventListener('click', (e) => {
@@ -318,7 +343,7 @@ async function checkUpcomingEventNotifications() {
             e.stopPropagation();
             toggleParticipation(event.id, participateBtn);
         });
-
+    
         if (isCreator) {
             const deleteBtn = eventCard.querySelector('.delete-btn');
             deleteBtn.addEventListener('click', (e) => {
@@ -327,10 +352,12 @@ async function checkUpcomingEventNotifications() {
                 deleteEvent(event.id);
             });
         }
-
+    
         eventCardWrapper.appendChild(eventCard);
         eventsContainer.appendChild(eventCardWrapper);
     }
+
+
     async function deleteEvent(eventId) {
         const confirmed = await showConfirmationModal("Excluir Evento", "Você tem a certeza que quer excluir este evento? Esta ação não pode ser desfeita.");
         if (confirmed) {
@@ -373,7 +400,7 @@ async function checkUpcomingEventNotifications() {
 
     // Em eventos.js
   // Em eventos.js
-async function createEvent(e) {
+  async function createEvent(e) {
     e.preventDefault();
 
     // 1. Pega todos os valores dos campos
@@ -384,6 +411,7 @@ async function createEvent(e) {
     const description = document.getElementById('eventDescription').value;
     const selectedCheckboxes = document.querySelectorAll('#createEventModal input[name="event-tags"]:checked');
     const tags = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+    const isFriendsOnly = document.getElementById('isFriendsOnly').checked;
 
     // 2. Faz todas as verificações
     if (!eventName || !eventLocation || !eventDate || !eventTime || !description || tags.length === 0) {
@@ -395,39 +423,45 @@ async function createEvent(e) {
         return;
     }
 
-    // --- INÍCIO DA NOVA VALIDAÇÃO ---
-    const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+    // --- INÍCIO DA CORREÇÃO DEFINITIVA DO FUSO HORÁRIO ---
+    const [year, month, day] = eventDate.split('-').map(Number);
+    const [hours, minutes] = eventTime.split(':').map(Number);
+
+    // Cria a data do evento usando os componentes numéricos, o que força o uso do fuso horário local.
+    const eventDateTime = new Date(year, month - 1, day, hours, minutes);
     const now = new Date();
+    // --- FIM DA CORREÇÃO DEFINITIVA DO FUSO HORÁRIO ---
 
     if (eventDateTime < now) {
         showCustomAlert("Não é possível criar eventos em uma data ou hora que já passou.");
-        return; // Impede a criação do evento
+        return;
     }
-    // --- FIM DA NOVA VALIDAÇÃO ---
 
     // 3. Continua com a criação do evento se tudo estiver correto
     try {
         await db.collection('events').add({
             eventName,
             eventLocation,
-            eventDateTime,
+            eventDateTime, // Salva o objeto Date correto
             description,
             tags,
             creatorId: currentUser.uid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            participants: [currentUser.uid]
+            participants: [currentUser.uid],
+            isFriendsOnly: isFriendsOnly
         });
 
         createEventModal.style.display = 'none';
         createEventForm.reset();
         showToast("Evento criado com sucesso!", "success");
         loadEvents();
-        
+
     } catch (error) {
         console.error("Erro ao criar evento: ", error);
         showCustomAlert("Ocorreu um erro ao criar o evento.");
     }
 }
+
     if (createEventBtn) {
         createEventBtn.addEventListener('click', () => { createEventModal.style.display = 'flex'; });
     }
