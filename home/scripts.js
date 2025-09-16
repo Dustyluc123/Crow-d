@@ -1023,185 +1023,163 @@ function clearPostImage() {
     // Garanta que o listener do botão de voltar seja adicionado aqui.
     backToFeedBtn.addEventListener('click', hideSinglePostView);
 
-    function addPostToDOM(post, isSingleView = false) {
-        if (!postTemplate) {
-            console.error("Template de post não encontrado.");
-            return null;
-        }
+ // EM home/scripts.js
 
-        // VERIFICAÇÃO DE REPUBLICACÃO ÓRFÃ
-        if (post.isRepost && (!post.originalPost || Object.keys(post.originalPost).length === 0)) {
-            console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
-            return null;
-        }
-
-        const postClone = document.importNode(postTemplate.content, true);
-        const postElement = postClone.querySelector(".post");
-        if (!postElement) return null;
-
-        const basePost = post.isRepost ? post.originalPost : post;
-        const baseId = post.originalPostId || post.id;
-
-        postElement.dataset.postId = post.id;
-        postElement.dataset.basePostId = baseId;
-
-        const actionsContainer = postElement.querySelector('.post-actions');
-
-        if (post.isRepost) {
-            postElement.classList.add('repost-card');
-            const repostHeader = document.createElement('div');
-            repostHeader.className = 'repost-header';
-
-            repostHeader.innerHTML = `
-                <i class="fas fa-retweet"></i>
-                <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
-                <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
-            `;
-            postElement.prepend(repostHeader);
-
-            if (actionsContainer) {
-                actionsContainer.remove();
-            }
-        }
-
-        // Preenche as informações do post (usando o post original se for um repost)
-        postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
-        postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
-        postElement.querySelector(".post-text").textContent = basePost.content || '';
-        if (basePost.timestamp?.toDate) {
-            postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
-        }
-
-        const mediaContainer = postElement.querySelector(".post-media");
-        if (basePost.imageURL) {
-            postElement.querySelector(".post-image").src = basePost.imageURL;
-            mediaContainer.style.display = 'block';
-        } else {
-            mediaContainer.style.display = 'none';
-        }
-        // Listeners para as abas de feed
-const feedTabButtons = document.querySelectorAll('.feed-tab-btn');
-feedTabButtons.forEach(button => {
-    button.addEventListener('click', function() {
-        // Remove a classe 'active' de todos os botões
-        feedTabButtons.forEach(btn => btn.classList.remove('active'));
-        // Adiciona 'active' apenas ao botão clicado
-        this.classList.add('active');
-
-        // Atualiza o tipo de feed ativo e recarrega os posts
-        activeFeedType = this.dataset.feedType;
-        loadInitialPosts(); // Esta função será modificada a seguir
-    });
-});
-
-        // ==========================================================
-        // === INÍCIO - NOVO CÓDIGO PARA EXIBIR HOBBIES NO POST ===
-        // ==========================================================
-        const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
-        // Usamos 'basePost' aqui para que os hobbies do post original apareçam na republicação
-        if (basePost.hobbies && basePost.hobbies.length > 0) {
-            hobbiesContainer.innerHTML = ''; // Limpa o container
-            hobbiesContainer.style.display = 'flex'; // Garante que o container esteja visível
-            basePost.hobbies.forEach(hobby => {
-                const hobbyTag = document.createElement('span');
-                hobbyTag.className = 'post-hobby-tag';
-                hobbyTag.textContent = hobby;
-                hobbiesContainer.appendChild(hobbyTag);
-            });
-        } else {
-            // Esconde o container se não houver hobbies
-            hobbiesContainer.style.display = 'none';
-        }
-        // ==========================================================
-        // === FIM - NOVO CÓDIGO PARA EXIBIR HOBBIES NO POST ===
-        // ==========================================================
-
-        // Configura os botões APENAS se não for uma republicação
-        if (!post.isRepost && actionsContainer) {
-            const likeBtn = postElement.querySelector(".like-btn");
-            const repostBtn = postElement.querySelector(".repost-btn");
-            const saveBtn = postElement.querySelector(".save-btn");
-            const shareBtn = postElement.querySelector(".share-btn");
-            const deleteBtn = postElement.querySelector('.post-delete-btn');
-
-            const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
-            likeBtn.querySelector('span').textContent = basePost.likes || 0;
-            likeBtn.classList.toggle('liked', isLiked);
-            likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
-
-            const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
-            saveBtn.classList.toggle('saved', isSaved);
-            saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
-            saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
-
-            shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
-
-            const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
-            repostBtn.classList.toggle('reposted', hasReposted);
-            repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
-            repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
-
-            if (post.authorId === currentUser?.uid) {
-                deleteBtn.style.display = 'block';
-                deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
-            }
-        }
-
-        // Configuração dos Comentários
-        const commentsSection = postElement.querySelector('.post-comments');
-        const commentBtn = postElement.querySelector(".comment-btn");
-
-        if (commentBtn) {
-            commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
-            commentBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isActive = commentsSection.classList.toggle('active');
-                const postId = postElement.dataset.basePostId;
-                if (isActive) {
-                    if (activeCommentListeners[postId]) {
-                        activeCommentListeners[postId]();
-                    }
-                    const commentsList = commentsSection.querySelector('.comments-list');
-                    activeCommentListeners[postId] = loadComments(postId, commentsList);
-                } else {
-                    if (activeCommentListeners[postId]) {
-                        activeCommentListeners[postId]();
-                        delete activeCommentListeners[postId];
-                    }
-                }
-            });
-        }
-
-        const commentInput = postElement.querySelector(".comment-text");
-        const sendCommentBtn = postElement.querySelector(".send-comment-btn");
-
-        sendCommentBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const content = commentInput.value.trim();
-            if (content) {
-                addComment(baseId, content);
-                commentInput.value = "";
-            }
-        });
-
-        commentInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendCommentBtn.click();
-            }
-        });
-
-        if (!isSingleView) {
-            postElement.addEventListener('click', (e) => {
-                if (e.target.closest('a, button, input, .post-actions, .comment-input, .comment-text')) {
-                    return;
-                }
-                showSinglePostView(baseId);
-            });
-        }
-
-        return postElement;
+// SUBSTITUA a sua função addPostToDOM inteira por esta:
+function addPostToDOM(post, isSingleView = false) {
+    if (!postTemplate) {
+        console.error("Template de post não encontrado.");
+        return null;
     }
+
+    // VERIFICAÇÃO DE REPUBLICACÃO ÓRFÃ
+    if (post.isRepost && (!post.originalPost || Object.keys(post.originalPost).length === 0)) {
+        console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
+        return null;
+    }
+
+    const postClone = document.importNode(postTemplate.content, true);
+    const postElement = postClone.querySelector(".post");
+    if (!postElement) return null;
+
+    const basePost = post.isRepost ? post.originalPost : post;
+    const baseId = post.originalPostId || post.id;
+
+    postElement.dataset.postId = post.id;
+    postElement.dataset.basePostId = baseId;
+
+    const actionsContainer = postElement.querySelector('.post-actions');
+
+    if (post.isRepost) {
+        postElement.classList.add('repost-card');
+        const repostHeader = document.createElement('div');
+        repostHeader.className = 'repost-header';
+
+        repostHeader.innerHTML = `
+            <i class="fas fa-retweet"></i>
+            <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
+            <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
+        `;
+        postElement.prepend(repostHeader);
+
+        if (actionsContainer) {
+            actionsContainer.remove();
+        }
+    }
+
+    postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
+    postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
+    postElement.querySelector(".post-text").textContent = basePost.content || '';
+    if (basePost.timestamp?.toDate) {
+        postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
+    }
+
+    const mediaContainer = postElement.querySelector(".post-media");
+    if (basePost.imageURL) {
+        postElement.querySelector(".post-image").src = basePost.imageURL;
+        mediaContainer.style.display = 'block';
+    } else {
+        mediaContainer.style.display = 'none';
+    }
+
+    const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
+    if (basePost.hobbies && basePost.hobbies.length > 0) {
+        hobbiesContainer.innerHTML = '';
+        hobbiesContainer.style.display = 'flex';
+        basePost.hobbies.forEach(hobby => {
+            const hobbyTag = document.createElement('span');
+            hobbyTag.className = 'post-hobby-tag';
+            hobbyTag.textContent = hobby;
+            hobbiesContainer.appendChild(hobbyTag);
+        });
+    } else {
+        hobbiesContainer.style.display = 'none';
+    }
+
+    if (!post.isRepost && actionsContainer) {
+        const likeBtn = postElement.querySelector(".like-btn");
+        const repostBtn = postElement.querySelector(".repost-btn");
+        const saveBtn = postElement.querySelector(".save-btn");
+        const shareBtn = postElement.querySelector(".share-btn");
+        const deleteBtn = postElement.querySelector('.post-delete-btn');
+
+        const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
+        likeBtn.querySelector('span').textContent = basePost.likes || 0;
+        likeBtn.classList.toggle('liked', isLiked);
+        likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
+
+        const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
+        saveBtn.classList.toggle('saved', isSaved);
+        saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
+        saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
+
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
+
+        const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
+        repostBtn.classList.toggle('reposted', hasReposted);
+        repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
+        repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
+
+        if (post.authorId === currentUser?.uid) {
+            deleteBtn.style.display = 'block';
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
+        }
+    }
+
+    const commentsSection = postElement.querySelector('.post-comments');
+    const commentBtn = postElement.querySelector(".comment-btn");
+
+    if (commentBtn) {
+        commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
+        commentBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isActive = commentsSection.classList.toggle('active');
+            const postId = postElement.dataset.basePostId;
+            if (isActive) {
+                if (activeCommentListeners[postId]) {
+                    activeCommentListeners[postId]();
+                }
+                const commentsList = commentsSection.querySelector('.comments-list');
+                activeCommentListeners[postId] = loadComments(postId, commentsList);
+            } else {
+                if (activeCommentListeners[postId]) {
+                    activeCommentListeners[postId]();
+                    delete activeCommentListeners[postId];
+                }
+            }
+        });
+    }
+
+    const commentInput = postElement.querySelector(".comment-text");
+    const sendCommentBtn = postElement.querySelector(".send-comment-btn");
+
+    sendCommentBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const content = commentInput.value.trim();
+        if (content) {
+            addComment(baseId, content);
+            commentInput.value = "";
+        }
+    });
+
+    commentInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendCommentBtn.click();
+        }
+    });
+
+    if (!isSingleView) {
+        postElement.addEventListener('click', (e) => {
+            if (e.target.closest('a, button, input, .post-actions, .comment-input, .comment-text')) {
+                return;
+            }
+            showSinglePostView(baseId);
+        });
+    }
+
+    return postElement;
+}
     async function showSinglePostView(postId) {
         detachPostsListener();
         feedView.style.display = 'none';

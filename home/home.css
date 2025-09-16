@@ -22,27 +22,51 @@
     box-sizing: border-box;
 }
 
+/* =================================================== */
+/* === SELETOR DE FEED PÍLULA (VERSÃO FINAL COMPACTA) ==== */
+/* =================================================== */
+
 .feed-tabs {
+    position: relative;
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--light-border);
+    justify-content: center;
+    background-color: var(--light-bg-secondary);
+    border-radius: 50px;
+    padding: 4px; /* Reduzido para um visual mais fino */
+    margin: 0 auto 25px;
+    max-width: 450px; /* Mais estreito para parecer mais horizontal */
+    border: 1px solid var(--light-border);
 }
 
 body.dark-mode .feed-tabs {
-    border-bottom-color: var(--dark-border);
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+}
+
+.feed-tab-slider {
+    position: absolute;
+    top: 4px; /* Ajustado ao novo padding */
+    left: 4px; /* Ajustado ao novo padding */
+    height: calc(100% - 8px); /* Ajustado ao novo padding */
+    width: calc((100% - 8px) / 3); /* Ajustado ao novo padding */
+    background-color: var(--primary-color);
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(112, 33, 196, 0.4);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1;
 }
 
 .feed-tab-btn {
+    flex: 1;
     background: none;
     border: none;
-    padding: 10px 15px;
-    font-size: 1rem;
+    padding: 8px 15px; /* Altura do botão reduzida */
+    font-size: 0.85rem; /* Fonte um pouco menor */
     font-weight: 600;
     cursor: pointer;
     color: var(--light-text-secondary);
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
+    transition: color 0.3s ease;
+    z-index: 2;
 }
 
 body.dark-mode .feed-tab-btn {
@@ -50,11 +74,12 @@ body.dark-mode .feed-tab-btn {
 }
 
 .feed-tab-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    color: #ffffff;
 }
 
-/* Estilo para mensagens informativas (nenhum post, etc.) */
+/* Move a pílula com base no botão ativo */
+.feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
+.feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
 .info-message {
     text-align: center;
     padding: 30px;
@@ -198,6 +223,7 @@ body.dark-mode .logo {
 }
 
 .main-nav a {
+     justify-content: center;
     text-decoration: none;
     color: var(--dark-text);
     font-weight: bold;
@@ -2491,7 +2517,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 /* A tag que aparece no post do feed */
 .post-hobby-tag {
     background-color: var(--background-color-secondary);
-    color: var(--text-color-secondary);
+    color: var(--light-text);
     padding: 5px 12px;
     border-radius: 15px;
     font-size: 0.8rem;
@@ -2571,7 +2597,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
     background-color: #7021C4;
     border: 1px solid var(--border-color);
     /* Borda sutil */
-    color: var(--text-color-secondary);
+    color: var(--light-text);
     padding: 5px 12px;
     border-radius: 15px;
     font-size: 0.8rem;
