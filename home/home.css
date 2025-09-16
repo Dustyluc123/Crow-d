@@ -21,7 +21,19 @@
     padding: 0;
     box-sizing: border-box;
 }
-
+/* Hint quando estiver respondendo a alguém no campo de comentário */
+.replying-hint {
+    font-size: .85rem;
+    margin: 4px 0 8px;
+    color: var(--light-text-secondary);
+  }
+  body.dark-mode .replying-hint { color: var(--dark-text-secondary); }
+  .replying-hint .cancel-reply {
+    margin-left: 8px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  
 /* =================================================== */
 /* === SELETOR DE FEED PÍLULA (VERSÃO FINAL COMPACTA) ==== */
 /* =================================================== */
@@ -82,7 +94,39 @@ body.dark-mode .feed-tabs {
     background-color: var(--dark-bg-tertiary);
     border-color: var(--dark-border);
 }
+/* Adicione este código ao final do seu arquivo home/home.css */
 
+.new-posts-indicator {
+    position: sticky;
+    top: 70px; /* Abaixo do header */
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    pointer-events: none; /* Permite clicar através do container */
+}
+
+#reload-feed-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease;
+    pointer-events: all; /* Torna apenas o botão clicável */
+}
+
+#reload-feed-btn:hover {
+    transform: scale(1.05);
+}
+
+#reload-feed-btn i {
+    margin-right: 8px;
+}
 .feed-tab-slider {
     position: absolute;
     top: 4px; /* Ajustado ao novo padding */

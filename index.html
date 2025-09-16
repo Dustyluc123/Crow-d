@@ -68,7 +68,9 @@
     <button class="feed-tab-btn" data-feed-type="friends">Feed de Amigos</button>
     <button class="feed-tab-btn" data-feed-type="hobbies">Feed de Hobbies</button>
     <div class="feed-tab-slider"></div> </div>
-            
+    <div id="new-posts-indicator" class="new-posts-indicator" style="display: none;">
+        <button id="reload-feed-btn"><i class="fas fa-arrow-up"></i> Novos Posts</button>
+    </div>
             <div id="feed-view">
                 <main class="feed">
                     <div class="create-post">
@@ -96,7 +98,7 @@
                             <button class="post-btn" id="publish-btn">Publicar</button>
                         </div>
                     </div>
-
+                    
                     <div class="posts" id="posts-container">
                         <div class="loading-posts">
                             <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
@@ -190,6 +192,8 @@
                     </button>
                 </div>
                 <p class="comment-text">Conteúdo do comentário...</p>
+                <button class="comment-reply-btn"><i class="fas fa-reply"></i> Responder</button>
+
                 <div class="comment-footer">
                     <span class="comment-timestamp">há 2 minutos</span>
                     <button class="comment-like-btn"><i class="far fa-heart"></i> <span
