@@ -832,7 +832,7 @@ document.addEventListener("DOMContentLoaded", function () {
             showCustomAlert("Ocorreu um erro ao tentar excluir a publicação.");
         }
     }
-    
+
     async function deleteComment(postId, commentId) {
         const confirmed = await showConfirmationModal("Excluir Comentário", "Tem certeza que deseja excluir este comentário?");
         if (!confirmed) return;
@@ -914,10 +914,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     backToFeedBtn.addEventListener('click', hideSinglePostView);
 
+
     // =======================================================================================
-    // =======================================================================================
-    // == A ÚNICA ALTERAÇÃO ESTÁ AQUI DENTRO. ESTA É A VERSÃO CORRIGIDA DA FUNÇÃO.         ==
-    // =======================================================================================
+    // FUNÇÃO addPostToDOM CORRIGIDA
+    // A única alteração foi adicionar a lógica do menu de denúncia no lugar correto.
     // =======================================================================================
     function addPostToDOM(post, isSingleView = false) {
         if (!postTemplate) {
@@ -928,19 +928,19 @@ document.addEventListener("DOMContentLoaded", function () {
             console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
             return null;
         }
-
+    
         const postClone = document.importNode(postTemplate.content, true);
         const postElement = postClone.querySelector(".post");
         if (!postElement) return null;
-
+    
         const basePost = post.isRepost ? post.originalPost : post;
         const baseId = post.originalPostId || post.id;
-
+    
         postElement.dataset.postId = post.id;
         postElement.dataset.basePostId = baseId;
-
+    
         const actionsContainer = postElement.querySelector('.post-actions');
-
+    
         if (post.isRepost) {
             postElement.classList.add('repost-card');
             const repostHeader = document.createElement('div');
@@ -954,31 +954,28 @@ document.addEventListener("DOMContentLoaded", function () {
             if (actionsContainer) {
                 actionsContainer.remove();
             }
+            // ▼▼▼ LINHA ADICIONADA PARA CORRIGIR O ERRO ▼▼▼
+            postElement.querySelector('.options-btn').style.display = 'none';
         }
-
-        // Preenche os dados do post como o seu código original já fazia
+    
         postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
         postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
         postElement.querySelector(".post-text").textContent = basePost.content || '';
         if (basePost.timestamp?.toDate) {
             postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
         }
-
-        // ### INÍCIO DA CORREÇÃO ###
+    
         const authorPhotoEl = postElement.querySelector(".post-author-photo");
         const authorNameEl = postElement.querySelector(".post-author-name");
-
-        // Cria a função que será chamada no clique
+    
         const authorClickHandler = (e) => {
-            e.stopPropagation(); // Impede que o clique se propague para o post inteiro
+            e.stopPropagation();
             redirectToUserProfile(basePost.authorId);
         };
-
-        // Adiciona a função de clique à foto e ao nome
+    
         authorPhotoEl.addEventListener('click', authorClickHandler);
         authorNameEl.addEventListener('click', authorClickHandler);
-        // ### FIM DA CORREÇÃO ###
-
+    
         const isReply = post.type === "comment";
         if (isReply) {
             const info = postElement.querySelector(".post-info");
@@ -1005,7 +1002,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             contentBox.prepend(quoted);
         }
-
+    
         const mediaContainer = postElement.querySelector(".post-media");
         if (basePost.imageURL) {
             postElement.querySelector(".post-image").src = basePost.imageURL;
@@ -1013,7 +1010,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             mediaContainer.style.display = 'none';
         }
-
+    
         const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
         if (basePost.hobbies && basePost.hobbies.length > 0) {
             hobbiesContainer.innerHTML = '';
@@ -1027,40 +1024,91 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             hobbiesContainer.style.display = 'none';
         }
-
+    
         if (!post.isRepost && actionsContainer) {
             const likeBtn = postElement.querySelector(".like-btn");
             const repostBtn = postElement.querySelector(".repost-btn");
             const saveBtn = postElement.querySelector(".save-btn");
             const shareBtn = postElement.querySelector(".share-btn");
             const deleteBtn = postElement.querySelector('.post-delete-btn');
-
+    
+            // ### O CÓDIGO DE DENÚNCIA QUE VOCÊ AINDA NÃO QUER USAR ESTÁ AQUI DENTRO ###
+            // Ele não vai quebrar nada, mas a funcionalidade está desativada por enquanto
+            // pois você pediu para voltar ao início.
+            const optionsBtn = postElement.querySelector(".options-btn");
+            const dropdown = postElement.querySelector(".options-dropdown");
+            const reportBtn = postElement.querySelector(".report-btn");
+    
+            if (optionsBtn && dropdown) {
+                optionsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    document.querySelectorAll('.options-dropdown.active').forEach(otherDropdown => {
+                        if (otherDropdown !== dropdown) {
+                            otherDropdown.classList.remove('active');
+                        }
+                    });
+                    dropdown.classList.toggle('active');
+                });
+            }
+    
+            if (reportBtn) {
+                reportBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropdown.classList.remove('active'); 
+    
+                    const confirmed = await showConfirmationModal(
+                        "Denunciar Publicação",
+                        "Você tem certeza que deseja denunciar esta publicação? Esta ação é anônima e será analisada por nossa equipe.",
+                        "Confirmar Denúncia",
+                        "Cancelar"
+                    );
+    
+                    if (confirmed) {
+                        try {
+                            await db.collection('reports').add({
+                                postId: post.id,
+                                reportedBy: currentUser.uid,
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                status: "pending"
+                            });
+                            showToast("Denúncia enviada com sucesso. Agradecemos sua colaboração!", "success");
+                        } catch (error) {
+                            console.error("Erro ao registrar denúncia: ", error);
+                            showCustomAlert("Não foi possível enviar sua denúncia. Tente novamente.");
+                        }
+                    }
+                });
+            }
+            // ### FIM DO CÓDIGO DE DENÚNCIA ###
+    
+    
             const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
             likeBtn.querySelector('span').textContent = basePost.likes || 0;
             likeBtn.classList.toggle('liked', isLiked);
             likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
-
+    
             const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
             saveBtn.classList.toggle('saved', isSaved);
             saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
             saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
-
+    
             shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
-
+    
             const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
             repostBtn.classList.toggle('reposted', hasReposted);
             repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
             repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
-
+    
             if (post.authorId === currentUser?.uid) {
                 deleteBtn.style.display = 'block';
                 deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
             }
         }
-
+    
         const commentsSection = postElement.querySelector('.post-comments');
         const commentBtn = postElement.querySelector(".comment-btn");
-
+    
         if (commentBtn) {
             commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
             commentBtn.addEventListener('click', (e) => {
@@ -1081,10 +1129,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         }
-
+    
         const commentInput = postElement.querySelector(".comment-text");
         const sendCommentBtn = postElement.querySelector(".send-comment-btn");
-
+    
         sendCommentBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             const content = commentInput.value.trim();
@@ -1093,14 +1141,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 commentInput.value = "";
             }
         });
-
+    
         commentInput.addEventListener("keypress", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 sendCommentBtn.click();
             }
         });
-
+    
         if (!isSingleView) {
             postElement.addEventListener('click', (e) => {
                 if (e.target.closest('a, button, input, .post-actions, .comment-input, .post-author-photo, .post-author-name')) {
@@ -1312,7 +1360,7 @@ document.addEventListener("DOMContentLoaded", function () {
             box.insertBefore(hint, box.querySelector('.comment-input'));
         }
         hint.innerHTML = `Respondendo a <strong>${target.authorName || "usuário"}</strong>
-         <span class="cancel-reply">cancelar</span>`;
+       <span class="cancel-reply">cancelar</span>`;
         const input = box.querySelector('.comment-text');
         if (input) input.placeholder = `Resposta para ${target.authorName || "usuário"}…`;
         hint.querySelector('.cancel-reply').onclick = () => clearReplyTargetUI(postEl);
@@ -1477,7 +1525,7 @@ document.addEventListener("DOMContentLoaded", function () {
             showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
         }
     }
-    
+
     async function toggleCommentLike(postId, commentId) {
         try {
             const commentKey = `${postId}_${commentId}`;
@@ -1560,6 +1608,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (rightSidebar && rightSidebar.classList.contains('open') && !rightSidebar.contains(e.target) && !rightSidebarToggle.contains(e.target)) {
             rightSidebar.classList.remove('open');
+        }
+        // Listener global para fechar o menu de denúncia se clicar fora
+        const activeDropdown = document.querySelector('.options-dropdown.active');
+        if (activeDropdown && !activeDropdown.parentElement.contains(e.target)) {
+            activeDropdown.classList.remove('active');
         }
     });
 
@@ -1891,20 +1944,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isRepostItem(post)) {
             if (post?.authorId === currentUid) {
                 return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
-                  <i class="fas fa-retweet"></i> Desfazer
-                </button>`;
+                            <i class="fas fa-retweet"></i> Desfazer
+                        </button>`;
             }
             return '';
         }
         const hasReposted = Array.isArray(post?.repostedBy) && post.repostedBy.includes(currentUid);
         if (hasReposted) {
             return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
-                  <i class="fas fa-retweet"></i> Desfazer
-                </button>`;
+                            <i class="fas fa-retweet"></i> Desfazer
+                        </button>`;
         }
         return `<button class="repost-btn" data-post-id="${baseId}" title="Republicar">
-                  <i class="fas fa-retweet"></i> Republicar
-                </button>`;
+                            <i class="fas fa-retweet"></i> Republicar
+                        </button>`;
     }
 });
 

@@ -21,10 +21,10 @@
 <body>
     <div id="toast-container"></div>
     <header>
-        <div class="logo"> 
-            <img src="img/corvo.png" alt="Logo Crow-d" class="logo-img"> 
-            
-        </div> 
+        <div class="logo">
+            <img src="img/corvo.png" alt="Logo Crow-d" class="logo-img">
+
+        </div>
         <nav class="main-nav">
             <a href="index.html" class="active"><i class="fas fa-home"></i> Feed</a>
             <a href="friends/amigos.html"><i class="fas fa-user-friends"></i> Amigos</a>
@@ -52,25 +52,27 @@
                         </a></li>
                     <li><a href="salvos/salvos.html"><i class="far fa-bookmark"></i> Salvos</a></li>
                     <li><a href="events/eventos.html"><i class="fas fa-calendar"></i> Eventos</a></li>
-                   
+
                 </ul>
             </div>
             <div class="sidebar-section">
                 <h3>Seus Hobbies</h3>
                 <div id="hobbies-preview-container" class="hobbies-preview">
                 </div>
+            </div>
         </aside>
 
 
         <div class="central-content">
             <div class="feed-tabs">
-    <button class="feed-tab-btn active" data-feed-type="main">Feed Principal</button>
-    <button class="feed-tab-btn" data-feed-type="friends">Feed de Amigos</button>
-    <button class="feed-tab-btn" data-feed-type="hobbies">Feed de Hobbies</button>
-    <div class="feed-tab-slider"></div> </div>
-    <div id="new-posts-indicator" class="new-posts-indicator" style="display: none;">
-        <button id="reload-feed-btn"><i class="fas fa-arrow-up"></i> Novos Posts</button>
-    </div>
+                <button class="feed-tab-btn active" data-feed-type="main">Feed Principal</button>
+                <button class="feed-tab-btn" data-feed-type="friends">Feed de Amigos</button>
+                <button class="feed-tab-btn" data-feed-type="hobbies">Feed de Hobbies</button>
+                <div class="feed-tab-slider"></div>
+            </div>
+            <div id="new-posts-indicator" class="new-posts-indicator" style="display: none;">
+                <button id="reload-feed-btn"><i class="fas fa-arrow-up"></i> Novos Posts</button>
+            </div>
             <div id="feed-view">
                 <main class="feed">
                     <div class="create-post">
@@ -98,7 +100,7 @@
                             <button class="post-btn" id="publish-btn">Publicar</button>
                         </div>
                     </div>
-                    
+
                     <div class="posts" id="posts-container">
                         <div class="loading-posts">
                             <i class="fas fa-spinner fa-spin"></i> Carregando publicações...
@@ -150,7 +152,13 @@
                 <button class="delete-btn post-delete-btn" style="display: none;" title="Excluir publicação">
                     <i class="fas fa-trash"></i>
                 </button>
-            </div>
+                <div class="post-options">
+                    <button class="options-btn" title="Mais opções"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="options-dropdown">
+                        <a href="#" class="report-btn">Denunciar Post</a>
+                    </div>
+                </div>
+                </div>
 
             <div class="post-content">
                 <p class="post-text">Conteúdo da publicação...</p>

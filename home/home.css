@@ -2709,3 +2709,109 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 }
 
 /* (O restante do CSS anterior para a busca e layout do modal continua válido e pode ser mantido) */
+/* ======================================== */
+/* === ESTILOS PARA O MENU DE DENÚNCIA === */
+/* ======================================== */
+
+.post-header {
+    /* Garante que o menu dropdown se posicione corretamente */
+    position: relative;
+}
+
+.post-options {
+    position: relative;
+    margin-left: 8px; /* Pequeno espaço ao lado do botão de lixeira */
+}
+
+.options-btn {
+    background: none;
+    border: none;
+    color: var(--light-text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 8px 10px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+body.dark-mode .options-btn {
+    color: var(--dark-text-secondary);
+}
+
+.options-btn:hover {
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+}
+
+body.dark-mode .options-btn:hover {
+    background-color: var(--dark-bg-tertiary);
+}
+
+/* O menu dropdown que aparece */
+.options-dropdown {
+    display: block; /* Alterado para permitir animação */
+    position: absolute;
+    top: 110%; /* Posição um pouco abaixo do botão */
+    right: 0;
+    background-color: var(--light-text);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    z-index: 10;
+    width: 150px;
+    overflow: hidden;
+    
+    /* Animação de entrada */
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    pointer-events: none;
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+}
+
+body.dark-mode .options-dropdown {
+    background-color: var(--dark-bg-secondary);
+    border: 1px solid var(--dark-border);
+}
+
+/* Ativa a visibilidade e animação com a classe 'active' do JS */
+.options-dropdown.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Estilo do item "Denunciar" dentro do menu */
+.options-dropdown .report-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: #dc3545; /* Vermelho para chamar atenção */
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.options-dropdown .report-btn:hover {
+    background-color: rgba(220, 53, 69, 0.08);
+}
+
+body.dark-mode .options-dropdown .report-btn {
+    color: #ff5c5c;
+}
+
+body.dark-mode .options-dropdown .report-btn:hover {
+    background-color: rgba(255, 92, 92, 0.1);
+}
+
+/* --- CORREÇÃO DE ALINHAMENTO PARA BOTÕES DO POST --- */
+
+/* Faz a área de informações (nome/timestamp) crescer */
+.post-header .post-info {
+    flex-grow: 1;
+}
+
+/* Garante um pequeno espaçamento entre os botões da direita */
+.post-header .options-btn {
+    margin-left: 8px;
+}
