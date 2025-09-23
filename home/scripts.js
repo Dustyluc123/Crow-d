@@ -1,3 +1,7 @@
+function redirectToUserProfile(userId) {
+    window.location.href = `pages/user.html?uid=${userId}`;
+}
+
 // Sistema de postagens e comentários para o Crow-d com Firebase
 document.addEventListener("DOMContentLoaded", function () {
     // Configuração do Firebase
@@ -10,16 +14,12 @@ document.addEventListener("DOMContentLoaded", function () {
         appId: "1:1066633833169:web:3fcb8fccac38141b1bb3f0",
     };
 
-
-
-
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
     const auth = firebase.auth();
     const db = firebase.firestore();
     const storage = firebase.storage();
-
 
     // Referências aos elementos do DOM
     const postInput = document.getElementById("post-content");
@@ -37,18 +37,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const singlePostView = document.getElementById("single-post-view");
     const focusedPostContainer = document.getElementById("focused-post-container");
     const backToFeedBtn = document.getElementById("back-to-feed-btn");
-    // === INÍCIO - NOVO CÓDIGO PARA HOBBIES ===
     const addHobbyBtn = document.getElementById("add-hobby-btn");
     const hobbyModal = document.getElementById("hobby-modal");
     const closeHobbyModalBtn = document.getElementById("close-hobby-modal");
     const confirmHobbiesBtn = document.getElementById("confirm-hobbies-btn");
     const hobbyListContainer = document.getElementById("hobby-list-container");
     const selectedHobbiesContainer = document.getElementById("selected-hobbies-container");
-    // Alvo atual de "Responder" por postId (apenas na UI)
-const replyTargetByPost = new Map(); 
-// Estrutura: replyTargetByPost.set(postId, { commentId, authorId, authorName, snippet })
+    const replyTargetByPost = new Map();
 
-    let selectedHobbiesForPost = []; // Guarda os hobbies para o post atual
+    let selectedHobbiesForPost = [];
 
     const hobbiesList = {
         "🎨 Artes": ["Desenho", "Pintura", "Fotografia", "Dança", "Escultura", "Arte Digital", "Teatro", "Caligrafia", "Cerâmica"],
@@ -57,108 +54,84 @@ const replyTargetByPost = new Map();
         "📚 Cultura Pop": ["Filmes", "Séries", "Animes", "Livros", "Quadrinhos/Mangás", "Ficção Científica", "Fantasia", "Poesia"],
         "🌍 Estilo de Vida & Outros": ["Culinária", "Viagens", "Idiomas", "Voluntariado", "Jardinagem", "Acampar", "Astronomia", "Animais de Estimação"]
     };
+
     function renderHobbyList() {
         hobbyListContainer.innerHTML = '';
         if (document.getElementById('hobby-search-input')) {
             document.getElementById('hobby-search-input').value = '';
         }
-    
-        // NOVO: Função para verificar e aplicar o limite de seleção
         const checkHobbyLimit = () => {
             const allCheckboxes = hobbyListContainer.querySelectorAll('input[type="checkbox"]');
             const checkedCount = hobbyListContainer.querySelectorAll('input[type="checkbox"]:checked').length;
-    
-            // Se 3 hobbies foram selecionados...
             if (checkedCount >= 3) {
-                // ...desativa todos os checkboxes que NÃO estão marcados.
                 allCheckboxes.forEach(cb => {
                     if (!cb.checked) {
                         cb.disabled = true;
-                        // Adiciona uma classe para deixar a label com aparência de desativada
                         cb.parentElement.classList.add('disabled');
                     }
                 });
             } else {
-                // ...senão, garante que todos os checkboxes estejam ativos.
                 allCheckboxes.forEach(cb => {
                     cb.disabled = false;
                     cb.parentElement.classList.remove('disabled');
                 });
             }
         };
-    
         for (const category in hobbiesList) {
             const categoryDiv = document.createElement('div');
             categoryDiv.className = 'hobby-category';
-    
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = category;
             categoryDiv.appendChild(categoryTitle);
-    
             const optionsDiv = document.createElement('div');
             optionsDiv.className = 'hobby-options';
-    
             hobbiesList[category].forEach(hobby => {
                 const label = document.createElement('label');
                 label.className = 'hobby-label';
-                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = hobby;
-    
                 const span = document.createElement('span');
                 span.textContent = hobby;
-    
                 if (selectedHobbiesForPost.includes(hobby)) {
                     checkbox.checked = true;
                     label.classList.add('selected');
                 }
-    
                 checkbox.addEventListener('change', () => {
                     label.classList.toggle('selected', checkbox.checked);
-                    // NOVO: Chama a função de verificação sempre que um hobby for alterado
                     checkHobbyLimit();
                 });
-    
                 label.appendChild(checkbox);
                 label.appendChild(span);
                 optionsDiv.appendChild(label);
             });
-    
             categoryDiv.appendChild(optionsDiv);
             hobbyListContainer.appendChild(categoryDiv);
         }
-        
-        // NOVO: Executa a verificação uma vez ao abrir o modal, caso já haja hobbies selecionados
         checkHobbyLimit();
-    
         if (typeof filterHobbies === 'function') {
             filterHobbies();
         }
     }
 
-    // Função para mostrar os hobbies selecionados na área de criação do post
     function updateSelectedHobbiesUI() {
         selectedHobbiesContainer.innerHTML = '';
         selectedHobbiesForPost.forEach(hobby => {
             const tag = document.createElement('span');
             tag.className = 'selected-hobby-tag';
             tag.textContent = hobby;
-
             const removeBtn = document.createElement('button');
             removeBtn.className = 'remove-hobby-btn';
             removeBtn.innerHTML = '&times;';
             removeBtn.onclick = () => {
                 selectedHobbiesForPost = selectedHobbiesForPost.filter(h => h !== hobby);
-                updateSelectedHobbiesUI(); // Atualiza a UI novamente
+                updateSelectedHobbiesUI();
             };
-
             tag.appendChild(removeBtn);
             selectedHobbiesContainer.appendChild(tag);
         });
     }
 
-    // Event Listeners para o modal de hobbies
     if (addHobbyBtn) {
         addHobbyBtn.addEventListener('click', () => {
             renderHobbyList();
@@ -184,81 +157,59 @@ const replyTargetByPost = new Map();
 
     function toast(m, t = "info") { try { window.createToast?.(m, t) } catch (_) { } }
 
-    // Variáveis globais
     let currentUser = null;
     let currentUserProfile = null;
     let postsListener = null;
-    let likeInProgress = {}; // Controle de likes em andamento
-    let commentLikeInProgress = {}; // Controle de likes em comentários
+    let likeInProgress = {};
+    let commentLikeInProgress = {};
     let displayedReposts = new Set();
-    let lastVisiblePost = null; // Guarda o último post carregado
-    let isLoadingMorePosts = false; // Impede carregamentos múltiplos ao mesmo tempo
-    let noMorePosts = false; // Indica se chegamos ao fim de todos os posts
-    const POSTS_PER_PAGE = 10; // Quantidade de posts para carregar por vez
+    let lastVisiblePost = null;
+    let isLoadingMorePosts = false;
+    let noMorePosts = false;
+    const POSTS_PER_PAGE = 10;
     let activeCommentListeners = {};
-    let activeFeedType = 'main'; // 'main' ou 'friends'
+    let activeFeedType = 'main';
     let newPostsListener = null;
-    // scripts.js
 
-    // ... (todo o seu código existente) ...
-
-    // === INÍCIO DO CÓDIGO DO EDITOR DE IMAGEM ===
-
-    // Variáveis para controlar o editor
     let cropperInstance = null;
-    let postImageBase64 = null; // A imagem cortada será guardada aqui
+    let postImageBase64 = null;
 
-    // Referências aos elementos do HTML que adicionámos
     const imageEditorModal = document.getElementById('image-editor-modal');
     const imageToCrop = document.getElementById('image-to-crop');
     const cropImageBtn = document.getElementById('crop-image-btn');
     const cancelCropBtn = document.getElementById('cancel-crop-btn');
     const closeEditorModalBtn = document.getElementById('close-editor-modal');
-    // Em scripts.js, adicione este bloco no topo
-
-    // --- INÍCIO DA LÓGICA DE UPLOAD DE IMAGEM PARA POSTS ---
-
     const imagePreviewContainer = document.getElementById('post-image-preview-container');
     const imagePreview = document.getElementById('post-image-preview');
     const removeImageBtn = document.getElementById('remove-image-btn');
-// No início do seu arquivo, junto com as outras referências do DOM:
-const newPostsIndicator = document.getElementById("new-posts-indicator");
-const reloadFeedBtn = document.getElementById("reload-feed-btn");
-
-    // Referências aos elementos do formulário de post
+    const newPostsIndicator = document.getElementById("new-posts-indicator");
+    const reloadFeedBtn = document.getElementById("reload-feed-btn");
     const postImageInput = document.getElementById('post-image-input');
     const postImagePreviewContainer = document.getElementById('post-image-preview-container');
     const postImagePreview = document.getElementById('post-image-preview');
     const removePostImageBtn = document.getElementById('remove-post-image-btn');
     const feedTabButtons = document.querySelectorAll('.feed-tab-btn');
+
     feedTabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove a classe 'active' de todos os botões e adiciona ao que foi clicado
+        button.addEventListener('click', function () {
             feedTabButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
-            
-            // Atualiza a variável de controlo e recarrega os posts
             activeFeedType = this.dataset.feedType;
-            loadInitialPosts(); 
+            loadInitialPosts();
         });
     });
 
-    // Função para ABRIR o editor
     function openImageEditor(file) {
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function (event) {
             imageToCrop.src = event.target.result;
             imageEditorModal.style.display = 'block';
-
             if (cropperInstance) {
                 cropperInstance.destroy();
             }
-
-            // Ativa a ferramenta Cropper.js na imagem
             cropperInstance = new Cropper(imageToCrop, {
-                aspectRatio: 1 / 1, // Proporção quadrada (1:1). Pode mudar para 16/9, etc.
+                aspectRatio: 1 / 1,
                 viewMode: 1,
                 background: false,
             });
@@ -266,77 +217,51 @@ const reloadFeedBtn = document.getElementById("reload-feed-btn");
         reader.readAsDataURL(file);
     }
 
-    // Função para FECHAR o editor
     function closeImageEditor() {
         imageEditorModal.style.display = 'none';
         if (cropperInstance) {
             cropperInstance.destroy();
             cropperInstance = null;
         }
-        postImageInput.value = ''; // Limpa a seleção do ficheiro
+        postImageInput.value = '';
     }
 
-
-
-    // O que acontece quando o utilizador escolhe uma imagem
     if (postImageInput) {
         postImageInput.addEventListener('change', (e) => {
             const files = e.target.files;
             if (files && files.length > 0) {
-                // Em vez de mostrar a imagem diretamente, abre o editor
                 openImageEditor(files[0]);
             }
         });
     }
 
-    // Ações dos botões do editor
     if (cropImageBtn) {
         cropImageBtn.addEventListener('click', () => {
             if (cropperInstance) {
-                // Pega na imagem cortada e converte-a
                 const canvas = cropperInstance.getCroppedCanvas({
-                    width: 800, // Define uma largura máxima para a imagem final
+                    width: 800,
                     height: 800,
                 });
-                postImageBase64 = canvas.toDataURL('image/jpeg', 1.0); // Converte para texto (Base64)
-
-                // Mostra a imagem cortada na pré-visualização do post
+                postImageBase64 = canvas.toDataURL('image/jpeg', 1.0);
                 postImagePreview.src = postImageBase64;
                 postImagePreviewContainer.style.display = 'block';
-
-                closeImageEditor(); // Fecha a janela
+                closeImageEditor();
             }
         });
     }
-    // Adicione o listener de clique para o novo botão
-if (reloadFeedBtn) {
-    reloadFeedBtn.addEventListener('click', () => {
-        // Esconde o botão, rola para o topo e recarrega o feed
-        if (newPostsIndicator) {
-            newPostsIndicator.style.display = 'none';
-        }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        loadInitialPosts(); // Chama a função para recarregar tudo
-    });
-}
+    if (reloadFeedBtn) {
+        reloadFeedBtn.addEventListener('click', () => {
+            if (newPostsIndicator) {
+                newPostsIndicator.style.display = 'none';
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            loadInitialPosts();
+        });
+    }
 
-
-
-    // Botões para fechar/cancelar e remover
     if (closeEditorModalBtn) closeEditorModalBtn.addEventListener('click', closeImageEditor);
     if (cancelCropBtn) cancelCropBtn.addEventListener('click', closeImageEditor);
     if (removePostImageBtn) removePostImageBtn.addEventListener('click', clearPostImage);
-
-
-    // IMPORTANTE: Verifique a sua função createPost
-    // Ela já deve estar a usar a variável `postImageBase64` para guardar a imagem no post.
-    // Se não estiver, certifique-se de que ela envia `postImageBase64` para o Firestore.
-
-    // === FIM DO CÓDIGO DO EDITOR DE IMAGEM ===
-
-
-
-
 
     if (postImageInput) {
         postImageInput.addEventListener('change', function () {
@@ -353,26 +278,20 @@ if (reloadFeedBtn) {
         });
     }
 
-  // home/scripts.js
-
-// SUBSTITUA AS DUAS FUNÇÕES ANTIGAS POR ESTA VERSÃO ÚNICA E CORRETA
-function clearPostImage() {
-    // Parte que limpa a IMAGEM
-    postImageBase64 = null;
-    if (postImageInput) {
-        postImageInput.value = '';
+    function clearPostImage() {
+        postImageBase64 = null;
+        if (postImageInput) {
+            postImageInput.value = '';
+        }
+        if (imagePreviewContainer) {
+            imagePreviewContainer.style.display = 'none';
+        }
+        if (imagePreview) {
+            imagePreview.src = '#';
+        }
+        selectedHobbiesForPost = [];
+        updateSelectedHobbiesUI();
     }
-    if (imagePreviewContainer) {
-        imagePreviewContainer.style.display = 'none';
-    }
-    if (imagePreview) {
-        imagePreview.src = '#';
-    }
-
-    // Parte que limpa os HOBBIES
-    selectedHobbiesForPost = [];
-    updateSelectedHobbiesUI(); // Esta função limpa as tags da tela
-}
 
     if (removeImageBtn) {
         removeImageBtn.addEventListener('click', clearPostImage);
@@ -380,7 +299,6 @@ function clearPostImage() {
     async function sharePost(postId) {
         const cleanUrl = window.location.href.split('?')[0].split('#')[0];
         const postUrl = `${cleanUrl}?post=${postId}`;
-
         try {
             await navigator.clipboard.writeText(postUrl);
             showToast("Link da publicação copiado!", "success");
@@ -391,8 +309,8 @@ function clearPostImage() {
     }
     function detachPostsListener() {
         if (postsListener) {
-            postsListener(); // Executa a função de 'unsubscribe' retornada pelo onSnapshot
-            postsListener = null; // Limpa a variável
+            postsListener();
+            postsListener = null;
         }
     }
     async function createFriendRequest(toUid) {
@@ -427,7 +345,6 @@ function clearPostImage() {
             throw err;
         }
 
-        // notificação para o destinatário
         try {
             await db.collection("users").doc(to).collection("notifications").add({
                 type: "friend_request",
@@ -472,7 +389,6 @@ function clearPostImage() {
 
     document.addEventListener("DOMContentLoaded", wireSuggestionActionsIndex);
     function getUserPagePath() {
-        // no index.html da raiz, user fica em /pages/
         return 'pages/user.html';
     }
 
@@ -480,18 +396,13 @@ function clearPostImage() {
         const box = document.getElementById('suggestions-container');
         if (!box) return;
 
-        // não interfere no botão de seguir
         box.addEventListener('click', (e) => {
             if (e.target.closest('.follow-btn, .friend-btn, .send-request-btn')) return;
-
-            // só navega se clicou no NOME ou na FOTO
             const hit = e.target.closest('.suggestion-photo, .suggestion-name');
             if (!hit) return;
-
             const card = hit.closest('.suggestion[data-user-id]');
             const uid = card?.dataset.userId;
             if (!uid) return;
-
             const userPage = getUserPagePath();
             window.location.href = `${userPage}?uid=${encodeURIComponent(uid)}`;
         });
@@ -499,41 +410,32 @@ function clearPostImage() {
 
     document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
 
-
     function formatTimestamp(date) {
-        // Verificar se date é um objeto Date válido
         if (!(date instanceof Date) || isNaN(date)) {
             return "Agora mesmo";
         }
-
         const now = new Date();
         const diff = now - date;
-
         if (diff < 60 * 1000) {
             return "Agora mesmo";
         }
-
         if (diff < 60 * 60 * 1000) {
             const minutes = Math.floor(diff / (60 * 1000));
             return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
         }
-
         if (diff < 24 * 60 * 60 * 1000) {
             const hours = Math.floor(diff / (60 * 60 * 1000));
             return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
         }
-
         if (diff < 7 * 24 * 60 * 60 * 1000) {
             const days = Math.floor(diff / (24 * 60 * 60 * 1000));
             return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
         }
-
         const day = date.getDate().toString().padStart(2, "0");
         const month = (date.getMonth() + 1).toString().padStart(2, "0");
         const year = date.getFullYear();
         const hours = date.getHours().toString().padStart(2, "0");
         const minutes = date.getMinutes().toString().padStart(2, "0");
-
         return `${day}/${month}/${year} às ${hours}:${minutes}`;
     }
 
@@ -561,7 +463,6 @@ function clearPostImage() {
             const profileLinks = document.querySelectorAll('.profile-link');
             if (profileLinks.length > 0) {
                 profileLinks.forEach(link => {
-                    // Define o link para a página do usuário logado com o UID correto
                     link.href = `pages/user.html?uid=${user.uid}`;
                 });
             }
@@ -603,14 +504,12 @@ function clearPostImage() {
     if (postButton && postInput) {
         postButton.addEventListener("click", function () {
             const content = postInput.value.trim();
-
             createPost(content);
         });
 
         postInput.addEventListener("keypress", function (e) {
             if (e.key === "Enter") {
                 const content = postInput.value.trim();
-                // ✨ CORREÇÃO APLICADA AQUI TAMBÉM ✨
                 createPost(content);
             }
         });
@@ -619,18 +518,13 @@ function clearPostImage() {
     async function loadUserProfile(userId) {
         try {
             const doc = await db.collection("users").doc(userId).get();
-
-
             if (doc.exists) {
                 currentUserProfile = doc.data();
-
                 if (userPhotoElement && currentUserProfile.photoURL) {
                     userPhotoElement.src = currentUserProfile.photoURL;
                 }
-
                 if (userHobbiesContainer) {
                     userHobbiesContainer.innerHTML = "";
-
                     if (currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
                         currentUserProfile.hobbies.forEach((hobby) => {
                             const hobbyTag = document.createElement("span");
@@ -652,7 +546,6 @@ function clearPostImage() {
                     }
                 }
             } else {
-
                 console.warn(`Aviso: Perfil para o usuário ${userId} não foi encontrado no Firestore.`);
             }
         } catch (error) {
@@ -667,7 +560,6 @@ function clearPostImage() {
     let _io = null;
     let _sentinel = null;
 
-
     function getPostsContainer() {
         return window.postsContainer
             || document.getElementById('posts-container')
@@ -675,7 +567,6 @@ function clearPostImage() {
             || document.querySelector('#posts');
     }
 
-    // insere com segurança (se ref não for filho, faz append)
     function safeInsertBefore(container, node, ref) {
         if (!(node instanceof Node)) return;
         if (ref && ref.parentNode === container) {
@@ -685,16 +576,12 @@ function clearPostImage() {
         }
     }
 
-    // garante que _sentinel exista e seja filho do container
     function ensureSentinel(container) {
         if (!container) return null;
-
-        // se temos um sentinel antigo preso em outro container, remova-o
         if (_sentinel && _sentinel.parentNode !== container) {
             try { _sentinel.remove(); } catch { }
             _sentinel = null;
         }
-
         if (!_sentinel) {
             _sentinel = document.createElement('div');
             _sentinel.id = 'feed-sentinel';
@@ -763,25 +650,18 @@ function clearPostImage() {
     }
     async function loadInitialPosts() {
         if (!postsContainer || !currentUser) return;
-    
         postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
         isLoadingMorePosts = true;
         noMorePosts = false;
         lastVisiblePost = null;
-    
-        // Esconde o indicador de novos posts ao recarregar
         if (newPostsIndicator) {
             newPostsIndicator.style.display = 'none';
         }
-    
         try {
             let query = db.collection("posts");
-    
-            // Filtro para o Feed de Amigos
             if (activeFeedType === 'friends') {
                 const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
                 const friendIds = friendsSnapshot.docs.map(doc => doc.id);
-    
                 if (friendIds.length === 0) {
                     postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos para ver as publicações deles aqui.</div>';
                     isLoadingMorePosts = false;
@@ -789,7 +669,6 @@ function clearPostImage() {
                 }
                 query = query.where('authorId', 'in', friendIds);
             }
-            // Filtro para o Feed de Hobbies
             else if (activeFeedType === 'hobbies') {
                 const userHobbies = currentUserProfile.hobbies || [];
                 if (userHobbies.length === 0) {
@@ -799,12 +678,9 @@ function clearPostImage() {
                 }
                 query = query.where('hobbies', 'array-contains-any', userHobbies);
             }
-    
             const finalQuery = query.orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
             const snapshot = await finalQuery.get();
-    
             postsContainer.innerHTML = '';
-    
             if (snapshot.empty) {
                 noMorePosts = true;
                 let message = 'Nenhum post encontrado.';
@@ -816,7 +692,6 @@ function clearPostImage() {
                 postsContainer.innerHTML = `<div class="info-message">${message}</div>`;
                 return;
             }
-    
             for (const doc of snapshot.docs) {
                 const postData = { id: doc.id, ...doc.data() };
                 const postElement = addPostToDOM(postData);
@@ -824,14 +699,10 @@ function clearPostImage() {
                     postsContainer.appendChild(postElement);
                 }
             }
-    
             if (snapshot.docs.length > 0) {
                 lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
-                // === CORREÇÃO ADICIONADA AQUI ===
-                // Inicia o listener para novos posts após carregar os posts iniciais.
                 setupNewPostsListener();
             }
-    
         } catch (error) {
             console.error("Erro ao carregar posts:", error);
             postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
@@ -841,18 +712,13 @@ function clearPostImage() {
     }
     async function loadMorePosts() {
         if (noMorePosts || isLoadingMorePosts || !lastVisiblePost) return;
-    
         isLoadingMorePosts = true;
         loadingMoreIndicator.style.display = 'block';
-    
         try {
             let query = db.collection("posts");
-    
-            // NOVO: Aplica os mesmos filtros da carga inicial
             if (activeFeedType === 'friends') {
                 const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
                 const friendIds = friendsSnapshot.docs.map(doc => doc.id);
-    
                 if (friendIds.length > 0) {
                     query = query.where('authorId', 'in', friendIds);
                 } else {
@@ -868,24 +734,19 @@ function clearPostImage() {
                     return;
                 }
             }
-    
             const finalQuery = query.orderBy("timestamp", "desc").startAfter(lastVisiblePost).limit(POSTS_PER_PAGE);
             const snapshot = await finalQuery.get();
-    
             if (snapshot.empty) {
                 noMorePosts = true;
                 return;
             }
-    
             for (const doc of snapshot.docs) {
                 const postElement = addPostToDOM({ id: doc.id, ...doc.data() });
                 if (postElement) {
                     postsContainer.appendChild(postElement);
                 }
             }
-    
             lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
-    
         } catch (error) {
             console.error("Erro ao carregar mais posts:", error);
         } finally {
@@ -900,34 +761,20 @@ function clearPostImage() {
         return div;
     }
     function setupNewPostsListener() {
-        // Cancela qualquer listener anterior para evitar duplicatas
         if (postsListener) {
             postsListener();
         }
-    
-        // Pega o timestamp do post mais recente que já está visível no feed.
-        // Se não houver posts, usa a data atual como ponto de partida.
         const firstPostTimestamp = lastVisiblePost ? lastVisiblePost.data().timestamp : new Date();
-    
         let query = db.collection("posts").orderBy("timestamp", "desc");
-    
-        // Aplica o mesmo filtro do feed ativo
         if (activeFeedType === 'friends' && currentUserProfile.friends && currentUserProfile.friends.length > 0) {
             query = query.where('authorId', 'in', currentUserProfile.friends);
         } else if (activeFeedType === 'hobbies' && currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
             query = query.where('hobbies', 'array-contains-any', currentUserProfile.hobbies);
         }
-    
-        // Escuta por posts que sejam mais recentes que o último carregado
         postsListener = query.where("timestamp", ">", firstPostTimestamp)
             .onSnapshot(snapshot => {
-                // A CORREÇÃO ESTÁ AQUI:
-                // Usamos docChanges() para verificar se houve posts ADICIONADOS
-                // desde que o feed foi carregado, ignorando a carga inicial.
                 const newPosts = snapshot.docChanges().filter(change => change.type === 'added');
-    
                 if (newPosts.length > 0) {
-                    // Mostra o botão apenas se houver posts genuinamente novos.
                     if (newPostsIndicator) {
                         newPostsIndicator.style.display = 'flex';
                     }
@@ -935,128 +782,87 @@ function clearPostImage() {
             });
     }
 
-
     async function deletePost(postId) {
         const confirmed = await showConfirmationModal(
-          "Excluir Publicação",
-          "Tem certeza que deseja excluir? Comentários e republicações ligados a ela também serão removidos.",
-          "Sim, excluir tudo",
-          "Cancelar"
+            "Excluir Publicação",
+            "Tem certeza que deseja excluir? Comentários e republicações ligados a ela também serão removidos.",
+            "Sim, excluir tudo",
+            "Cancelar"
         );
         if (!confirmed) return;
-      
         try {
-          const postRef = db.collection('posts').doc(postId);
-          const postSnap = await postRef.get();
-          if (!postSnap.exists) return;
-          const data = postSnap.data();
-      
-          // Se o post em si é um "comentário no feed", espelha a exclusão no comentário original
-          if (data.type === "comment" && data.parentPostId && data.commentId) {
-            const parentRef = db.collection('posts').doc(data.parentPostId);
-            const commentRef = parentRef.collection('comments').doc(data.commentId);
-      
-            const batch1 = db.batch();
-            batch1.delete(postRef);           // apaga o doc do feed (type: "comment")
-            batch1.delete(commentRef);        // apaga o comentário na subcoleção do post pai
-            batch1.update(parentRef, {        // decrementa a contagem do pai
-              commentCount: firebase.firestore.FieldValue.increment(-1),
-            });
-            await batch1.commit();
-      
-            // remove da UI
-            document.querySelectorAll(`.post[data-post-id="${postId}"]`).forEach(el => el.remove());
-            showToast("Comentário removido do feed e do post.", "info");
-            return;
-          }
-      
-          // Caso contrário, é um post normal: apague tudo que depende dele (reposts, comentários e posts de comentário)
-          const batch = db.batch();
-          batch.delete(postRef);
-      
-          // 1) apagar republicações (você já fazia)
-          const repostsSnapshot = await db.collection('posts')
-            .where('originalPostId', '==', postId)
-            .get();
-          repostsSnapshot.forEach(doc => batch.delete(doc.ref));
-      
-          // 2) apagar todos os comentários da subcoleção
-          const commentsSnap = await db.collection('posts').doc(postId).collection('comments').get();
-          commentsSnap.forEach(doc => batch.delete(doc.ref));
-      
-          // 3) apagar todos os "posts de comentário" no feed ligados a este post
-          const commentPostsSnap = await db.collection('posts')
-            .where('type', '==', 'comment')
-            .where('parentPostId', '==', postId)
-            .get();
-          commentPostsSnap.forEach(doc => batch.delete(doc.ref));
-      
-          await batch.commit();
-      
-          showToast("Publicação, comentários, republicações e entradas no feed excluídos.", "success");
-      
-          // limpa da UI (post e possíveis clones com base/base-post-id)
-          document.querySelectorAll(
-            `.post[data-post-id="${postId}"], .post[data-base-post-id="${postId}"]`
-          ).forEach(el => el.remove());
-      
+            const postRef = db.collection('posts').doc(postId);
+            const postSnap = await postRef.get();
+            if (!postSnap.exists) return;
+            const data = postSnap.data();
+            if (data.type === "comment" && data.parentPostId && data.commentId) {
+                const parentRef = db.collection('posts').doc(data.parentPostId);
+                const commentRef = parentRef.collection('comments').doc(data.commentId);
+                const batch1 = db.batch();
+                batch1.delete(postRef);
+                batch1.delete(commentRef);
+                batch1.update(parentRef, {
+                    commentCount: firebase.firestore.FieldValue.increment(-1),
+                });
+                await batch1.commit();
+                document.querySelectorAll(`.post[data-post-id="${postId}"]`).forEach(el => el.remove());
+                showToast("Comentário removido do feed e do post.", "info");
+                return;
+            }
+            const batch = db.batch();
+            batch.delete(postRef);
+            const repostsSnapshot = await db.collection('posts')
+                .where('originalPostId', '==', postId)
+                .get();
+            repostsSnapshot.forEach(doc => batch.delete(doc.ref));
+            const commentsSnap = await db.collection('posts').doc(postId).collection('comments').get();
+            commentsSnap.forEach(doc => batch.delete(doc.ref));
+            const commentPostsSnap = await db.collection('posts')
+                .where('type', '==', 'comment')
+                .where('parentPostId', '==', postId)
+                .get();
+            commentPostsSnap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            showToast("Publicação, comentários, republicações e entradas no feed excluídos.", "success");
+            document.querySelectorAll(
+                `.post[data-post-id="${postId}"], .post[data-base-post-id="${postId}"]`
+            ).forEach(el => el.remove());
         } catch (error) {
-          console.error("Erro ao excluir publicação e dependências:", error);
-          showCustomAlert("Ocorreu um erro ao tentar excluir a publicação.");
+            console.error("Erro ao excluir publicação e dependências:", error);
+            showCustomAlert("Ocorreu um erro ao tentar excluir a publicação.");
         }
-      }
-      
-    /**
-     * Exclui um comentário de uma publicação.
-     * @param {string} postId O ID da publicação pai.
-     * @param {string} commentId O ID do comentário a ser excluído.
-     */
+    }
+    
     async function deleteComment(postId, commentId) {
         const confirmed = await showConfirmationModal("Excluir Comentário", "Tem certeza que deseja excluir este comentário?");
         if (!confirmed) return;
-      
         try {
-          // apaga o comentário na subcoleção
-          const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
-          await commentRef.delete();
-      
-          // decrementa a contagem do post pai
-          const postRef = db.collection('posts').doc(postId);
-          await postRef.update({
-            commentCount: firebase.firestore.FieldValue.increment(-1)
-          });
-      
-          // apaga o doc do feed (type: "comment") que espelha este comentário
-          const mirrorSnap = await db.collection('posts')
-            .where('type', '==', 'comment')
-            .where('parentPostId', '==', postId)
-            .where('commentId', '==', commentId)
-            .get();
-      
-          const batch = db.batch();
-          mirrorSnap.forEach(doc => batch.delete(doc.ref));
-          await batch.commit();
-      
-          showToast("Comentário excluído no post e no feed.", "info");
-          // os onSnapshot removem a UI da lista de comentários; no feed, o card do espelho some ao ser excluído
-      
+            const commentRef = db.collection('posts').doc(postId).collection('comments').doc(commentId);
+            await commentRef.delete();
+            const postRef = db.collection('posts').doc(postId);
+            await postRef.update({
+                commentCount: firebase.firestore.FieldValue.increment(-1)
+            });
+            const mirrorSnap = await db.collection('posts')
+                .where('type', '==', 'comment')
+                .where('parentPostId', '==', postId)
+                .where('commentId', '==', commentId)
+                .get();
+            const batch = db.batch();
+            mirrorSnap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            showToast("Comentário excluído no post e no feed.", "info");
         } catch (error) {
-          console.error("Erro ao excluir comentário:", error);
-          showCustomAlert("Ocorreu um erro ao excluir o comentário.");
+            console.error("Erro ao excluir comentário:", error);
+            showCustomAlert("Ocorreu um erro ao excluir o comentário.");
         }
-      }
-      
+    }
 
     function handleScroll() {
-        // Se não há mais posts para carregar ou se já estamos carregando, não faz nada.
         if (noMorePosts || isLoadingMorePosts) {
             return;
         }
-
-        // Calcula a posição da rolagem
         const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-
-        // Se o usuário rolou até 500 pixels do final da página, carrega mais posts.
         if (scrollTop + clientHeight >= scrollHeight - 500) {
             loadMorePosts();
         }
@@ -1067,18 +873,14 @@ function clearPostImage() {
                 showCustomAlert("Você precisa estar logado para publicar.");
                 return;
             }
-
-            // Validação que inclui texto, imagem ou hobbies
             if (!content && !postImageBase64 && selectedHobbiesForPost.length === 0) {
                 showCustomAlert("Escreva algo, adicione uma imagem ou selecione um hobby para publicar.");
                 return;
             }
-
             if (postButton) {
                 postButton.disabled = true;
                 postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
             }
-
             const postData = {
                 content,
                 authorId: currentUser.uid,
@@ -1089,25 +891,17 @@ function clearPostImage() {
                 likedBy: [],
                 commentCount: 0,
                 imageURL: postImageBase64,
-                hobbies: selectedHobbiesForPost // Inclui os hobbies no post
+                hobbies: selectedHobbiesForPost
             };
-
             const docRef = await db.collection("posts").add(postData);
             const newPostDoc = await docRef.get();
             const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
-
-            // 1. Chama a função addPostToDOM, que retorna um elemento HTML
             const postElement = addPostToDOM(newPostData);
-
-            // 2. Verifica se o elemento foi criado e o adiciona no início do feed
             if (postElement) {
                 postsContainer.prepend(postElement);
             }
-
-            // 3. Limpa os campos do formulário
             postInput.value = "";
-            clearPostImage(); // Esta função já limpa a imagem e os hobbies
-
+            clearPostImage();
         } catch (error) {
             console.error("Erro ao criar post:", error);
             showCustomAlert("Erro ao criar publicação. Tente novamente.");
@@ -1118,201 +912,206 @@ function clearPostImage() {
             }
         }
     }
-    // Garanta que o listener do botão de voltar seja adicionado aqui.
     backToFeedBtn.addEventListener('click', hideSinglePostView);
 
- // EM home/scripts.js
-
-// SUBSTITUA a sua função addPostToDOM inteira por esta:
-function addPostToDOM(post, isSingleView = false) {
-    if (!postTemplate) {
-        console.error("Template de post não encontrado.");
-        return null;
-    }
-
-    // VERIFICAÇÃO DE REPUBLICACÃO ÓRFÃ
-    if (post.isRepost && (!post.originalPost || Object.keys(post.originalPost).length === 0)) {
-        console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
-        return null;
-    }
-
-    const postClone = document.importNode(postTemplate.content, true);
-    const postElement = postClone.querySelector(".post");
-    if (!postElement) return null;
-
-    const basePost = post.isRepost ? post.originalPost : post;
-    const baseId = post.originalPostId || post.id;
-
-    postElement.dataset.postId = post.id;
-    postElement.dataset.basePostId = baseId;
-
-    const actionsContainer = postElement.querySelector('.post-actions');
-
-    if (post.isRepost) {
-        postElement.classList.add('repost-card');
-        const repostHeader = document.createElement('div');
-        repostHeader.className = 'repost-header';
-
-        repostHeader.innerHTML = `
-            <i class="fas fa-retweet"></i>
-            <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
-            <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
-        `;
-        postElement.prepend(repostHeader);
-
-        if (actionsContainer) {
-            actionsContainer.remove();
+    // =======================================================================================
+    // =======================================================================================
+    // == A ÚNICA ALTERAÇÃO ESTÁ AQUI DENTRO. ESTA É A VERSÃO CORRIGIDA DA FUNÇÃO.         ==
+    // =======================================================================================
+    // =======================================================================================
+    function addPostToDOM(post, isSingleView = false) {
+        if (!postTemplate) {
+            console.error("Template de post não encontrado.");
+            return null;
         }
-    }
-
-    postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
-    postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
-    postElement.querySelector(".post-text").textContent = basePost.content || '';
-    if (basePost.timestamp?.toDate) {
-        postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
-    }
-    // ...dentro de addPostToDOM, depois de setar nome/horário e antes de mídia/ações...
-
-const isReply = post.type === "comment";
-if (isReply) {
-  // Cabeçalho "Fulano respondeu a Sicrano"
-  const info = postElement.querySelector(".post-info");
-  const replyCtx = document.createElement("div");
-  replyCtx.className = "reply-context";
-  // Ex.: "Fulano respondeu a Sicrano"
-  replyCtx.innerHTML = `<span class="reply-actor">${post.authorName}</span> respondeu a <span class="reply-target">${post.parentAuthorName || "usuário"}</span>`;
-  info.appendChild(replyCtx);
-
-  // Mostra um "quoted preview" do post original
-  const contentBox = postElement.querySelector(".post-content");
-  const quoted = document.createElement("div");
-  quoted.className = "quoted-parent";
-  quoted.innerHTML = `
-    <div class="quoted-bar"></div>
-    <div class="quoted-body">
-      <div class="quoted-author">${post.parentAuthorName || "Usuário"}</div>
-      <div class="quoted-text">${(post.parentSnippet || "").replace(/\n/g,"<br>")}</div>
-    </div>
-  `;
-  quoted.style.cursor = "pointer";
-quoted.addEventListener("click", (e) => {
-  e.stopPropagation();
-  if (post.parentPostId) {
-    showSinglePostView(post.parentPostId);
-  }
-});
-
-  // O texto principal do post vira o corpo do comentário (já existe .post-text)
-  contentBox.prepend(quoted);
-}
-
-
-    const mediaContainer = postElement.querySelector(".post-media");
-    if (basePost.imageURL) {
-        postElement.querySelector(".post-image").src = basePost.imageURL;
-        mediaContainer.style.display = 'block';
-    } else {
-        mediaContainer.style.display = 'none';
-    }
-
-    const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
-    if (basePost.hobbies && basePost.hobbies.length > 0) {
-        hobbiesContainer.innerHTML = '';
-        hobbiesContainer.style.display = 'flex';
-        basePost.hobbies.forEach(hobby => {
-            const hobbyTag = document.createElement('span');
-            hobbyTag.className = 'post-hobby-tag';
-            hobbyTag.textContent = hobby;
-            hobbiesContainer.appendChild(hobbyTag);
-        });
-    } else {
-        hobbiesContainer.style.display = 'none';
-    }
-
-    if (!post.isRepost && actionsContainer) {
-        const likeBtn = postElement.querySelector(".like-btn");
-        const repostBtn = postElement.querySelector(".repost-btn");
-        const saveBtn = postElement.querySelector(".save-btn");
-        const shareBtn = postElement.querySelector(".share-btn");
-        const deleteBtn = postElement.querySelector('.post-delete-btn');
-
-        const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
-        likeBtn.querySelector('span').textContent = basePost.likes || 0;
-        likeBtn.classList.toggle('liked', isLiked);
-        likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
-
-        const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
-        saveBtn.classList.toggle('saved', isSaved);
-        saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
-        saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
-
-        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
-
-        const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
-        repostBtn.classList.toggle('reposted', hasReposted);
-        repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
-        repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
-
-        if (post.authorId === currentUser?.uid) {
-            deleteBtn.style.display = 'block';
-            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
+        if (post.isRepost && (!post.originalPost || Object.keys(post.originalPost).length === 0)) {
+            console.warn(`Republicação órfã (ID: ${post.id}) não será exibida pois o post original (ID: ${post.originalPostId}) foi apagado.`);
+            return null;
         }
-    }
 
-    const commentsSection = postElement.querySelector('.post-comments');
-    const commentBtn = postElement.querySelector(".comment-btn");
+        const postClone = document.importNode(postTemplate.content, true);
+        const postElement = postClone.querySelector(".post");
+        if (!postElement) return null;
 
-    if (commentBtn) {
-        commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
-        commentBtn.addEventListener('click', (e) => {
+        const basePost = post.isRepost ? post.originalPost : post;
+        const baseId = post.originalPostId || post.id;
+
+        postElement.dataset.postId = post.id;
+        postElement.dataset.basePostId = baseId;
+
+        const actionsContainer = postElement.querySelector('.post-actions');
+
+        if (post.isRepost) {
+            postElement.classList.add('repost-card');
+            const repostHeader = document.createElement('div');
+            repostHeader.className = 'repost-header';
+            repostHeader.innerHTML = `
+                <i class="fas fa-retweet"></i>
+                <img src="${post.authorPhoto || 'img/Design sem nome2.png'}" alt="Foto de ${post.authorName}" class="repost-author-photo">
+                <a href="pages/user.html?uid=${post.authorId}" class="repost-author-link">${post.authorName}</a> republicou
+            `;
+            postElement.prepend(repostHeader);
+            if (actionsContainer) {
+                actionsContainer.remove();
+            }
+        }
+
+        // Preenche os dados do post como o seu código original já fazia
+        postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
+        postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
+        postElement.querySelector(".post-text").textContent = basePost.content || '';
+        if (basePost.timestamp?.toDate) {
+            postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
+        }
+
+        // ### INÍCIO DA CORREÇÃO ###
+        const authorPhotoEl = postElement.querySelector(".post-author-photo");
+        const authorNameEl = postElement.querySelector(".post-author-name");
+
+        // Cria a função que será chamada no clique
+        const authorClickHandler = (e) => {
+            e.stopPropagation(); // Impede que o clique se propague para o post inteiro
+            redirectToUserProfile(basePost.authorId);
+        };
+
+        // Adiciona a função de clique à foto e ao nome
+        authorPhotoEl.addEventListener('click', authorClickHandler);
+        authorNameEl.addEventListener('click', authorClickHandler);
+        // ### FIM DA CORREÇÃO ###
+
+        const isReply = post.type === "comment";
+        if (isReply) {
+            const info = postElement.querySelector(".post-info");
+            const replyCtx = document.createElement("div");
+            replyCtx.className = "reply-context";
+            replyCtx.innerHTML = `<span class="reply-actor">${post.authorName}</span> respondeu a <span class="reply-target">${post.parentAuthorName || "usuário"}</span>`;
+            info.appendChild(replyCtx);
+            const contentBox = postElement.querySelector(".post-content");
+            const quoted = document.createElement("div");
+            quoted.className = "quoted-parent";
+            quoted.innerHTML = `
+            <div class="quoted-bar"></div>
+            <div class="quoted-body">
+              <div class="quoted-author">${post.parentAuthorName || "Usuário"}</div>
+              <div class="quoted-text">${(post.parentSnippet || "").replace(/\n/g, "<br>")}</div>
+            </div>
+          `;
+            quoted.style.cursor = "pointer";
+            quoted.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (post.parentPostId) {
+                    showSinglePostView(post.parentPostId);
+                }
+            });
+            contentBox.prepend(quoted);
+        }
+
+        const mediaContainer = postElement.querySelector(".post-media");
+        if (basePost.imageURL) {
+            postElement.querySelector(".post-image").src = basePost.imageURL;
+            mediaContainer.style.display = 'block';
+        } else {
+            mediaContainer.style.display = 'none';
+        }
+
+        const hobbiesContainer = postElement.querySelector(".post-hobbies-container");
+        if (basePost.hobbies && basePost.hobbies.length > 0) {
+            hobbiesContainer.innerHTML = '';
+            hobbiesContainer.style.display = 'flex';
+            basePost.hobbies.forEach(hobby => {
+                const hobbyTag = document.createElement('span');
+                hobbyTag.className = 'post-hobby-tag';
+                hobbyTag.textContent = hobby;
+                hobbiesContainer.appendChild(hobbyTag);
+            });
+        } else {
+            hobbiesContainer.style.display = 'none';
+        }
+
+        if (!post.isRepost && actionsContainer) {
+            const likeBtn = postElement.querySelector(".like-btn");
+            const repostBtn = postElement.querySelector(".repost-btn");
+            const saveBtn = postElement.querySelector(".save-btn");
+            const shareBtn = postElement.querySelector(".share-btn");
+            const deleteBtn = postElement.querySelector('.post-delete-btn');
+
+            const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
+            likeBtn.querySelector('span').textContent = basePost.likes || 0;
+            likeBtn.classList.toggle('liked', isLiked);
+            likeBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLike(baseId, e.currentTarget); });
+
+            const isSaved = !!(currentUser && basePost.savedBy?.includes(currentUser.uid));
+            saveBtn.classList.toggle('saved', isSaved);
+            saveBtn.innerHTML = isSaved ? `<i class="fas fa-bookmark"></i> Salvo` : `<i class="far fa-bookmark"></i> Salvar`;
+            saveBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleSavePost(baseId, e.currentTarget); });
+
+            shareBtn.addEventListener('click', (e) => { e.stopPropagation(); sharePost(baseId); });
+
+            const hasReposted = !!(currentUser && basePost.repostedBy?.includes(currentUser.uid));
+            repostBtn.classList.toggle('reposted', hasReposted);
+            repostBtn.innerHTML = hasReposted ? `<i class="fas fa-retweet"></i> Republicado` : `<i class="fas fa-retweet"></i> Republicar`;
+            repostBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepost(baseId, e.currentTarget); });
+
+            if (post.authorId === currentUser?.uid) {
+                deleteBtn.style.display = 'block';
+                deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(post.id); });
+            }
+        }
+
+        const commentsSection = postElement.querySelector('.post-comments');
+        const commentBtn = postElement.querySelector(".comment-btn");
+
+        if (commentBtn) {
+            commentBtn.querySelector('span').textContent = basePost.commentCount || 0;
+            commentBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = commentsSection.classList.toggle('active');
+                const postId = postElement.dataset.basePostId;
+                if (isActive) {
+                    if (activeCommentListeners[postId]) {
+                        activeCommentListeners[postId]();
+                    }
+                    const commentsList = commentsSection.querySelector('.comments-list');
+                    activeCommentListeners[postId] = loadComments(postId, commentsList);
+                } else {
+                    if (activeCommentListeners[postId]) {
+                        activeCommentListeners[postId]();
+                        delete activeCommentListeners[postId];
+                    }
+                }
+            });
+        }
+
+        const commentInput = postElement.querySelector(".comment-text");
+        const sendCommentBtn = postElement.querySelector(".send-comment-btn");
+
+        sendCommentBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            const isActive = commentsSection.classList.toggle('active');
-            const postId = postElement.dataset.basePostId;
-            if (isActive) {
-                if (activeCommentListeners[postId]) {
-                    activeCommentListeners[postId]();
-                }
-                const commentsList = commentsSection.querySelector('.comments-list');
-                activeCommentListeners[postId] = loadComments(postId, commentsList);
-            } else {
-                if (activeCommentListeners[postId]) {
-                    activeCommentListeners[postId]();
-                    delete activeCommentListeners[postId];
-                }
+            const content = commentInput.value.trim();
+            if (content) {
+                addComment(baseId, content);
+                commentInput.value = "";
             }
         });
-    }
 
-    const commentInput = postElement.querySelector(".comment-text");
-    const sendCommentBtn = postElement.querySelector(".send-comment-btn");
-
-    sendCommentBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const content = commentInput.value.trim();
-        if (content) {
-            addComment(baseId, content);
-            commentInput.value = "";
-        }
-    });
-
-    commentInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendCommentBtn.click();
-        }
-    });
-
-    if (!isSingleView) {
-        postElement.addEventListener('click', (e) => {
-            if (e.target.closest('a, button, input, .post-actions, .comment-input, .comment-text')) {
-                return;
+        commentInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendCommentBtn.click();
             }
-            showSinglePostView(baseId);
         });
+
+        if (!isSingleView) {
+            postElement.addEventListener('click', (e) => {
+                if (e.target.closest('a, button, input, .post-actions, .comment-input, .post-author-photo, .post-author-name')) {
+                    return;
+                }
+                showSinglePostView(baseId);
+            });
+        }
+        return postElement;
     }
 
-    return postElement;
-}
     async function showSinglePostView(postId) {
         detachPostsListener();
         feedView.style.display = 'none';
@@ -1331,18 +1130,12 @@ quoted.addEventListener("click", (e) => {
         if (doc.exists) {
             const postData = { id: doc.id, ...doc.data() };
             focusedPostContainer.innerHTML = '';
-
-            // CORREÇÃO: Pega o elemento retornado pela função
             const postElement = addPostToDOM(postData, true);
-
             if (postElement) {
-                // Abre a seção de comentários por padrão
                 const commentsSection = postElement.querySelector('.post-comments');
                 const commentsList = postElement.querySelector('.comments-list');
                 commentsSection.classList.add('active');
                 loadComments(postId, commentsList);
-
-                // Adiciona o elemento ao container do post focado
                 focusedPostContainer.appendChild(postElement);
             }
         } else {
@@ -1350,24 +1143,14 @@ quoted.addEventListener("click", (e) => {
         }
     }
     function hideSinglePostView() {
-        // 1. Faz o processo inverso: esconde a área do post e mostra o feed
-
         singlePostView.style.display = 'none';
         feedView.style.display = 'block';
-        focusedPostContainer.innerHTML = ''; // Limpa o contêiner para a próxima vez
-
-
-        // 2. Limpa a URL, removendo o parâmetro '?post=...'
+        focusedPostContainer.innerHTML = '';
         const url = new URL(window.location);
         url.searchParams.delete('post');
         history.pushState({}, '', url);
         loadInitialPosts();
     }
-
-    function redirectToUserProfile(userId) {
-        window.location.href = `pages/user.html?uid=${userId}`;
-    }
-    // Em home/scripts.js, substitua completamente a função toggleRepost
 
     async function toggleRepost(basePostId, buttonElement) {
         if (buttonElement) buttonElement.disabled = true;
@@ -1389,57 +1172,42 @@ quoted.addEventListener("click", (e) => {
             const hasReposted = (originalPostData.repostedBy || []).includes(currentUser.uid);
 
             if (hasReposted) {
-                // --- AÇÃO PARA DESFAZER A REPUBLICAÇÃO (Esta parte já estava correta) ---
                 const repostQuery = db.collection("posts")
                     .where("originalPostId", "==", basePostId)
                     .where("authorId", "==", currentUser.uid);
-
                 const repostSnapshot = await repostQuery.get();
                 const batch = db.batch();
-
                 repostSnapshot.forEach(doc => {
                     batch.delete(doc.ref);
                 });
-
                 batch.update(postRef, {
                     repostedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
                     repostCount: firebase.firestore.FieldValue.increment(-repostSnapshot.size || -1)
                 });
                 await batch.commit();
-
                 showToast("Republicação removida.", "info");
-                loadInitialPosts(); // Recarrega o feed para mostrar o post original de volta
+                loadInitialPosts();
 
             } else {
-                // --- AÇÃO PARA CRIAR A REPUBLICAÇÃO (LÓGICA CORRIGIDA) ---
                 if (originalPostData.authorId === currentUser.uid) {
                     showCustomAlert("Você não pode republicar as suas próprias publicações.");
                     return;
                 }
-
                 const repostData = {
                     isRepost: true,
                     originalPostId: basePostId,
-                    originalPost: originalPostData, // Você pode manter isso se for útil
+                    originalPost: originalPostData,
                     authorId: currentUser.uid,
                     authorName: currentUserProfile.nickname || "Usuário",
                     authorPhoto: currentUserProfile.photoURL || null,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 };
-
-                // 1. Adiciona a nova republicação ao banco de dados
                 await db.collection("posts").add(repostData);
-
-                // 2. Atualiza o post original para registrar quem republicou
                 await postRef.update({
                     repostedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
                     repostCount: firebase.firestore.FieldValue.increment(1)
                 });
-
-                // 3. (A CORREÇÃO) Em vez de manipular o DOM, simplesmente recarregue o feed.
-                // O feed será redesenhado com a sua nova republicação no topo, e o problema de duplicação desaparecerá.
                 loadInitialPosts();
-
                 showToast("Publicação republicada!", "success");
             }
         } catch (error) {
@@ -1454,14 +1222,11 @@ quoted.addEventListener("click", (e) => {
             showCustomAlert("Você precisa estar logado para salvar publicações.");
             return;
         }
-
         const postRef = db.collection("posts").doc(postId);
         try {
             const doc = await postRef.get();
             if (!doc.exists) return;
-
             const isSaved = (doc.data().savedBy || []).includes(currentUser.uid);
-
             if (isSaved) {
                 await postRef.update({
                     savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
@@ -1497,7 +1262,6 @@ quoted.addEventListener("click", (e) => {
             const postData = postDoc.data();
             const isLiked = (postData.likedBy || []).includes(currentUser.uid);
 
-            // Atualização da UI imediata
             const likeCountElement = buttonElement.querySelector(".like-count");
             let currentLikes = parseInt(likeCountElement.textContent);
 
@@ -1515,7 +1279,6 @@ quoted.addEventListener("click", (e) => {
                 });
                 buttonElement.classList.add("liked");
                 likeCountElement.textContent = currentLikes + 1;
-                // Lógica de notificação (opcional)
             }
         } catch (error) {
             console.error("Erro ao curtir post:", error);
@@ -1527,105 +1290,60 @@ quoted.addEventListener("click", (e) => {
         const replyBtn = commentEl.querySelector('.comment-reply-btn');
         if (!replyBtn) return;
         replyBtn.addEventListener('click', () => {
-          replyTargetByPost.set(postId, {
-            commentId: commentData.id,               // id do doc na subcoleção
-            authorId: commentData.authorId || null,
-            authorName: commentData.authorName || "Usuário",
-            snippet: (commentData.content || "").slice(0, 160)
-          });
-          setReplyTargetUI(postEl, replyTargetByPost.get(postId));
-          const input = postEl.querySelector('.comment-text');
-          if (input) input.focus();
+            replyTargetByPost.set(postId, {
+                commentId: commentData.id,
+                authorId: commentData.authorId || null,
+                authorName: commentData.authorName || "Usuário",
+                snippet: (commentData.content || "").slice(0, 160)
+            });
+            setReplyTargetUI(postEl, replyTargetByPost.get(postId));
+            const input = postEl.querySelector('.comment-text');
+            if (input) input.focus();
         });
-      }
-      
+    }
+
     function setReplyTargetUI(postEl, target) {
         const box = postEl.querySelector('.post-comments');
         if (!box) return;
         let hint = box.querySelector('.replying-hint');
         if (!hint) {
-          hint = document.createElement('div');
-          hint.className = 'replying-hint';
-          box.insertBefore(hint, box.querySelector('.comment-input'));
+            hint = document.createElement('div');
+            hint.className = 'replying-hint';
+            box.insertBefore(hint, box.querySelector('.comment-input'));
         }
         hint.innerHTML = `Respondendo a <strong>${target.authorName || "usuário"}</strong>
-          <span class="cancel-reply">cancelar</span>`;
-      
+         <span class="cancel-reply">cancelar</span>`;
         const input = box.querySelector('.comment-text');
         if (input) input.placeholder = `Resposta para ${target.authorName || "usuário"}…`;
-      
         hint.querySelector('.cancel-reply').onclick = () => clearReplyTargetUI(postEl);
-      }
-      
-      function clearReplyTargetUI(postEl) {
+    }
+
+    function clearReplyTargetUI(postEl) {
         const box = postEl.querySelector('.post-comments');
         if (!box) return;
         const hint = box.querySelector('.replying-hint');
         if (hint) hint.remove();
         const input = box.querySelector('.comment-text');
         if (input) input.placeholder = "O que você está pensando?";
-      }
-      
-
-    async function toggleSavePost(postId, buttonElement) {
-        if (!currentUser) {
-            showCustomAlert("Você precisa estar logado para salvar publicações.");
-            return;
-        }
-
-        const postRef = db.collection("posts").doc(postId);
-        try {
-            const doc = await postRef.get();
-            if (!doc.exists) return;
-
-            const isSaved = (doc.data().savedBy || []).includes(currentUser.uid);
-
-            if (isSaved) {
-                await postRef.update({
-                    savedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                });
-                buttonElement.classList.remove('saved');
-                buttonElement.innerHTML = `<i class="far fa-bookmark"></i> Salvar`;
-            } else {
-                await postRef.update({
-                    savedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                });
-                buttonElement.classList.add('saved');
-                buttonElement.innerHTML = `<i class="fas fa-bookmark"></i> Salvo`;
-            }
-        } catch (error) {
-            console.error("Erro ao salvar/remover post:", error);
-            showCustomAlert("Ocorreu um erro ao tentar salvar a publicação.");
-        }
     }
-    // home/scripts.js
 
     function loadComments(postId, commentsListElement) {
         if (!commentsListElement) {
             console.error("Elemento da lista de comentários não fornecido.");
-            return () => { }; // Retorna uma função vazia para não quebrar o código
+            return () => { };
         }
-
-        // Limpa a lista antes de carregar e mostra o indicador de carregamento
         commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-
         const query = db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc");
-
-        // Retorna a função de unsubscribe para ser chamada mais tarde
         return query.onSnapshot(snapshot => {
-            commentsListElement.innerHTML = ''; // Limpa novamente para garantir
-
+            commentsListElement.innerHTML = '';
             if (snapshot.empty) {
                 commentsListElement.innerHTML = '<div class="no-comments">Nenhum comentário ainda. Seja o primeiro!</div>';
                 return;
             }
-
             snapshot.forEach(doc => {
                 const commentData = { id: doc.id, ...doc.data() };
-                // A função que desenha o comentário individual (sem alterações necessárias)
                 addCommentToDOM(postId, commentData, commentsListElement);
             });
-
         }, error => {
             console.error("Erro ao carregar comentários:", error);
             commentsListElement.innerHTML = '<div class="error-message">Erro ao carregar comentários.</div>';
@@ -1633,37 +1351,29 @@ quoted.addEventListener("click", (e) => {
     }
     function addCommentToDOM(postId, comment, commentsList) {
         if (!commentTemplate || !commentsList) return;
-
         const commentClone = document.importNode(commentTemplate.content, true);
         const commentElement = commentClone.querySelector(".comment");
-
-        // Referências aos elementos do comentário
         const authorPhotoElement = commentClone.querySelector(".comment-author-photo");
         const authorNameElement = commentClone.querySelector(".comment-author-name");
         const timestampElement = commentClone.querySelector(".comment-timestamp");
         const contentElement = commentClone.querySelector(".comment-text");
         const likeButton = commentClone.querySelector(".comment-like-btn");
         const likeCount = commentClone.querySelector(".comment-like-count");
-        // ✨ NOVO: Referência ao botão de excluir comentário
         const deleteCommentBtn = commentClone.querySelector('.comment-delete-btn');
 
-        // Adiciona a ação de clique ao botão de curtir
         likeButton.addEventListener("click", function () {
             toggleCommentLike(postId, comment.id);
         });
 
-        // Definir IDs
         commentElement.dataset.commentId = comment.id;
         commentElement.dataset.authorId = comment.authorId;
 
-        // Preenche os dados do comentário
         if (comment.authorPhoto) {
             authorPhotoElement.src = comment.authorPhoto;
         }
         authorPhotoElement.addEventListener("click", function () {
             redirectToUserProfile(comment.authorId);
         });
-
         authorNameElement.textContent = comment.authorName;
         authorNameElement.addEventListener("click", function () {
             redirectToUserProfile(comment.authorId);
@@ -1682,122 +1392,92 @@ quoted.addEventListener("click", (e) => {
         if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {
             likeButton.classList.add("liked");
         }
-
         if (comment.authorId === currentUser.uid) {
             deleteCommentBtn.style.display = 'block';
             deleteCommentBtn.addEventListener('click', () => {
                 deleteComment(postId, comment.id);
             });
         }
-
         commentsList.insertBefore(commentClone, commentsList.firstChild);
     }
     async function addComment(postId, content) {
         try {
-          if (!currentUser || !currentUserProfile) {
-            showCustomAlert("Você precisa estar logado para comentar.");
-            return;
-          }
-      
-          // 1) Detecta se estamos respondendo um COMENTÁRIO específico desse post
-          const replyTarget = replyTargetByPost.get(postId) || null; 
-          const replyingToComment = !!(replyTarget && replyTarget.commentId);
-      
-          // 2) Monta os dados do comentário (subcoleção)
-          const commentData = {
-            content,
-            authorId: currentUser.uid,
-            authorName: currentUserProfile.nickname || "Usuário",
-            authorPhoto: currentUserProfile.photoURL || null,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            likes: 0,
-            likedBy: [],
-            // campos de threading (opcionais, mas úteis)
-            parentCommentId: replyingToComment ? replyTarget.commentId : null,
-            parentCommentAuthorId: replyingToComment ? (replyTarget.commentAuthorId || null) : null,
-            parentCommentAuthorName: replyingToComment ? (replyTarget.commentAuthorName || null) : null
-          };
-      
-          // 3) Cria o comentário na subcoleção
-          const commentRef = await db.collection("posts").doc(postId)
-            .collection("comments").add(commentData);
-      
-          // 4) Incrementa a contagem no post pai
-          await db.collection("posts").doc(postId).update({
-            commentCount: firebase.firestore.FieldValue.increment(1)
-          });
-      
-          // 5) Lê o post pai para montar o “espelho” no feed
-          const postDoc = await db.collection("posts").doc(postId).get();
-          const postData = postDoc.data() || {};
-      
-          // Determina quem está sendo respondido e qual snippet exibir
-          let parentAuthorId   = postData.authorId || null;
-          let parentAuthorName = postData.authorName || "Usuário";
-          let parentSnippet    = (postData.content || "").slice(0, 160);
-          if (replyingToComment) {
-            parentAuthorId   = replyTarget.commentAuthorId || parentAuthorId;
-            parentAuthorName = replyTarget.commentAuthorName || parentAuthorName;
-            parentSnippet    = (replyTarget.commentContent || "").slice(0, 160);
-          }
-      
-          // 6) Cria o doc de feed (type: "comment") para aparecer no feed principal
-          await db.collection("posts").add({
-            type: "comment",
-            content,                           // corpo do comentário
-            authorId: currentUser.uid,
-            authorName: currentUserProfile.nickname || "Usuário",
-            authorPhoto: currentUserProfile.photoURL || null,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            likes: 0,
-            likedBy: [],
-            commentCount: 0,
-      
-            // relação com o conteúdo respondido
-            parentPostId: postId,
-            parentAuthorId,
-            parentAuthorName,
-            parentSnippet,
-            commentId: commentRef.id,          // liga o espelho ao comentário real
-      
-            // se for resposta a comentário, guarda também:
-            parentCommentId: replyingToComment ? replyTarget.commentId : null
-          });
-      
-          // 7) Notificação (autor do post ou do comentário, se não for você)
-          const notifyUserId = replyingToComment
-            ? (replyTarget.commentAuthorId || postData.authorId)
-            : postData.authorId;
-      
-          if (notifyUserId && notifyUserId !== currentUser.uid) {
-            await db.collection("users").doc(notifyUserId).collection("notifications").add({
-              type: replyingToComment ? "comment_reply" : "comment",
-              postId,
-              commentId: commentRef.id,
-              fromUserId: currentUser.uid,
-              fromUserName: currentUserProfile.nickname || "Usuário",
-              fromUserPhoto: currentUserProfile.photoURL || null,
-              content: replyingToComment ? "respondeu seu comentário" : "comentou em sua publicação",
-              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              read: false
+            if (!currentUser || !currentUserProfile) {
+                showCustomAlert("Você precisa estar logado para comentar.");
+                return;
+            }
+            const replyTarget = replyTargetByPost.get(postId) || null;
+            const replyingToComment = !!(replyTarget && replyTarget.commentId);
+            const commentData = {
+                content,
+                authorId: currentUser.uid,
+                authorName: currentUserProfile.nickname || "Usuário",
+                authorPhoto: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                likes: 0,
+                likedBy: [],
+                parentCommentId: replyingToComment ? replyTarget.commentId : null,
+                parentCommentAuthorId: replyingToComment ? (replyTarget.commentAuthorId || null) : null,
+                parentCommentAuthorName: replyingToComment ? (replyTarget.commentAuthorName || null) : null
+            };
+            const commentRef = await db.collection("posts").doc(postId).collection("comments").add(commentData);
+            await db.collection("posts").doc(postId).update({
+                commentCount: firebase.firestore.FieldValue.increment(1)
             });
-          }
-      
-          // 8) Limpa UI: contador local e alvo de resposta
-          const countEl = document.querySelector(`.post[data-post-id="${postId}"] .comment-count`);
-          if (countEl) countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
-      
-          replyTargetByPost.delete(postId);
-          const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
-          if (postEl) clearReplyTargetUI(postEl);
-      
+            const postDoc = await db.collection("posts").doc(postId).get();
+            const postData = postDoc.data() || {};
+            let parentAuthorId = postData.authorId || null;
+            let parentAuthorName = postData.authorName || "Usuário";
+            let parentSnippet = (postData.content || "").slice(0, 160);
+            if (replyingToComment) {
+                parentAuthorId = replyTarget.commentAuthorId || parentAuthorId;
+                parentAuthorName = replyTarget.commentAuthorName || parentAuthorName;
+                parentSnippet = (replyTarget.commentContent || "").slice(0, 160);
+            }
+            await db.collection("posts").add({
+                type: "comment",
+                content,
+                authorId: currentUser.uid,
+                authorName: currentUserProfile.nickname || "Usuário",
+                authorPhoto: currentUserProfile.photoURL || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                likes: 0,
+                likedBy: [],
+                commentCount: 0,
+                parentPostId: postId,
+                parentAuthorId,
+                parentAuthorName,
+                parentSnippet,
+                commentId: commentRef.id,
+                parentCommentId: replyingToComment ? replyTarget.commentId : null
+            });
+            const notifyUserId = replyingToComment
+                ? (replyTarget.commentAuthorId || postData.authorId)
+                : postData.authorId;
+            if (notifyUserId && notifyUserId !== currentUser.uid) {
+                await db.collection("users").doc(notifyUserId).collection("notifications").add({
+                    type: replyingToComment ? "comment_reply" : "comment",
+                    postId,
+                    commentId: commentRef.id,
+                    fromUserId: currentUser.uid,
+                    fromUserName: currentUserProfile.nickname || "Usuário",
+                    fromUserPhoto: currentUserProfile.photoURL || null,
+                    content: replyingToComment ? "respondeu seu comentário" : "comentou em sua publicação",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+            }
+            const countEl = document.querySelector(`.post[data-post-id="${postId}"] .comment-count`);
+            if (countEl) countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+            replyTargetByPost.delete(postId);
+            const postEl = document.querySelector(`.post[data-post-id="${postId}"]`);
+            if (postEl) clearReplyTargetUI(postEl);
         } catch (error) {
-          console.error("Erro ao adicionar comentário:", error);
-          showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
+            console.error("Erro ao adicionar comentário:", error);
+            showCustomAlert("Erro ao adicionar comentário. Tente novamente.");
         }
-      }
-      
-  
+    }
+    
     async function toggleCommentLike(postId, commentId) {
         try {
             const commentKey = `${postId}_${commentId}`;
@@ -1806,68 +1486,48 @@ quoted.addEventListener("click", (e) => {
             }
             commentLikeInProgress[commentKey] = true;
 
-
             if (!currentUser) {
                 showCustomAlert("Você precisa estar logado para curtir.");
                 commentLikeInProgress[commentKey] = false;
                 return;
             }
 
-
-            const commentRef = db
-                .collection("posts")
-                .doc(postId)
-                .collection("comments")
-                .doc(commentId);
+            const commentRef = db.collection("posts").doc(postId).collection("comments").doc(commentId);
             const commentDoc = await commentRef.get();
-
-
             if (!commentDoc.exists) {
                 console.error("Comentário não encontrado.");
                 commentLikeInProgress[commentKey] = false;
                 return;
             }
 
-
             const commentData = commentDoc.data();
             const likedBy = commentData.likedBy || [];
             const isLiked = likedBy.includes(currentUser.uid);
 
-
             if (isLiked) {
-                // Ação: REMOVER a curtida do banco de dados
                 await commentRef.update({
                     likes: firebase.firestore.FieldValue.increment(-1),
                     likedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
                 });
             } else {
-                // Ação: ADICIONAR a curtida no banco de dados
                 await commentRef.update({
                     likes: firebase.firestore.FieldValue.increment(1),
                     likedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
                 });
-
-
-                // Criar notificação para o autor do comentário (se não for o próprio usuário)
                 if (commentData.authorId !== currentUser.uid) {
-                    await db
-                        .collection("users")
-                        .doc(commentData.authorId)
-                        .collection("notifications")
-                        .add({
-                            type: "comment_like",
-                            postId,
-                            commentId,
-                            fromUserId: currentUser.uid,
-                            fromUserName: currentUserProfile.nickname || "Usuário",
-                            fromUserPhoto: currentUserProfile.photoURL || null,
-                            content: "curtiu seu comentário",
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                            read: false,
-                        });
+                    await db.collection("users").doc(commentData.authorId).collection("notifications").add({
+                        type: "comment_like",
+                        postId,
+                        commentId,
+                        fromUserId: currentUser.uid,
+                        fromUserName: currentUserProfile.nickname || "Usuário",
+                        fromUserPhoto: currentUserProfile.photoURL || null,
+                        content: "curtiu seu comentário",
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false,
+                    });
                 }
             }
-            // A interface será atualizada automaticamente pelo listener 'onSnapshot'
             commentLikeInProgress[commentKey] = false;
         } catch (error) {
             console.error("Erro ao curtir comentário:", error);
@@ -1875,16 +1535,10 @@ quoted.addEventListener("click", (e) => {
         }
     }
 
-    // Em scripts.js, substitua a sua função loadSuggestions por esta versão:
-
-
-
-    // Adicione este script para controlar os menus laterais no celular
     const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
     const rightSidebarToggle = document.getElementById('right-sidebar-toggle');
     const leftSidebar = document.querySelector('.left-sidebar');
     const rightSidebar = document.querySelector('.right-sidebar');
-
 
     if (leftSidebarToggle && leftSidebar) {
         leftSidebarToggle.addEventListener('click', (e) => {
@@ -1893,7 +1547,6 @@ quoted.addEventListener("click", (e) => {
         });
     }
 
-
     if (rightSidebarToggle && rightSidebar) {
         rightSidebarToggle.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1901,8 +1554,6 @@ quoted.addEventListener("click", (e) => {
         });
     }
 
-
-    // Fecha os menus se clicar fora deles
     document.addEventListener('click', (e) => {
         if (leftSidebar && leftSidebar.classList.contains('open') && !leftSidebar.contains(e.target) && !leftSidebarToggle.contains(e.target)) {
             leftSidebar.classList.remove('open');
@@ -1911,48 +1562,35 @@ quoted.addEventListener("click", (e) => {
             rightSidebar.classList.remove('open');
         }
     });
-    // Em home/scripts.js
 
     function addSuggestionToDOM(user) {
         if (!suggestionTemplate) {
             console.error("Template de sugestão não encontrado.");
             return;
         }
-
         const suggestionClone = document.importNode(suggestionTemplate.content, true);
         const suggestionElement = suggestionClone.querySelector(".suggestion");
         const followButton = suggestionClone.querySelector(".follow-btn");
-        const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies"); // Pega no elemento dos hobbies
+        const hobbiesElement = suggestionClone.querySelector(".suggestion-hobbies");
 
         suggestionElement.dataset.userId = user.id;
         suggestionClone.querySelector(".suggestion-photo").src = user.photoURL || 'img/Design sem nome2.png';
         suggestionClone.querySelector(".suggestion-name").textContent = user.nickname || 'Usuário';
 
-        // --- INÍCIO DA CORREÇÃO DE HOBBIES ---
-
-        // Garante que temos os hobbies de ambos os utilizadores
         const currentUserHobbies = currentUserProfile?.hobbies || [];
         const suggestedUserHobbies = user.hobbies || [];
-
-        // Encontra apenas os hobbies que existem em ambas as listas
         const commonHobbies = currentUserHobbies.filter(hobby => suggestedUserHobbies.includes(hobby));
 
-        // Define o texto com base no número de hobbies em comum
         if (commonHobbies.length > 0) {
             hobbiesElement.textContent = `${commonHobbies.length} hobby(s) em comum`;
-            // Opcional: Se quiser mostrar os hobbies, pode usar a linha abaixo
-            // hobbiesElement.textContent = `Em comum: ${commonHobbies.join(', ')}`;
         } else {
             hobbiesElement.textContent = 'Nenhum hobby em comum';
         }
-
-        // --- FIM DA CORREÇÃO DE HOBBIES ---
 
         const profileLink = `pages/user.html?uid=${encodeURIComponent(user.id)}`;
         const nameEl = suggestionClone.querySelector('.suggestion-name');
         const imgEl = suggestionClone.querySelector('.suggestion-photo');
 
-        // wrap do NOME
         if (nameEl) {
             const aName = document.createElement('a');
             aName.href = profileLink;
@@ -1961,7 +1599,6 @@ quoted.addEventListener("click", (e) => {
             aName.appendChild(nameEl);
         }
 
-        // wrap da FOTO
         if (imgEl) {
             const aImg = document.createElement('a');
             aImg.href = profileLink;
@@ -1970,39 +1607,29 @@ quoted.addEventListener("click", (e) => {
             aImg.appendChild(imgEl);
         }
 
-
         followButton.addEventListener("click", async function () {
             await sendFriendRequest(user.id);
         });
 
         suggestionsContainer.appendChild(suggestionClone);
     }
-    // Em home/scripts.js
 
     async function sendFriendRequest(userId) {
         if (!currentUserProfile || !currentUserProfile.nickname) {
             showToast("O seu perfil ainda não foi carregado, tente novamente.", "error");
             return false;
         }
-
         const followButton = document.querySelector(`.suggestion[data-user-id="${userId}"] .follow-btn`);
         if (followButton) {
             followButton.disabled = true;
             followButton.textContent = 'Aguarde...';
         }
-
         try {
             if (userId === currentUser.uid) throw new Error('Você não pode se adicionar.');
-
             const friendDoc = await db.collection("users").doc(currentUser.uid).collection("friends").doc(userId).get();
             if (friendDoc.exists) throw new Error('Este utilizador já é seu amigo.');
-
             const requestId = [currentUser.uid, userId].sort().join('_');
             const requestRef = db.collection('friendRequests').doc(requestId);
-
-            // A verificação de pedido pendente foi removida para evitar erros de permissão.
-            // O próprio .set() é idempotente, então não criará duplicados.
-
             await requestRef.set({
                 from: currentUser.uid,
                 to: userId,
@@ -2011,16 +1638,12 @@ quoted.addEventListener("click", (e) => {
                 status: "pending",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             });
-
             showToast("Solicitação enviada!", "success");
             if (followButton) {
-                // *** MUDANÇA PRINCIPAL ***
-                // O botão agora fica permanentemente como "Pendente" e desativado.
                 followButton.textContent = 'Pendente';
                 followButton.disabled = true;
             }
             return true;
-
         } catch (error) {
             showToast(error.message, 'error');
             if (followButton) {
@@ -2034,48 +1657,36 @@ quoted.addEventListener("click", (e) => {
     async function loadUpcomingEvents() {
         const upcomingEventsContainer = document.getElementById('upcoming-events-container');
         if (!upcomingEventsContainer) return;
-
-
         upcomingEventsContainer.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i></div>';
-
-
         try {
             const now = new Date();
             const snapshot = await db.collection('events')
-                .where('eventDateTime', '>=', now) // Apenas eventos que ainda não aconteceram
-                .orderBy('eventDateTime', 'desc')   // Ordena pelos mais próximos
-                .limit(3)                          // Pega apenas os 3 primeiros
+                .where('eventDateTime', '>=', now)
+                .orderBy('eventDateTime', 'desc')
+                .limit(3)
                 .get();
-
-
             upcomingEventsContainer.innerHTML = '';
-
-
             if (snapshot.empty) {
                 upcomingEventsContainer.innerHTML = '<p>Nenhum evento próximo.</p>';
                 return;
             }
-
-
             snapshot.forEach(doc => {
                 const event = { id: doc.id, ...doc.data() };
                 const eventDate = event.eventDateTime.toDate();
                 const day = eventDate.getDate();
                 const month = eventDate.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-
-
                 const eventElement = document.createElement('div');
                 eventElement.className = 'event';
                 eventElement.innerHTML = `
-               <div class="event-date">
-                   <span class="day">${day}</span>
-                   <span class="month">${month}</span>
-               </div>
-               <div class="event-info">
-                   <h4>${event.eventName}</h4>
-                   <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
-               </div>
-           `;
+              <div class="event-date">
+                  <span class="day">${day}</span>
+                  <span class="month">${month}</span>
+              </div>
+              <div class="event-info">
+                  <h4>${event.eventName}</h4>
+                  <p><i class="fas fa-map-marker-alt"></i> ${event.eventLocation}</p>
+              </div>
+            `;
                 upcomingEventsContainer.appendChild(eventElement);
             });
         } catch (error) {
@@ -2086,51 +1697,32 @@ quoted.addEventListener("click", (e) => {
 
     async function checkUpcomingEventNotifications() {
         if (!currentUser || !currentUser.uid) return;
-
-
         try {
             const now = new Date();
-            // Define o limite de tempo para "próximo": 24 horas a partir de agora
             const upcomingLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-
-            // 1. Encontra todos os eventos futuros em que o utilizador participa
             const eventsSnapshot = await db.collection('events')
                 .where('participants', 'array-contains', currentUser.uid)
-                .where('eventDateTime', '>=', now) // Apenas eventos que ainda não aconteceram
-                .where('eventDateTime', '<=', upcomingLimit) // Apenas eventos nas próximas 24h
+                .where('eventDateTime', '>=', now)
+                .where('eventDateTime', '<=', upcomingLimit)
                 .get();
-
-
             if (eventsSnapshot.empty) {
-                // Nenhum evento próximo para notificar
                 return;
             }
-
-
-            // 2. Para cada evento próximo, verifica se já existe uma notificação
             eventsSnapshot.forEach(async (doc) => {
                 const event = { id: doc.id, ...doc.data() };
                 const eventId = event.id;
-
-
-                // Procura por uma notificação de lembrete já existente para este evento
                 const notificationQuery = await db.collection('users').doc(currentUser.uid).collection('notifications')
                     .where('type', '==', 'event_reminder')
                     .where('eventId', '==', eventId)
                     .limit(1)
                     .get();
-
-                // 3. Se não existir notificação, cria uma nova
                 if (notificationQuery.empty) {
                     const eventDate = event.eventDateTime.toDate();
                     const formattedTime = eventDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-
                     await db.collection('users').doc(currentUser.uid).collection('notifications').add({
                         type: 'event_reminder',
                         eventId: eventId,
-                        fromUserName: 'Sistema de Eventos', // Notificação do sistema
+                        fromUserName: 'Sistema de Eventos',
                         content: `Lembrete: O evento "${event.eventName}" começa hoje às ${formattedTime}!`,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                         read: false
@@ -2142,34 +1734,24 @@ quoted.addEventListener("click", (e) => {
             console.error("Erro ao verificar notificações de eventos:", error);
         }
     }
-    // Em home/scripts.js, substitua a função inteira
 
     async function repostPost(postId) {
         if (!currentUser) {
             showCustomAlert("Você precisa estar logado para republicar.");
             return;
         }
-
         const postToRepostRef = db.collection("posts").doc(postId);
-
         try {
             const postDoc = await postToRepostRef.get();
             if (!postDoc.exists) {
                 showCustomAlert("Este post não existe mais.");
                 return;
             }
-
             const postData = postDoc.data();
-
-            // ▼▼▼ ADICIONE ESTA VERIFICAÇÃO DE SEGURANÇA ▼▼▼
-            // Impede a republicação de um post que já é uma republicação.
             if (postData.isRepost) {
                 showCustomAlert("Não é possível republicar um post já republicado.");
                 return;
             }
-            // ▲▲▲ FIM DA VERIFICAÇÃO ▲▲▲
-
-            // Cria o novo post como uma republicação
             const newPost = {
                 authorId: currentUser.uid,
                 authorName: currentUser.displayName,
@@ -2180,52 +1762,37 @@ quoted.addEventListener("click", (e) => {
                 likes: 0,
                 likedBy: [],
                 commentCount: 0,
-                isRepost: true, // Marca como uma republicação
-                originalPostId: postId, // Link para o post original
+                isRepost: true,
+                originalPostId: postId,
                 originalAuthorId: postData.authorId,
                 originalAuthorName: postData.authorName,
             };
-
             await db.collection("posts").add(newPost);
-
-            // Atualiza a contagem de republicações no post original
             await postToRepostRef.update({
                 repostCount: firebase.firestore.FieldValue.increment(1)
             });
-
             showCustomAlert("Post republicado com sucesso!", "success");
-
         } catch (error) {
             console.error("Erro ao republicar o post:", error);
             showCustomAlert("Ocorreu um erro ao republicar.");
         }
     }
-    // Em home/scripts.js, substitua a função loadSuggestions por esta:
-    // Adicione esta nova função ao ficheiro: home/scripts.js
 
     function loadHobbiesPreview() {
         const hobbiesContainer = document.getElementById('hobbies-preview-container');
         if (!hobbiesContainer) return;
-
-        hobbiesContainer.innerHTML = ''; // Limpa o conteúdo anterior
-
+        hobbiesContainer.innerHTML = '';
         const hobbies = currentUserProfile.hobbies || [];
-
         if (hobbies.length > 0) {
-            // Pega apenas os primeiros 4 hobbies para a pré-visualização
             const hobbiesToShow = hobbies.slice(0, 4);
-
             hobbiesToShow.forEach(hobby => {
                 const hobbyElement = document.createElement('span');
                 hobbyElement.className = 'hobby-tag';
                 hobbyElement.textContent = hobby;
                 hobbiesContainer.appendChild(hobbyElement);
             });
-
-            // Adiciona o botão "+" que leva ao perfil para ver/editar todos os hobbies
             if (hobbies.length > 4) {
                 const addHobbyLink = document.createElement('a');
-                // Esta é a correção: Aponta para a sua página de perfil com o caminho correto
                 addHobbyLink.href = `pages/user.html?uid=${currentUser.uid}`;
                 addHobbyLink.className = 'hobby-add-btn';
                 addHobbyLink.innerHTML = '<i class="fas fa-plus"></i>';
@@ -2239,42 +1806,27 @@ quoted.addEventListener("click", (e) => {
     async function loadSuggestions() {
         if (!suggestionsContainer) return;
         suggestionsContainer.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando sugestões...</div>';
-
         try {
-            // 1. Obter os hobbies do utilizador atual
             const currentUserHobbies = new Set(currentUserProfile.hobbies || []);
             if (currentUserHobbies.size === 0) {
                 suggestionsContainer.innerHTML = '<p class="no-suggestions">Adicione hobbies ao seu perfil para ver sugestões.</p>';
                 return;
             }
-
-            // 2. Obter a lista de IDs a excluir (o próprio utilizador, amigos, pedidos pendentes)
             const exclusionIds = new Set();
             exclusionIds.add(currentUser.uid);
-
             const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
             friendsSnapshot.forEach(doc => exclusionIds.add(doc.id));
-
             const sentRequestsSnapshot = await db.collection('friendRequests').where('from', '==', currentUser.uid).get();
             sentRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().to));
-
             const receivedRequestsSnapshot = await db.collection('friendRequests').where('to', '==', currentUser.uid).get();
             receivedRequestsSnapshot.forEach(doc => exclusionIds.add(doc.data().from));
-
-            // 3. Obter todos os outros utilizadores
             const allUsersSnapshot = await db.collection('users').get();
-
             const suggestions = [];
-
             allUsersSnapshot.forEach(doc => {
-                // Se o ID do utilizador NÃO ESTIVER na lista de exclusão, processa-o
                 if (!exclusionIds.has(doc.id)) {
                     const user = { id: doc.id, ...doc.data() };
                     const userHobbies = new Set(user.hobbies || []);
-
-                    // 4. Calcular hobbies em comum
                     const commonHobbies = [...currentUserHobbies].filter(hobby => userHobbies.has(hobby));
-
                     if (commonHobbies.length > 0) {
                         suggestions.push({
                             ...user,
@@ -2283,14 +1835,9 @@ quoted.addEventListener("click", (e) => {
                     }
                 }
             });
-
-            // 5. Ordenar as sugestões por quem tem mais hobbies em comum
             suggestions.sort((a, b) => b.commonHobbiesCount - a.commonHobbiesCount);
-
-            // 6. Mostrar apenas as 5 melhores sugestões na página inicial
             suggestionsContainer.innerHTML = '';
             const top5Suggestions = suggestions.slice(0, 5);
-
             if (top5Suggestions.length === 0) {
                 suggestionsContainer.innerHTML = '<p class="no-suggestions">Nenhuma nova sugestão encontrada.</p>';
             } else {
@@ -2298,7 +1845,6 @@ quoted.addEventListener("click", (e) => {
                     addSuggestionToDOM(user, user.commonHobbiesCount);
                 });
             }
-
         } catch (error) {
             console.error('Erro ao carregar sugestões:', error);
             if (suggestionsContainer) {
@@ -2306,104 +1852,73 @@ quoted.addEventListener("click", (e) => {
             }
         }
     }
-    // ====== helpers para repost ======
     function isRepostItem(post) {
         return post?.type === 'repost' || !!post?.repostOfId || !!post?.originalPostId;
     }
     function basePostId(post) {
         return post?.repostOfId || post?.originalPostId || post?.id;
     }
-// 1. Adicione esta referência no topo do seu arquivo, junto com as outras
-const hobbySearchInput = document.getElementById("hobby-search-input");
+    const hobbySearchInput = document.getElementById("hobby-search-input");
 
-
-// 2. Adicione esta função de filtro em qualquer lugar antes dos "Event Listeners" do modal
-function filterHobbies() {
-    const searchTerm = hobbySearchInput.value.toLowerCase().trim();
-    const allCategories = hobbyListContainer.querySelectorAll('.hobby-category');
-
-    allCategories.forEach(category => {
-        const labels = category.querySelectorAll('.hobby-label');
-        let visibleHobbiesInCategory = 0;
-
-        labels.forEach(label => {
-            const hobbyText = label.textContent.toLowerCase();
-            if (hobbyText.includes(searchTerm)) {
-                label.style.display = 'flex';
-                visibleHobbiesInCategory++;
+    function filterHobbies() {
+        const searchTerm = hobbySearchInput.value.toLowerCase().trim();
+        const allCategories = hobbyListContainer.querySelectorAll('.hobby-category');
+        allCategories.forEach(category => {
+            const labels = category.querySelectorAll('.hobby-label');
+            let visibleHobbiesInCategory = 0;
+            labels.forEach(label => {
+                const hobbyText = label.textContent.toLowerCase();
+                if (hobbyText.includes(searchTerm)) {
+                    label.style.display = 'flex';
+                    visibleHobbiesInCategory++;
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+            if (visibleHobbiesInCategory > 0) {
+                category.style.display = 'block';
             } else {
-                label.style.display = 'none';
+                category.style.display = 'none';
             }
         });
+    }
 
-        // Esconde o título da categoria se nenhum hobby corresponder à pesquisa
-        if (visibleHobbiesInCategory > 0) {
-            category.style.display = 'block';
-        } else {
-            category.style.display = 'none';
-        }
-    });
-}
-
-
-// 3. Adicione este event listener junto com os outros do modal de hobbies
-if (hobbySearchInput) {
-    hobbySearchInput.addEventListener('input', filterHobbies);
-}
-    /**
-     * Renderiza os botões de Republicar/Desfazer corretamente.
-     * - Em REPUBLICAÇÕES: NUNCA mostra "Republicar". Só mostra "Desfazer" se a republicação for SUA.
-     * - Em POSTS ORIGINAIS: mostra "Desfazer" se você já republicou; senão, "Republicar".
-     */
+    if (hobbySearchInput) {
+        hobbySearchInput.addEventListener('input', filterHobbies);
+    }
     function renderRepostControls(post, currentUid) {
         const baseId = basePostId(post);
-
-        // Card é uma republicação
         if (isRepostItem(post)) {
-            // Só o dono da republicação vê "Desfazer"
             if (post?.authorId === currentUid) {
                 return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
-                <i class="fas fa-retweet"></i> Desfazer
-              </button>`;
+                  <i class="fas fa-retweet"></i> Desfazer
+                </button>`;
             }
-            return ''; // mais ninguém vê botão em republicações
+            return '';
         }
-
-        // Card é post original
         const hasReposted = Array.isArray(post?.repostedBy) && post.repostedBy.includes(currentUid);
         if (hasReposted) {
             return `<button class="undo-repost-btn" data-post-id="${baseId}" title="Desfazer sua republicação">
-              <i class="fas fa-retweet"></i> Desfazer
-            </button>`;
+                  <i class="fas fa-retweet"></i> Desfazer
+                </button>`;
         }
         return `<button class="repost-btn" data-post-id="${baseId}" title="Republicar">
-            <i class="fas fa-retweet"></i> Republicar
-          </button>`;
+                  <i class="fas fa-retweet"></i> Republicar
+                </button>`;
     }
-
-
 });
 
-// === Listener global dos botões de (des)republicação — cole no FINAL do JS do FEED ===
 document.addEventListener('click', async (e) => {
     const rep = e.target.closest('.repost-btn, .undo-repost-btn');
     if (!rep) return;
-
     e.preventDefault();
-
     const baseId = rep.getAttribute('data-post-id');
     const auth = firebase.auth();
     const db = firebase.firestore();
-
     if (!auth.currentUser) return;
-
     try {
         await toggleRepost(baseId, auth.currentUser.uid, db);
-        // se você tem uma função que re-renderiza o card/linha, chame aqui:
-        // ex.: refreshPostCard(baseId) OU recarregue o bloco do feed
     } catch (err) {
         console.error(err);
-        // opcional: toast('Falha ao (des)republicar', 'error');
     }
-
 });
