@@ -13,7 +13,6 @@
     <script src="user.js"></script>
     <script src="../config/darkmode.js" defer></script> 
      <script src="../config/global-modals.js"></script>
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -21,6 +20,51 @@
     <script src="../config/global-notifications.js" defer></script>
     
     <style>
+        /* CSS para o Lightbox (imagem ampliada) */
+        /* MODIFICAÇÃO PRINCIPAL PARA O MODAL */
+    .lightbox-modal {
+        display: none; /* Inicia oculto */
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden; /* Previne barras de rolagem */
+        background-color: rgba(0,0,0,0.9);
+        /* Usar Flexbox para centralizar a imagem perfeitamente */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* MODIFICAÇÃO PRINCIPAL PARA A IMAGEM */
+    .lightbox-modal .modal-content-image {
+        /* A imagem ocupará o máximo da tela sem distorcer */
+        max-width: 100vw;
+        max-height: 100vh;
+        width: auto;
+        height: auto;
+        /* Garante que a imagem se ajuste bem, caso seja muito grande */
+        object-fit: contain;
+    }
+
+        .lightbox-modal .close-modal-lightbox {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .lightbox-modal .close-modal-lightbox:hover,
+        .lightbox-modal .close-modal-lightbox:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
     /* --- ESTILOS COMPLETOS E CORRIGIDOS PARA user.html --- */
 
     .friends-grid {
@@ -292,16 +336,23 @@
 }
 
 /* 3. Foto de Perfil (Sobreposição) */
-.profile-photo {
+.profile-photo-link {
+    display: block;
     width: 134px;
     height: 134px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid var(--light-text);
     position: absolute;
     top: -80px;
     left: 20px;
     z-index: 2;
+    border: 4px solid var(--light-text);
+    overflow: hidden;
+    cursor: pointer;
+}
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* 4. Informações do Perfil */
@@ -317,7 +368,7 @@ body.dark-mode .profile-header {
     border-color: var(--dark-border, #38383a); /* Borda lateral/inferior */
 }
 
-body.dark-mode .profile-photo {
+body.dark-mode .profile-photo-link {
     border-color: var(--dark-bg-secondary, #1c1c1e);
 }
 
@@ -374,7 +425,7 @@ body.dark-mode .profile-tab:hover:not(.active) {
         padding-top: 70px; /* Aumenta o espaço no topo para a foto */
     }
 
-    .profile-photo {
+    .profile-photo-link {
         /* Move a foto para o centro e mantém a sobreposição */
         left: 50%;
         transform: translateX(-50%);
@@ -443,7 +494,6 @@ body.dark-mode .profile-tab:hover:not(.active) {
 </style>
 </head>
 <body>
-    <!-- HEADER / MENU DE NAVEGAÇÃO -->
     <header>
         <div class="logo">
             <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -459,7 +509,6 @@ body.dark-mode .profile-tab:hover:not(.active) {
         </div>
     </header>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="main-container">
         <main class="feed">
             <div class="profile-banner-container">
@@ -468,9 +517,10 @@ body.dark-mode .profile-tab:hover:not(.active) {
                     <i class="fas fa-camera"></i> Editar Banner
                 </button>
             </div>
-            <!-- Cabeçalho do perfil -->
             <div class="profile-header">
-                <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-photo" id="profilePhoto">
+                <a href="#" id="profilePhotoLink" class="profile-photo-link">
+                    <img src="../img/Design sem nome2.png" alt="Foto de perfil" class="profile-photo" id="profilePhoto">
+                </a>
                 
                 <div class="profile-info">
                     <h1 class="profile-name" id="profileName">Carregando...</h1>
@@ -482,8 +532,7 @@ body.dark-mode .profile-tab:hover:not(.active) {
                     </div>
                     
                     <div class="profile-hobbies" id="profileHobbies">
-                        <!-- Hobbies serão carregados dinamicamente -->
-                    </div>
+                        </div>
                     
                     <div class="profile-actions">
                         <button class="profile-btn follow-btn" id="followBtn">
@@ -496,15 +545,12 @@ body.dark-mode .profile-tab:hover:not(.active) {
                 </div>
             </div>
             
-            <!-- Abas do perfil -->
             <div class="profile-tabs">
                 <div class="profile-tab active" data-tab="posts">Publicações</div>
                 <div class="profile-tab" data-tab="friends">Amigos</div>
             </div>
             
-            <!-- Conteúdo do perfil -->
             <div class="profile-content">
-                <!-- Aba de publicações -->
                 <div class="profile-section" id="postsSection">
                     <h2 class="section-title"><i class="fas fa-newspaper"></i> Publicações</h2>
                     <div class="posts-container" id="postsContainer">
@@ -514,7 +560,6 @@ body.dark-mode .profile-tab:hover:not(.active) {
                     </div>
                 </div>
                 
-                <!-- Aba de amigos -->
                 <div class="profile-section" id="friendsSection" style="display: none;">
                     <h2 class="section-title"><i class="fas fa-user-friends"></i> Amigos</h2>
                     <div class="friends-grid" id="friendsGrid">
@@ -598,6 +643,10 @@ body.dark-mode .profile-tab:hover:not(.active) {
             <button type="button" class="primary-btn" id="confirmCropBtn">Confirmar</button>
         </div>
     </div>
+</div>
+<div id="lightbox-modal" class="lightbox-modal" style="display: none;">
+    <span class="close-modal-lightbox" id="lightbox-close">&times;</span>
+    <img class="modal-content-image" id="lightbox-image">
 </div>
 </body>
 </html>

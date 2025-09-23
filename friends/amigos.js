@@ -134,55 +134,70 @@
   // ================= FIM DAS ALTERAÇÕES ================= 
 
   // ---------------------- Amigos: lista ---------------------- 
-  async function loadFriendsList(auth, db) { 
-    const grid = refs.gridAll(); 
-    if (!grid) return; 
-     
-    grid.innerHTML = `<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>`; 
+  async function loadFriendsList(auth, db) {
+    const grid = refs.gridAll();
+    if (!grid) return;
 
-    const user = auth.currentUser; 
-    if (!user) { 
-      grid.innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`; 
-      return; 
-    } 
+    grid.innerHTML = `<div class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Carregando amigos...</div>`;
 
-    try { 
-      const friendsSnap = await db.collection('users').doc(user.uid).collection('friends').get(); 
-      const friendIds = friendsSnap.docs.map(d => d.id); 
+    const user = auth.currentUser;
+    if (!user) {
+        grid.innerHTML = `<div class="no-friends">Faça login para ver seus amigos.</div>`;
+        return;
+    }
 
-      if (!friendIds.length) { 
-        grid.innerHTML = `<div class="no-friends">Você ainda não adicionou amigos.</div>`; 
-        _friendsCache = []; 
-        return; 
-      } 
+    try {
+        const friendsSnap = await db.collection('users').doc(user.uid).collection('friends').get();
+        const friendIds = friendsSnap.docs.map(d => d.id);
 
-      const profiles = await Promise.all(friendIds.map(async (fid) => { 
-        try { 
-          const udoc = await db.collection('users').doc(fid).get(); 
-          const u = udoc.data() || {}; 
-          const displayName = u.nickname || u.displayName || u.name || 'Usuário'; 
-          const photoURL = u.photoURL || '../img/corvo.png'; 
-          return { uid: udoc.id, displayName, photoURL, hobbies: u.hobbies || [] }; 
-        } catch (e) { 
-          console.debug('perfil amigo falhou:', e?.message); 
-          return null; 
-        } 
-      })); 
+        if (!friendIds.length) {
+            grid.innerHTML = `<div class="no-friends">Você ainda não adicionou amigos.</div>`;
+            _friendsCache = [];
+            return;
+        }
 
-      _friendsCache = []; 
-      profiles.filter(Boolean).forEach(({ uid, displayName, photoURL, hobbies }) => { 
-          _friendsCache.push({ uid, displayName, photoURL, hobbies: hobbies || [] }); 
-        }); 
-         
-        grid.innerHTML = _friendsCache.map(friendCardHtml).join(""); 
-        wireFriendCardClicks(); 
+        // Busca os perfis dos amigos
+        const profilesPromises = friendIds.map(async (fid) => {
+            try {
+                const udoc = await db.collection('users').doc(fid).get();
 
-    } catch (err) { 
-      console.error(err); 
-      grid.innerHTML = `<div class="error-message">Erro ao carregar amigos: ${htmlEscape(err.message || String(err))}</div>`; 
-    } 
-  } 
+                // ** A CORREÇÃO ESTÁ AQUI **
+                // Verifica se o documento do amigo realmente existe
+                if (udoc.exists) {
+                    const u = udoc.data() || {};
+                    const displayName = u.nickname || u.displayName || u.name || 'Usuário sem nome';
+                    const photoURL = u.photoURL || '../img/corvo.png';
+                    return { uid: udoc.id, displayName, photoURL, hobbies: u.hobbies || [] };
+                } else {
+                    // Se o amigo não for encontrado, registra um aviso e o ignora
+                    console.warn(`O usuário amigo com ID "${fid}" não foi encontrado. Pode ter sido excluído.`);
+                    return null;
+                }
+            } catch (e) {
+                console.error(`Falha ao buscar o perfil do amigo ${fid}:`, e);
+                return null; // Retorna nulo em caso de erro
+            }
+        });
 
+        const profiles = await Promise.all(profilesPromises);
+
+        // Filtra os amigos que não foram encontrados (nulos)
+        _friendsCache = profiles.filter(Boolean);
+
+        if (_friendsCache.length === 0 && friendIds.length > 0) {
+            grid.innerHTML = `<div class="no-friends">Não foi possível carregar os perfis dos seus amigos. Verifique sua conexão.</div>`;
+        } else if (_friendsCache.length === 0) {
+             grid.innerHTML = `<div class="no-friends">Você ainda não adicionou amigos.</div>`;
+        } else {
+            grid.innerHTML = _friendsCache.map(friendCardHtml).join("");
+            wireFriendCardClicks();
+        }
+
+    } catch (err) {
+        console.error(err);
+        grid.innerHTML = `<div class="error-message">Erro ao carregar amigos: ${htmlEscape(err.message || String(err))}</div>`;
+    }
+}
   function friendCardHtml({ uid, displayName, photoURL, hobbies }) { 
     const hasHobbies = Array.isArray(hobbies) && hobbies.length > 0; 
     const hobbiesHtml = hasHobbies ? hobbies.slice(0,4).map(h => `<span class="hobby-tag">${htmlEscape(String(h))}</span>`).join("") : `<span class="hobby-tag">Sem hobbies</span>`; 

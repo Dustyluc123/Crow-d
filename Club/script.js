@@ -273,27 +273,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function viewMembers(groupId) {
     if (!membersList || !viewMembersModal) return;
-    membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    membersList.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> Carregando membros...</div>';
     viewMembersModal.style.display = 'flex';
+    
     try {
-      const groupSnap = await db.collection('groups').doc(groupId).get();
-      const groupData = groupSnap.data() || {};
-      const members = Array.isArray(groupData.members) ? groupData.members : [];
-      membersList.innerHTML = '';
-      for (const uid of members) {
-        const u = await db.collection('users').doc(uid).get();
-        const data = u.data() || {};
-        const el = document.createElement('div');
-        el.className = 'member-row';
-        el.innerHTML = `<p>${data.nickname || 'Usuário'}</p>`;
-        membersList.appendChild(el);
-      }
-    } catch (e) {
-      console.error('Erro ao carregar membros:', e);
-      membersList.innerHTML = '<p>Ocorreu um erro ao carregar os membros.</p>';
-    }
-  }
+        const groupSnap = await db.collection('groups').doc(groupId).get();
+        if (!groupSnap.exists) {
+            membersList.innerHTML = '<p>Grupo não encontrado.</p>';
+            return;
+        }
 
+        const groupData = groupSnap.data() || {};
+        const memberIds = Array.isArray(groupData.members) ? groupData.members : [];
+        membersList.innerHTML = ''; // Limpa o container
+
+        if (memberIds.length === 0) {
+            membersList.innerHTML = '<p>Este grupo não tem membros.</p>';
+            return;
+        }
+
+        // Busca todos os perfis de uma vez para melhor performance
+        const memberPromises = memberIds.map(uid => db.collection('users').doc(uid).get());
+        const memberDocs = await Promise.all(memberPromises);
+
+        for (const userDoc of memberDocs) {
+            const el = document.createElement('div');
+            el.className = 'member-item'; // Usando uma classe para facilitar a estilização
+
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                const photoURL = data.photoURL || '../img/Design sem nome2.png';
+                const nickname = data.nickname || 'Usuário sem nome'; // Fallback mais claro
+
+                el.innerHTML = `
+                    <img src="${photoURL}" alt="Foto de ${nickname}" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px; object-fit: cover;">
+                    <p style="margin: 0; font-weight: 600;">${nickname}</p>
+                `;
+            } else {
+                // Caso o documento do usuário não exista no Firestore
+                el.innerHTML = `
+                    <img src="../img/Design sem nome2.png" alt="Usuário não encontrado" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 12px;">
+                    <p style="margin: 0; color: #888; font-style: italic;">Usuário não encontrado</p>
+                `;
+                console.warn(`Documento de usuário não encontrado para o UID: ${userDoc.id}`);
+            }
+            membersList.appendChild(el);
+        }
+    } catch (e) {
+        console.error('Erro ao carregar membros:', e);
+        membersList.innerHTML = '<p>Ocorreu um erro ao carregar os membros.</p>';
+    }
+}
   async function openShareModal(groupId, name) {
     if (!shareGroupModal || !shareFriendsList || !shareGroupName) return;
     currentGroupIdToShare = groupId;

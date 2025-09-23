@@ -129,6 +129,21 @@ body.dark-mode .hobby-option {
     margin-top: 4px;
     height: 1em; /* Evita que o layout "pule" */
 }
+
+/* Estilos para a lista de membros no modal */
+#members-list .member-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    #members-list .member-item:hover {
+        background-color: var(--light-bg-secondary);
+    }
+    body.dark-mode #members-list .member-item:hover {
+        background-color: var(--dark-bg-tertiary);
+    }
     </style>
     <header>
         <div class="logo">

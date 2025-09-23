@@ -315,6 +315,39 @@ async function loadProfileUser(userId) {
             profileBanner.src = profileUser.bannerURL;
         }
 
+
+    // --- CÓDIGO NOVO PARA A IMAGEM DE PERFIL AMPLIADA ---
+    const profilePhotoLink = document.getElementById('profilePhotoLink');
+    if (profileUser.photoURL) {
+        profilePhoto.src = profileUser.photoURL;
+        if(profilePhotoLink) {
+          profilePhotoLink.href = profileUser.photoURL;
+        }
+    }
+
+    const lightboxModal = document.getElementById('lightbox-modal');
+    const lightboxImage = document.getElementById('lightbox-image');
+    const lightboxClose = document.getElementById('lightbox-close');
+
+    if(profilePhotoLink && lightboxModal && lightboxImage && lightboxClose) {
+        profilePhotoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            lightboxImage.src = profilePhotoLink.href;
+            // MODIFICADO: Mudar de 'block' para 'flex'
+            lightboxModal.style.display = "flex";
+        });
+    
+        lightboxClose.addEventListener('click', () => {
+            lightboxModal.style.display = "none";
+        });
+    
+        lightboxModal.addEventListener('click', (e) => {
+            if (e.target === lightboxModal) {
+                lightboxModal.style.display = "none";
+            }
+        });
+    }
+
         updateProfileUI();
     } else {
         window.location.href = '../index.html';
