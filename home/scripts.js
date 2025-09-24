@@ -867,51 +867,73 @@ document.addEventListener("DOMContentLoaded", function () {
             loadMorePosts();
         }
     }
-    async function createPost(content) {
-        try {
-            if (!currentUser || !currentUserProfile) {
-                showCustomAlert("Você precisa estar logado para publicar.");
-                return;
-            }
-            if (!content && !postImageBase64 && selectedHobbiesForPost.length === 0) {
-                showCustomAlert("Escreva algo, adicione uma imagem ou selecione um hobby para publicar.");
-                return;
-            }
-            if (postButton) {
-                postButton.disabled = true;
-                postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-            }
-            const postData = {
-                content,
-                authorId: currentUser.uid,
-                authorName: currentUserProfile.nickname || "Usuário",
-                authorPhoto: currentUserProfile.photoURL || null,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                likes: 0,
-                likedBy: [],
-                commentCount: 0,
-                imageURL: postImageBase64,
-                hobbies: selectedHobbiesForPost
-            };
-            const docRef = await db.collection("posts").add(postData);
-            const newPostDoc = await docRef.get();
-            const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
-            const postElement = addPostToDOM(newPostData);
-            if (postElement) {
-                postsContainer.prepend(postElement);
-            }
-            postInput.value = "";
-            clearPostImage();
-        } catch (error) {
-            console.error("Erro ao criar post:", error);
-            showCustomAlert("Erro ao criar publicação. Tente novamente.");
-        } finally {
-            if (postButton) {
-                postButton.disabled = false;
-                postButton.textContent = "Publicar";
-            }
+   // Em home/scripts.js, substitua a função createPost por esta:
+async function createPost(content) {
+    // --- INÍCIO DA MODIFICAÇÃO PARA O EASTER EGG ---
+    const secretPhrase = "Eu te amo Manu.C";
+    if (content.trim() === secretPhrase) {
+        // Se o texto for a frase secreta, redireciona para a página de homenagem
+        window.location.href = 'homenagem/homenagem.html';
+        return; // Impede que o resto da função (de criar o post) seja executado
+    }
+    // --- FIM DA MODIFICAÇÃO ---
+
+    try {
+        if (!currentUser || !currentUserProfile) {
+            showCustomAlert("Você precisa estar logado para publicar.");
+            return;
+        }
+
+        // Validação que inclui texto, imagem ou hobbies
+        if (!content && !postImageBase64 && selectedHobbiesForPost.length === 0) {
+            showCustomAlert("Escreva algo, adicione uma imagem ou selecione um hobby para publicar.");
+            return;
+        }
+
+        if (postButton) {
+            postButton.disabled = true;
+            postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+        }
+
+        const postData = {
+            content,
+            authorId: currentUser.uid,
+            authorName: currentUserProfile.nickname || "Usuário",
+            authorPhoto: currentUserProfile.photoURL || null,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: 0,
+            likedBy: [],
+            commentCount: 0,
+            imageURL: postImageBase64,
+            hobbies: selectedHobbiesForPost // Inclui os hobbies no post
+        };
+
+        const docRef = await db.collection("posts").add(postData);
+        const newPostDoc = await docRef.get();
+        const newPostData = { id: newPostDoc.id, ...newPostDoc.data() };
+
+        // 1. Chama a função addPostToDOM, que retorna um elemento HTML
+        const postElement = addPostToDOM(newPostData);
+
+        // 2. Verifica se o elemento foi criado e o adiciona no início do feed
+        if (postElement) {
+            postsContainer.prepend(postElement);
+        }
+
+        // 3. Limpa os campos do formulário
+        postInput.value = "";
+        clearPostImage(); // Esta função já limpa a imagem e os hobbies
+
+    } catch (error) {
+        console.error("Erro ao criar post:", error);
+        showCustomAlert("Erro ao criar publicação. Tente novamente.");
+    } finally {
+        if (postButton) {
+            postButton.disabled = false;
+            postButton.textContent = "Publicar";
         }
     }
+}
     backToFeedBtn.addEventListener('click', hideSinglePostView);
 
 
