@@ -6,24 +6,19 @@
   <title>Mensagens - Crow-d</title>
   <link rel="icon" type="image/png" href="../img/corvo.png" />
 
-  <!-- Estilos globais existentes -->
   <link rel="stylesheet" href="../home/home.css" />
   <link rel="stylesheet" href="../css/global.css" />
   <link rel="stylesheet" href="mensagens.css" />
 
-  <!-- Ícones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
-  <!-- Emoji picker -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
-  <!-- Config / inicialização (deve vir antes do script desta página) -->
   <script src="../config/global.js"></script>
   <script src="../config/global-notifications.js"></script>
   <script src="../config/global-modals.js"></script>
@@ -31,7 +26,6 @@
 </head>
 <body class="mensagens-page">
 
-  <!-- Top bar -->
   <header>
     <div class="logo">
       <img src="../img/corvo.png" alt="Logo Crow-d" class="logo-img">
@@ -39,7 +33,6 @@
     <nav class="main-nav">
       <a href="../index.html"><i class="fas fa-home"></i> Feed</a>
       <a href="../friends/amigos.html"><i class="fas fa-user-friends"></i> Amigos</a>
-      <!-- corrigido caminho da página de mensagens -->
       <a href="../mensagens/mensagens.html" class="active"><i class="fas fa-comment"></i> Mensagens</a>
       <a href="../editprofile/edit-profile.html" class="profile-link"><i class="fas fa-user"></i> Perfil</a>
     </nav>
@@ -53,7 +46,6 @@
       <h1 class="page-title"><i class="fas fa-comment"></i> Mensagens</h1>
 
       <div class="messages-container">
-        <!-- Lista de conversas + sugestões -->
         <aside class="conversations-list">
           <div id="conversations-items">
             <div class="loading-conversations">
@@ -72,10 +64,8 @@
           </section>
         </aside>
 
-        <!-- Área do chat -->
         <section class="chat-area">
 
-          <!-- Cabeçalho do chat (novo) -->
           <div id="chatHeader" class="chat-header">
             <img id="chatAvatar" class="chat-avatar" src="../img/Design sem nome2.png" alt="Avatar do contato">
             <div class="chat-title">
@@ -84,18 +74,22 @@
                 <span class="status-badge"></span> offline
               </div>
             </div>
-            <!-- botão voltar (visível no mobile) -->
+
+            <div class="chat-options">
+                <button class="options-btn" title="Mais opções"><i class="fas fa-ellipsis-v"></i></button>
+                <div class="options-dropdown">
+                    <a href="#" class="report-user-btn"><i class="fas fa-flag"></i> Denunciar Perfil</a>
+                </div>
+            </div>
             <button id="backBtn" class="chat-back-btn" aria-label="Voltar">
               <i class="fas fa-arrow-left"></i>
             </button>
           </div>
 
-          <!-- Mensagens -->
           <div class="chat-messages" id="chatMessages">
             <div class="no-messages">Selecione uma conversa para começar a conversar</div>
           </div>
 
-          <!-- Input -->
           <footer class="chat-input-area">
             <emoji-picker id="emojiPicker" class="light" style="display:none;"></emoji-picker>
             <button id="emojiBtn" class="chat-action-btn" title="Emojis"><i class="fas fa-smile"></i></button>
@@ -107,17 +101,14 @@
     </main>
   </div>
 
-  <!-- Bottom nav mobile -->
   <nav id="mobile-bottom-nav">
     <button id="left-sidebar-toggle" class="mobile-nav-item"><i class="fas fa-bars"></i></button>
     <a href="../index.html" class="mobile-nav-item"><i class="fas fa-home"></i></a>
     <a href="../friends/amigos.html" class="mobile-nav-item"><i class="fas fa-user-friends"></i></a>
-    <!-- corrigido caminho -->
     <a href="../mensagens/mensagens.html" class="mobile-nav-item active"><i class="fas fa-comment"></i></a>
     <a href="#" class="profile-link mobile-nav-item"><i class="fas fa-user"></i></a>
   </nav>
 
-  <!-- Template das sugestões (href será atualizado no JS como fallback acessível) -->
   <template id="suggestion-template">
     <a href="../mensagens/mensagens.html" class="suggestion-item-link">
       <div class="suggestion-item">
@@ -131,7 +122,6 @@
     </a>
   </template>
 
-  <!-- Script desta página (depende do global.js já ter inicializado o Firebase) -->
   <script src="script.js"></script>
 </body>
 </html>
