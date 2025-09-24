@@ -761,84 +761,7 @@ function clearPostImage() {
         }
         return post;
     }
-    async function loadInitialPosts() {
-        if (!postsContainer || !currentUser) return;
     
-        postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        isLoadingMorePosts = true;
-        noMorePosts = false;
-        lastVisiblePost = null;
-    
-        // Esconde o indicador de novos posts ao recarregar
-        if (newPostsIndicator) {
-            newPostsIndicator.style.display = 'none';
-        }
-    
-        try {
-            let query = db.collection("posts");
-    
-            // Filtro para o Feed de Amigos
-            if (activeFeedType === 'friends') {
-                const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
-                const friendIds = friendsSnapshot.docs.map(doc => doc.id);
-    
-                if (friendIds.length === 0) {
-                    postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos para ver as publicações deles aqui.</div>';
-                    isLoadingMorePosts = false;
-                    return;
-                }
-                query = query.where('authorId', 'in', friendIds);
-            }
-            // Filtro para o Feed de Hobbies
-            else if (activeFeedType === 'hobbies') {
-                const userHobbies = currentUserProfile.hobbies || [];
-                if (userHobbies.length === 0) {
-                    postsContainer.innerHTML = '<div class="info-message">Adicione hobbies ao seu perfil para ver publicações relacionadas.</div>';
-                    isLoadingMorePosts = false;
-                    return;
-                }
-                query = query.where('hobbies', 'array-contains-any', userHobbies);
-            }
-    
-            const finalQuery = query.orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
-            const snapshot = await finalQuery.get();
-    
-            postsContainer.innerHTML = '';
-    
-            if (snapshot.empty) {
-                noMorePosts = true;
-                let message = 'Nenhum post encontrado.';
-                if (activeFeedType === 'friends') {
-                    message = 'Nenhum dos seus amigos publicou ainda.';
-                } else if (activeFeedType === 'hobbies') {
-                    message = 'Nenhum post encontrado com os seus hobbies.';
-                }
-                postsContainer.innerHTML = `<div class="info-message">${message}</div>`;
-                return;
-            }
-    
-            for (const doc of snapshot.docs) {
-                const postData = { id: doc.id, ...doc.data() };
-                const postElement = addPostToDOM(postData);
-                if (postElement) {
-                    postsContainer.appendChild(postElement);
-                }
-            }
-    
-            if (snapshot.docs.length > 0) {
-                lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
-                // === CORREÇÃO ADICIONADA AQUI ===
-                // Inicia o listener para novos posts após carregar os posts iniciais.
-                setupNewPostsListener();
-            }
-    
-        } catch (error) {
-            console.error("Erro ao carregar posts:", error);
-            postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
-        } finally {
-            isLoadingMorePosts = false;
-        }
-    }
     async function loadMorePosts() {
         if (noMorePosts || isLoadingMorePosts || !lastVisiblePost) return;
     
@@ -899,42 +822,119 @@ function clearPostImage() {
         div.textContent = text;
         return div;
     }
-    function setupNewPostsListener() {
-        // Cancela qualquer listener anterior para evitar duplicatas
-        if (postsListener) {
-            postsListener();
-        }
-    
-        // Pega o timestamp do post mais recente que já está visível no feed.
-        // Se não houver posts, usa a data atual como ponto de partida.
-        const firstPostTimestamp = lastVisiblePost ? lastVisiblePost.data().timestamp : new Date();
-    
-        let query = db.collection("posts").orderBy("timestamp", "desc");
-    
-        // Aplica o mesmo filtro do feed ativo
-        if (activeFeedType === 'friends' && currentUserProfile.friends && currentUserProfile.friends.length > 0) {
-            query = query.where('authorId', 'in', currentUserProfile.friends);
-        } else if (activeFeedType === 'hobbies' && currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
-            query = query.where('hobbies', 'array-contains-any', currentUserProfile.hobbies);
-        }
-    
-        // Escuta por posts que sejam mais recentes que o último carregado
-        postsListener = query.where("timestamp", ">", firstPostTimestamp)
-            .onSnapshot(snapshot => {
-                // A CORREÇÃO ESTÁ AQUI:
-                // Usamos docChanges() para verificar se houve posts ADICIONADOS
-                // desde que o feed foi carregado, ignorando a carga inicial.
-                const newPosts = snapshot.docChanges().filter(change => change.type === 'added');
-    
-                if (newPosts.length > 0) {
-                    // Mostra o botão apenas se houver posts genuinamente novos.
-                    if (newPostsIndicator) {
-                        newPostsIndicator.style.display = 'flex';
-                    }
-                }
-            });
+ // Em home/scripts.js
+
+async function loadInitialPosts() {
+    if (!postsContainer || !currentUser) return;
+
+    postsContainer.innerHTML = '<div class="loading-posts"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    isLoadingMorePosts = true;
+    noMorePosts = false;
+    lastVisiblePost = null;
+
+    // Esconde o indicador e cancela o listener antigo antes de carregar
+    if (newPostsIndicator) {
+        newPostsIndicator.style.display = 'none';
+    }
+    if (postsListener) {
+        postsListener();
+        postsListener = null;
     }
 
+    try {
+        let query = db.collection("posts");
+
+        // Aplica filtros de feed (Amigos ou Hobbies)
+        if (activeFeedType === 'friends') {
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            const friendIds = friendsSnapshot.docs.map(doc => doc.id);
+
+            if (friendIds.length === 0) {
+                postsContainer.innerHTML = '<div class="info-message">Você ainda não tem amigos para ver as publicações deles aqui.</div>';
+                isLoadingMorePosts = false;
+                setupNewPostsListener(new Date()); // Começa a ouvir por posts a partir de agora
+                return;
+            }
+            query = query.where('authorId', 'in', friendIds);
+        } else if (activeFeedType === 'hobbies') {
+            const userHobbies = currentUserProfile.hobbies || [];
+            if (userHobbies.length === 0) {
+                postsContainer.innerHTML = '<div class="info-message">Adicione hobbies ao seu perfil para ver publicações relacionadas.</div>';
+                isLoadingMorePosts = false;
+                setupNewPostsListener(new Date()); // Começa a ouvir por posts a partir de agora
+                return;
+            }
+            query = query.where('hobbies', 'array-contains-any', userHobbies);
+        }
+
+        const finalQuery = query.orderBy("timestamp", "desc").limit(POSTS_PER_PAGE);
+        const snapshot = await finalQuery.get();
+
+        postsContainer.innerHTML = '';
+
+        if (snapshot.empty) {
+            noMorePosts = true;
+            let message = 'Nenhum post encontrado. Seja o primeiro a publicar!';
+            if (activeFeedType === 'friends') message = 'Nenhum dos seus amigos publicou ainda.';
+            if (activeFeedType === 'hobbies') message = 'Nenhum post encontrado com os seus hobbies.';
+            postsContainer.innerHTML = `<div class="info-message">${message}</div>`;
+            setupNewPostsListener(new Date()); // Começa a ouvir por posts a partir de agora
+            return;
+        }
+
+        for (const doc of snapshot.docs) {
+            const postData = { id: doc.id, ...doc.data() };
+            const postElement = addPostToDOM(postData);
+            if (postElement) {
+                postsContainer.appendChild(postElement);
+            }
+        }
+        
+        // **A LÓGICA CORRIGIDA ESTÁ AQUI**
+        // Pega o timestamp do post MAIS NOVO (o primeiro do resultado)
+        const newestPostTimestamp = snapshot.docs[0].data().timestamp;
+        lastVisiblePost = snapshot.docs[snapshot.docs.length - 1];
+
+        // Inicia o listener para novos posts usando o timestamp correto como referência
+        setupNewPostsListener(newestPostTimestamp);
+
+    } catch (error) {
+        console.error("Erro ao carregar posts:", error);
+        postsContainer.innerHTML = '<div class="error-message">Erro ao carregar publicações.</div>';
+    } finally {
+        isLoadingMorePosts = false;
+    }
+}
+
+function setupNewPostsListener(newestTimestamp) {
+    // Cancela qualquer listener anterior para evitar duplicatas
+    if (postsListener) {
+        postsListener();
+    }
+
+    let query = db.collection("posts");
+
+    // Aplica os mesmos filtros que o feed ativo está a usar
+    if (activeFeedType === 'friends' && currentUserProfile.friends && currentUserProfile.friends.length > 0) {
+        query = query.where('authorId', 'in', currentUserProfile.friends);
+    } else if (activeFeedType === 'hobbies' && currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
+        query = query.where('hobbies', 'array-contains-any', currentUserProfile.hobbies);
+    }
+
+    // A consulta agora escuta por posts estritamente MAIS NOVOS que o mais novo já carregado
+    postsListener = query.where("timestamp", ">", newestTimestamp)
+        .onSnapshot(snapshot => {
+            // Verifica se as alterações são de posts recém-adicionados
+            const newPosts = snapshot.docChanges().filter(change => change.type === 'added');
+
+            if (newPosts.length > 0) {
+                // Mostra o botão apenas se houver posts genuinamente novos
+                if (newPostsIndicator) {
+                    newPostsIndicator.style.display = 'flex';
+                }
+            }
+        });
+}
 
     async function deletePost(postId) {
         const confirmed = await showConfirmationModal(
@@ -1062,6 +1062,13 @@ function clearPostImage() {
         }
     }
     async function createPost(content) {
+           // --- INÍCIO DA MODIFICAÇÃO PARA O EASTER EGG ---
+    const secretPhrase = "Eu te amo Manu.C";
+    if (content.trim() === secretPhrase) {
+        // Se o texto for a frase secreta, redireciona para a página de homenagem
+        window.location.href = 'homenagem/homenagem.html';
+        return; // Impede que o resto da função (de criar o post) seja executado
+    }
         try {
             if (!currentUser || !currentUserProfile) {
                 showCustomAlert("Você precisa estar logado para publicar.");
