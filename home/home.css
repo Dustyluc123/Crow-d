@@ -2815,3 +2815,144 @@ body.dark-mode .options-dropdown .report-btn:hover {
 .post-header .options-btn {
     margin-left: 8px;
 }
+
+/* ====================================================== */
+/* ESTILOS PARA RESPONSIVIDADE (TABLETS E CELULARES) */
+/* ====================================================== */
+
+/* Para telas de até 992px (tablets e celulares maiores na horizontal) */
+@media (max-width: 992px) {
+    .main-container {
+        /* Empilha as colunas verticalmente */
+        flex-direction: column;
+        padding: 0 15px;
+        margin-top: 15px;
+    }
+
+    .sidebar {
+        /* Faz as sidebars ocuparem a largura total e remove o posicionamento fixo */
+        width: 100%;
+        position: static;
+        max-height: none; /* Remove a altura máxima */
+        order: 3; /* Coloca as sidebars depois do feed */
+    }
+
+    .feed {
+        order: 2; /* Feed no meio */
+    }
+
+    .left-sidebar {
+        order: 1; /* Atalhos rápidos primeiro */
+    }
+}
+
+/* Para telas de até 768px (maioria dos celulares) */
+@media (max-width: 768px) {
+    body {
+        /* Adiciona espaço no final para não sobrepor a navegação mobile */
+        padding-bottom: 70px;
+    }
+
+    /* Esconde as sidebars e a navegação principal do topo */
+    .sidebar {
+        display: none;
+    }
+    header .main-nav {
+        display: none;
+    }
+
+    /* Mostra e fixa a barra de navegação inferior */
+    #mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: var(--light-text);
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    body.dark-mode #mobile-bottom-nav {
+        background-color: var(--dark-bg-secondary);
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    }
+
+    .mobile-nav-item {
+        background: none;
+        border: none;
+        color: var(--dark-text);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    body.dark-mode .mobile-nav-item {
+        color: var(--light-text);
+    }
+
+    .mobile-nav-item.active, .mobile-nav-item:hover {
+        color: var(--primary-color);
+    }
+    
+    body.dark-mode .mobile-nav-item.active, body.dark-mode .mobile-nav-item:hover {
+        color: var(--primary-hover);
+    }
+
+    /* Ajustes gerais de layout e fontes */
+    .logo span {
+        display: none; /* Esconde o texto do logo */
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-photo-link {
+        position: static;
+        transform: none;
+        top: 0;
+        left: 0;
+        margin-bottom: 15px;
+    }
+    .profile-info {
+        padding-left: 0;
+    }
+
+    body {
+        font-size: 14px;
+    }
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    /* Garante que imagens não quebrem o layout */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Ajustes finos para celulares pequenos (até 480px) */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+    .post-actions {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .post-action {
+        flex-basis: 48%;
+        justify-content: center;
+    }
+}

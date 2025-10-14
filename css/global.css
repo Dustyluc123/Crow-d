@@ -184,3 +184,91 @@ body.light-mode {
     top: 60px;
     height: calc(100vh - 60px);
 }
+
+/* --- REGRAS DE RESPONSIVIDADE (MEDIA QUERIES) --- */
+
+/* Para tablets e telas menores (até 992px) */
+@media (max-width: 992px) {
+    .main-container {
+        flex-direction: column;
+        padding: 0 15px;
+    }
+    .sidebar {
+        width: 100%;
+        position: static; /* Remove a sidebar fixa */
+        order: 3; /* Muda a ordem para aparecer no final */
+        max-height: none; /* Remove a altura máxima */
+    }
+    .feed { order: 2; }
+    .left-sidebar { order: 1; }
+}
+
+/* Para celulares (até 768px) */
+@media (max-width: 768px) {
+    body {
+        padding-top: 60px; /* Mantém o espaço para o header */
+        padding-bottom: 70px; /* Adiciona espaço para o nav mobile inferior */
+    }
+
+    /* Esconde a navegação do header e as sidebars */
+    header .main-nav {
+        display: none;
+    }
+    .sidebar {
+        display: none;
+    }
+    
+    /* Mostra a navegação mobile inferior (que já existe no seu HTML) */
+    #mobile-bottom-nav {
+        display: flex;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    /* Ajustes de layout da página de perfil (user.html) */
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding-top: 70px;
+    }
+    .profile-photo-link {
+        position: static;
+        transform: none;
+        top: 0;
+        left: 0;
+        margin-bottom: 15px;
+    }
+    .profile-info {
+        padding-left: 0;
+    }
+
+    /* Ajustes gerais de fonte e imagem */
+    body {
+        font-size: 14px;
+    }
+    h1 {
+        font-size: 1.8rem;
+    }
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Ajustes finos para celulares pequenos (até 480px) */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+    .post-actions {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .post-action {
+        flex-basis: 48%;
+        justify-content: center;
+    }
+}
