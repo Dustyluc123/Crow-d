@@ -171,6 +171,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let activeFeedType = 'main';
     let newPostsListener = null;
 
+    let isFirstNewPostsSnapshot = true;
+
     let cropperInstance = null;
     let postImageBase64 = null;
 
@@ -657,6 +659,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (newPostsIndicator) {
             newPostsIndicator.style.display = 'none';
         }
+        
+        // <<< MUDANÇA 1: Redefine a flag antes de carregar e configurar o listener
+        isFirstNewPostsSnapshot = true;
+        
         try {
             let query = db.collection("posts");
             if (activeFeedType === 'friends') {
@@ -760,20 +766,45 @@ document.addEventListener("DOMContentLoaded", function () {
         div.textContent = text;
         return div;
     }
-    function setupNewPostsListener() {
+   async function setupNewPostsListener() {
         if (postsListener) {
             postsListener();
         }
+        
         const firstPostTimestamp = lastVisiblePost ? lastVisiblePost.data().timestamp : new Date();
-        let query = db.collection("posts").orderBy("timestamp", "desc");
-        if (activeFeedType === 'friends' && currentUserProfile.friends && currentUserProfile.friends.length > 0) {
-            query = query.where('authorId', 'in', currentUserProfile.friends);
-        } else if (activeFeedType === 'hobbies' && currentUserProfile.hobbies && currentUserProfile.hobbies.length > 0) {
-            query = query.where('hobbies', 'array-contains-any', currentUserProfile.hobbies);
+        let query = db.collection("posts");
+
+        // Replicar a lógica de filtragem da loadInitialPosts para o listener (o que é necessário)
+        if (activeFeedType === 'friends') {
+            const friendsSnapshot = await db.collection('users').doc(currentUser.uid).collection('friends').get();
+            const friendIds = friendsSnapshot.docs.map(doc => doc.id);
+            if (friendIds.length === 0) {
+                return;
+            }
+            query = query.where('authorId', 'in', friendIds);
+        } else if (activeFeedType === 'hobbies') {
+            const userHobbies = currentUserProfile.hobbies || [];
+            if (userHobbies.length === 0) {
+                return;
+            }
+            query = query.where('hobbies', 'array-contains-any', userHobbies);
         }
+
         postsListener = query.where("timestamp", ">", firstPostTimestamp)
             .onSnapshot(snapshot => {
+                // <<< MUDANÇA 2: Ignora o primeiro snapshot (os posts que já existiam antes de o listener iniciar)
+                if (isFirstNewPostsSnapshot) {
+                    isFirstNewPostsSnapshot = false;
+                    // Garante que o indicador está oculto, pois o estado inicial é "sem novos posts"
+                    if (newPostsIndicator) {
+                        newPostsIndicator.style.display = 'none'; 
+                    }
+                    return; 
+                }
+
                 const newPosts = snapshot.docChanges().filter(change => change.type === 'added');
+                
+                // Exibe o botão apenas se novos posts reais (adicionados após o primeiro snapshot) forem detectados
                 if (newPosts.length > 0) {
                     if (newPostsIndicator) {
                         newPostsIndicator.style.display = 'flex';

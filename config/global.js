@@ -91,12 +91,23 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // config/global.js
 document.addEventListener('DOMContentLoaded', () => {
-    const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
-    const leftSidebar = document.querySelector('.left-sidebar');
+   const leftSidebarToggle = document.getElementById('left-sidebar-toggle');
+    const leftSidebar = document.querySelector('.sidebar.left-sidebar'); // Seleciona a sidebar pela classe
 
     if (leftSidebarToggle && leftSidebar) {
         leftSidebarToggle.addEventListener('click', () => {
-            leftSidebar.classList.toggle('active');
+            // A classe 'active' fará a sidebar aparecer
+            leftSidebar.classList.toggle('active'); 
+        });
+
+        // Opcional: Fechar a sidebar se clicar fora dela
+        document.addEventListener('click', function(event) {
+            const isClickInsideSidebar = leftSidebar.contains(event.target);
+            const isClickOnToggleButton = leftSidebarToggle.contains(event.target);
+
+            if (!isClickInsideSidebar && !isClickOnToggleButton && leftSidebar.classList.contains('active')) {
+                leftSidebar.classList.remove('active');
+            }
         });
     }
 
