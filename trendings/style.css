@@ -1,0 +1,108 @@
+/* Arquivo: style.css (ou adicione ao home/home.css) */
+
+/* Estilos para o bloco central de tendências */
+.trending-block {
+    background-color: var(--light-text); /* Fundo branco/claro */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 30px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+}
+
+body.dark-mode .trending-block {
+    background-color: var(--dark-bg-secondary); /* Fundo escuro */
+}
+
+/* Título do bloco */
+.trending-title {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--light-border);
+    padding-bottom: 10px;
+}
+
+body.dark-mode .trending-title {
+    border-bottom-color: var(--dark-border);
+}
+
+/* Lista ordenada de tendências */
+.trending-list {
+    list-style-type: none; /* Remove números padrão da lista */
+    counter-reset: trending-counter; /* Inicializa o contador */
+    padding: 0;
+    margin: 0;
+}
+
+.trending-list li {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--light-border);
+    transition: background-color 0.2s;
+    color: var(--dark-text); /* Cor do texto no modo claro */
+}
+
+body.dark-mode .trending-list li {
+    border-bottom-color: var(--dark-border);
+    color: var(--light-text); /* Cor do texto no modo escuro */
+}
+
+.trending-list li:last-child {
+    border-bottom: none;
+}
+
+.trending-list li:hover {
+    background-color: var(--light-bg-secondary);
+    cursor: pointer;
+}
+
+body.dark-mode .trending-list li:hover {
+    background-color: var(--dark-bg-tertiary);
+}
+
+/* Número da posição (1º, 2º, etc.) */
+.trending-list li::before {
+    counter-increment: trending-counter;
+    content: "#" counter(trending-counter);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 15px;
+    min-width: 40px;
+    text-align: right;
+    
+    /* Destaque para os Top 3 */
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+}
+
+/* Estilo para a própria hashtag */
+.hashtag {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-text); 
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.dark-mode .hashtag {
+    color: var(--light-text);
+}
+
+/* Contagem de uso (opcional, para visualização de debug) */
+.count {
+    font-size: 0.9rem;
+    color: var(--light-text-secondary);
+}
+
+.trending-disclaimer {
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: var(--light-text-secondary);
+    text-align: center;
+}
