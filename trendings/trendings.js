@@ -3,14 +3,16 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     // A variável 'db' é inicializada no config/global.js e está disponível globalmente.
-    // Usamos o 'db' do Firebase Firestore.
     const db = firebase.firestore();
     const TRENDING_LIMIT = 10;
-    const MAX_POSTS_TO_ANALYZE = 100; // Limita a análise aos 100 posts mais recentes
+    const MAX_POSTS_TO_ANALYZE = 100; // Analisa os 100 posts mais recentes para tendências
 
     /**
      * Busca o conteúdo de um número limitado de posts recentes do Firestore.
-     * Assumimos que a coleção de posts se chama 'posts' e o campo de texto é 'content'.
+     * Assumimos:
+     * 1. Coleção de posts se chama 'posts'.
+     * 2. O campo de texto do post é 'content'.
+     * 3. Existe um campo 'timestamp' para ordenação.
      * @returns {Promise<Array<string>>} Promise que resolve para um array de strings (conteúdo dos posts).
      */
     async function fetchPostsFromFirestore() {
@@ -24,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             snapshot.forEach(doc => {
                 const postData = doc.data();
-                // Garante que o campo de conteúdo existe e não é nulo
                 if (postData.content && typeof postData.content === 'string') {
                     postsContent.push(postData.content);
                 }
@@ -43,28 +44,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Processa o array de posts para extrair a frequência das hashtags.
+     * Processa o array de posts para extrair, somar e ordenar a frequência das hashtags.
      * @param {Array<string>} posts - Array de strings contendo o texto dos posts.
      * @returns {Array<[string, number]>} Array de pares [hashtag, contagem] ordenado.
      */
     function calculateTrendingTopics(posts) {
         const hashtagCounts = new Map();
-        // Regex para encontrar todas as palavras precedidas por '#' (\w+ captura letras, números e underscore)
+        // Regex: Encontra '#' seguido por uma ou mais letras, números ou underscore (\w+).
         const hashtagRegex = /#(\w+)/g;
 
         posts.forEach(post => {
             let match;
+            // Loop para encontrar TODAS as hashtags no post
             while ((match = hashtagRegex.exec(post)) !== null) {
-                // match[1] contém a palavra (a hashtag sem o #)
-                const hashtag = match[1].toLowerCase(); 
+                const hashtag = match[1].toLowerCase(); // Normaliza para minúsculas para somar corretamente
                 
-                // Incrementa a contagem para a hashtag
+                // Distribui e soma a contagem da hashtag
                 hashtagCounts.set(hashtag, (hashtagCounts.get(hashtag) || 0) + 1);
             }
         });
 
-        // Converte o Map para um Array de [hashtag, count]
-        // Ordena por contagem (do maior para o menor)
+        // Converte o Map para Array e ordena por contagem (do maior para o menor)
         const sortedTopics = Array.from(hashtagCounts.entries())
             .sort(([, countA], [, countB]) => countB - countA);
 
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 1. Busca dos dados reais (assíncrono)
         const posts = await fetchPostsFromFirestore();
         
-        // 2. Processamento e cálculo
+        // 2. Processamento e cálculo das Top 10
         const topTopics = calculateTrendingTopics(posts).slice(0, TRENDING_LIMIT);
 
         if (!trendingListEl) return;
@@ -93,8 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // 3. Inserção no HTML
-        topTopics.forEach(([hashtag, count], index) => {
+        // 3. Inserção funcional no HTML
+        topTopics.forEach(([hashtag, count]) => {
             const listItem = document.createElement('li');
             
             // Torna o item clicável para simular a busca
@@ -112,6 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Inicializa a exibição das tendências ao carregar a página
+    // Inicializa a exibição
     displayTrendingTopics();
 });
