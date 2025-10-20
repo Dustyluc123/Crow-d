@@ -26,14 +26,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modais e Overlays
     const confirmationModal = document.getElementById('confirmationModal');
     const loadingOverlay = document.getElementById('loadingOverlay');
-    const passwordModal = document.getElementById('passwordModal'); // Novo modal
+    const passwordModal = document.getElementById('passwordModal');
+    const termsModal = document.getElementById('termsModal'); // <-- ADICIONADO
     const editBtn = document.getElementById('editBtn');
     const confirmBtn = document.getElementById('confirmBtn');
     
-    // Botões do novo modal de senha
+    // Botões do modal de senha
     const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
     const submitPasswordBtn = document.getElementById('submitPasswordBtn');
     const accessCodeInput = document.getElementById('accessCodeInput');
+
+    // Botões do modal de termos <-- ADICIONADO
+    const acceptTermsBtn = document.getElementById('acceptTermsBtn');
+    const declineTermsBtn = document.getElementById('declineTermsBtn');
 
     // Cropper
     const cropperModal = document.getElementById('cropperModal');
@@ -58,12 +63,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (user) {
             currentUser = user;
             db.collection('users').doc(user.uid).get().then(doc => {
-                if (doc.exists) window.location.href = '../index.html';
+                if (doc.exists) {
+                    // Se o perfil já existe, vai para a home
+                    window.location.href = '../index.html';
+                } else {
+                    // Se o perfil NÃO existe, mostra os termos primeiro
+                    termsModal.style.display = 'flex';
+                }
             });
         } else {
+            // Se não está logado, volta ao login
             window.location.href = '../login/login.html';
         }
     });
+
+    // --- LÓGICA DO MODAL DE TERMOS (NOVO) ---
+    acceptTermsBtn.addEventListener('click', () => {
+        termsModal.style.display = 'none'; // Fecha o modal e deixa o usuário preencher
+    });
+
+    declineTermsBtn.addEventListener('click', () => {
+        // Se recusar, não pode criar perfil. Volta ao login.
+        alert("Você precisa aceitar os termos para criar um perfil.");
+        window.location.href = '../login/login.html';
+    });
+
 
     // --- LÓGICA DE VALIDAÇÃO DE APELIDO ---
     nicknameInput.addEventListener('input', () => {
@@ -132,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 settings: { profilePublic: true, darkMode: true },
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                termsAccepted: true,
-                isApproved: true // <-- ALTERADO PARA TRUE
+                termsAccepted: true, // Já que ele aceitou no modal inicial
+                isApproved: true
             };
             
             await db.collection('users').doc(userId).set(profileData);
@@ -186,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Botão "Voltar e Editar" no modal de confirmação
     editBtn.addEventListener('click', () => confirmationModal.style.display = 'none');
     
-    // Botão "Confirmar" no modal de confirmação AGORA ABRE O MODAL DE SENHA
+    // Botão "Confirmar" no modal de confirmação ABRE O MODAL DE SENHA
     confirmBtn.addEventListener('click', () => {
         confirmationModal.style.display = 'none';
         passwordModal.style.display = 'flex';
