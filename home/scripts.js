@@ -1487,7 +1487,7 @@ async function createPost(content) {
             timestampElement.textContent = "Agora mesmo";
         }
 
-        contentElement.textContent = comment.content;
+        
         likeCount.textContent = comment.likes || 0;
 
         if (comment.likedBy && comment.likedBy.includes(currentUser.uid)) {

@@ -106,3 +106,24 @@ body.dark-mode .hashtag {
     color: var(--light-text-secondary);
     text-align: center;
 }
+.hashtag {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    flex-grow: 1; /* Permite que o elemento cresça */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    /* --- ADIÇÕES PARA QUEBRA DE LINHA --- */
+    word-break: break-all; /* Força a quebra de palavras longas */
+    overflow-wrap: break-word; /* Garante a quebra em navegadores diferentes */
+    white-space: normal; /* Permite que o texto quebre em várias linhas */
+    min-width: 0; /* Ajuda o flexbox a calcular o espaço corretamente */
+    /* --- FIM DAS ADIÇÕES --- */
+}
+
+/* Modo escuro (mantém a cor correta) */
+body.dark-mode .hashtag {
+    color: var(--light-text);
+}

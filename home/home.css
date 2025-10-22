@@ -3049,3 +3049,78 @@ body.dark-mode .hashtag {
 .count {
     color: var(--light-text-secondary);
 }
+.feed-tabs {
+    /* ... (outros estilos que você já tem) ... */
+    display: flex; /* Garante que os itens fiquem em linha */
+    justify-content: center; /* Centraliza os botões no container */
+    align-items: stretch; /* Faz com que todos os botões tenham a mesma altura */
+    max-width: 600px; /* Ajuste a largura máxima conforme necessário */
+    margin: 0 auto 25px; /* Centraliza o container na página */
+    border-radius: 50px; /* Mantém as bordas arredondadas */
+    padding: 4px; /* Espaçamento interno */
+    background-color: var(--light-bg-secondary);
+    border: 1px solid var(--light-border);
+    position: relative; /* Necessário para o slider */
+}
+
+/* Modifica o botão para usar flexbox e ter largura igual */
+.feed-tab-btn {
+    flex: 1 1 0; /* Distribui o espaço igualmente entre os botões */
+    text-align: center; /* Centraliza o texto dentro do botão */
+    background: none;
+    border: none;
+    padding: 8px 10px; /* Ajuste o padding vertical/horizontal */
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--light-text-secondary);
+    transition: color 0.3s ease;
+    z-index: 2; /* Fica acima do slider */
+    white-space: nowrap; /* Impede que o texto quebre */
+    overflow: hidden; /* Esconde texto que transbordar */
+    text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
+}
+
+/* Garante que o slider tenha a largura correta (1/4 do total) */
+.feed-tab-slider {
+    /* ... (outros estilos do slider) ... */
+    /* Agora temos 4 botões */
+    width: calc((100% - 8px) / 4);
+}
+/* Estilo para destacar hashtags dentro do conteúdo do post */
+.post-text .hashtag-link {
+    color: var(--primary-color); /* Sua cor roxa principal */
+    font-weight: bold;
+    cursor: pointer; /* Indica que é clicável */
+    text-decoration: none; /* Remove sublinhado padrão */
+}
+
+/* Efeito ao passar o mouse */
+.post-text .hashtag-link:hover {
+    text-decoration: underline; /* Adiciona sublinhado no hover */
+}
+
+/* Mantém a cor roxa no modo escuro */
+body.dark-mode .post-text .hashtag-link {
+    color: var(--primary-hover); /* Sua cor roxa para hover/dark mode */
+}
+
+/* Ajusta a posição do slider para os 4 botões */
+.feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
+.feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
+.feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
+.feed-tab-btn:nth-child(4).active ~ .feed-tab-slider { transform: translateX(300%); } /* Novo */
+
+/* Modo escuro (ajustes se necessário) */
+body.dark-mode .feed-tabs {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .feed-tab-btn {
+    color: var(--dark-text-secondary);
+}
+
+body.dark-mode .feed-tab-btn.active {
+    color: #ffffff;
+}
