@@ -2847,6 +2847,179 @@ body.dark-mode .options-dropdown .report-btn:hover {
         order: 1; /* Atalhos rápidos primeiro */
     }
 }
+/* ====================================================== */
+/* ESTILOS GLOBAIS PARA RESPONSIVIDADE (TABLETS E CELULARES) */
+/* ====================================================== */
+
+/* Para tablets e telas menores (até 992px) */
+@media (max-width: 992px) {
+    /* Ajusta layout principal para empilhar colunas */
+    .main-container {
+        flex-direction: column;
+        padding: 0 15px; /* Reduz espaçamento lateral */
+        margin-top: 15px;
+    }
+
+    /* Sidebars ocupam largura total e perdem fixação */
+    .sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+        order: 3; /* Sidebars vão para o final */
+    }
+    .feed { order: 2; } /* Feed fica no meio */
+    .left-sidebar { order: 1; } /* Atalhos rápidos primeiro */
+
+    /* Diminui largura da sidebar em modo desktop/tablet (se aplicável em outras páginas) */
+    body:not(.chat-open) .sidebar { /* Ajuste global para sidebar, exceto quando chat está aberto */
+       /* A largura de 200px pode ser específica de certas páginas, verificar necessidade */
+    }
+    body:not(.chat-open) .main-content { /* Ajuste global para conteúdo principal */
+       /* margin-left: 200px; */ /* Verificar necessidade */
+    }
+}
+
+/* Para celulares (até 768px) */
+@media (max-width: 768px) {
+    body {
+        padding-top: 70px; /* Mais espaço no topo se header for maior no mobile */
+        padding-bottom: 70px; /* Espaço para a barra de navegação inferior */
+    }
+
+    /* Ajustes no Header */
+    header {
+        height: 70px;
+        padding: 0 15px;
+    }
+    .logo-img { height: 60px; }
+    .logo span { display: none; } /* Esconde texto do logo */
+
+    /* Esconde navegação principal do header e sidebars */
+    header .main-nav {
+        display: none;
+    }
+    .sidebar { /* Esconde AMBAS as sidebars */
+        display: none;
+    }
+
+    /* Ajusta container principal e conteúdo para ocupar 100% da largura */
+     .main-container {
+        padding: 0 10px; /* Reduz padding lateral se necessário, REMOVE margens */
+        margin-left: 0;
+        margin-right: 0;
+        width: auto; /* Permite ocupar a largura toda */
+        max-width: 100%; /* Garante que não ultrapasse a tela */
+    }
+
+    /* Aplica ao elemento correto que contém o feed e as tabs */
+    .feed, .central-content {
+        width: 100%;       /* Ocupa toda a largura disponível */
+        max-width: 100%;   /* Garante que não ultrapasse a tela */
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 0;   /* Remove padding interno se houver */
+        padding-right: 0;  /* Remove padding interno se houver */
+    }
+
+    .main-content { /* Regra global para remover margem da sidebar */
+        margin-left: 0;
+    }
+
+    /* Mostra a barra de navegação inferior */
+    #mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        background-color: var(--light-text); /* Cor clara por padrão */
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+    body.dark-mode #mobile-bottom-nav {
+        background-color: var(--dark-bg-secondary); /* Cor escura no dark mode */
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* Estilos dos itens da navegação inferior */
+    .mobile-nav-item {
+        background: none; border: none;
+        color: var(--dark-text); /* Cor escura por padrão */
+        font-size: 1.5rem; cursor: pointer; padding: 10px;
+        border-radius: 50%; transition: color 0.3s;
+    }
+    body.dark-mode .mobile-nav-item { color: var(--light-text); } /* Cor clara no dark mode */
+    .mobile-nav-item.active, .mobile-nav-item:hover { color: var(--primary-color); }
+    body.dark-mode .mobile-nav-item.active, body.dark-mode .mobile-nav-item:hover { color: var(--primary-hover); }
+
+     /* Sidebars viram menus laterais (drawers) - Estilos base para funcionamento */
+    .left-sidebar, .right-sidebar {
+        display: flex; /* Garante que o JS possa encontrá-las */
+        position: fixed; top: 0; height: 100%; width: 280px;
+        z-index: 1001; background-color: var(--light-text);
+        box-shadow: 0 0 15px rgba(0,0,0,0.2); overflow-y: auto;
+        transition: transform 0.3s ease-in-out; padding-top: 20px;
+        flex-direction: column; align-items: stretch;
+    }
+    body.dark-mode .left-sidebar, body.dark-mode .right-sidebar { background-color: var(--dark-bg-secondary); }
+    .left-sidebar { left: 0; transform: translateX(-100%); }
+    .right-sidebar { right: 0; transform: translateX(100%); }
+    .left-sidebar.active, .left-sidebar.open { transform: translateX(0); box-shadow: 4px 0 15px rgba(0,0,0,0.3); } /* Mostra sidebar esquerda */
+    .right-sidebar.open { transform: translateX(0); } /* Mostra sidebar direita */
+     /* Garante que seções internas ocupem a largura na sidebar mobile */
+    .left-sidebar .sidebar-section, .right-sidebar .sidebar-section {
+        width: 100%; box-sizing: border-box; padding: 0 20px;
+    }
+
+    /* Ajustes específicos de layout (Ex: perfil, posts) */
+    .profile-header { /* Exemplo da página de perfil */
+        flex-direction: column; align-items: center; text-align: center;
+        padding-top: 70px; /* Espaço para foto sobreposta */
+    }
+    .profile-photo-link { position: static; transform: none; margin-bottom: 15px; }
+    .profile-info { padding-left: 0; }
+    .post-actions { flex-wrap: wrap; } /* Ações do post em múltiplas linhas */
+    .post-action { flex-grow: 1; justify-content: center; }
+
+    /* Ajustes gerais de fonte e imagem */
+    body { font-size: 14px; }
+    h1 { font-size: 1.8rem; }
+    img { max-width: 100%; height: auto; }
+}
+
+/* Ajustes finos para celulares pequenos (até 480px) */
+@media (max-width: 480px) {
+    .main-content { padding: 10px; padding-bottom: 70px; } /* Menos padding lateral */
+
+    /* Ações do post com tamanho mais adequado */
+    .post-actions { gap: 5px; }
+    .post-action { flex-basis: 48%; } /* Tenta colocar 2 por linha */
+
+    /* Ajustes para o seletor de feed em telas pequenas */
+    .feed-tabs {
+        max-width: none; /* Ocupa a largura total */
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    .feed-tab-btn {
+        font-size: 0.75rem; /* Diminui o texto dos botões */
+        padding: 8px 5px; /* Diminui o espaçamento interno */
+    }
+}
+
+/* Garante que o header SEMPRE apareça em telas maiores, mesmo com chat aberto em outra aba */
+@media (min-width: 769px) {
+    body.chat-open > header {
+        display: flex !important;
+    }
+    /* Esconde a nav mobile inferior em telas maiores */
+    #mobile-bottom-nav {
+        display: none !important;
+    }
+}
 
 /* Para telas de até 768px (maioria dos celulares) */
 @media (max-width: 768px) {
@@ -2957,6 +3130,19 @@ body.dark-mode .options-dropdown .report-btn:hover {
         flex-basis: 48%;
         justify-content: center;
     }
+
+    /* --- ADICIONE ESTAS NOVAS REGRAS AQUI --- */
+    .feed-tabs {
+        max-width: none; 
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .feed-tab-btn {
+        font-size: 0.75rem; 
+        padding: 8px 5px; 
+    }
+    /* --- FIM DAS NOVAS REGRAS --- */
 }
 
 /* Arquivo: trendings/style.css */
