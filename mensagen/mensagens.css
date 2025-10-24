@@ -1,353 +1,540 @@
+/* mensagen/mensagens.css - VERSÃO 2 (Ajuste Fundo Modo Claro) */
+
 /* ======================================================
-   Variáveis (fallback caso não venham do tema)
+   Layout Geral (Usando variáveis de home/home.css e global.css)
 ====================================================== */
-:root{
-  --primary-color:#5b5ad3;
-  --primary-color-dark:#4847b5;
 
-  --bg-primary:#ffffff;
-  --bg-secondary:#f5f5f7;
-  --bg-hover:#f0f0f4;
-
-  --text-primary:#222;
-  --text-secondary:#666;
-  --text-tertiary:#999;
-
-  --light-border:#e3e3ea;
-  --border-color:#e3e3ea;
-
-  --shadow:0 4px 12px rgba(0,0,0,.08);
+/* FORÇA O FUNDO DA PÁGINA A SER IGUAL AO DA HOME */
+body.mensagens-page {
+    background-color: var(--light-bg); /* Lilás claro */
 }
-body.dark-mode{
-  --bg-primary:#1a1b1f;
-  --bg-secondary:#202227;
-  --bg-hover:#2a2d33;
+body.mensagens-page.dark-mode {
+    background-color: var(--dark-bg); /* Cinza escuro */
+}
 
-  --text-primary:#fff;
-  --text-secondary:#bbb;
-  --text-tertiary:#888;
+/* Garante que o container principal use o fundo correto */
+.main-container .feed {
+    /* O feed em si não precisa de cor de fundo específica aqui */
+}
 
-  --light-border:#2f3238;
-  --border-color:#2f3238;
+.page-title {
+    color: var(--dark-text); /* Usa variável global */
+    margin-bottom: 20px; /* Consistente com home.css */
+}
+
+body.dark-mode .page-title {
+    color: var(--light-text); /* Usa variável global */
 }
 
 /* ======================================================
-   Layout da página de Mensagens
+   Container principal das Mensagens
 ====================================================== */
-body{ padding-top:60px; }
-header{
-  height:60px; position:fixed; top:0; left:0; right:0; z-index:1000;
-  background:var(--bg-primary); display:flex; align-items:center; justify-content:space-between;
-  padding:0 16px; box-shadow:var(--shadow);
+.messages-container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 60px - 20px - 20px); /* 100vh - header - margin-top - margin-bottom do main-container */
+    background: var(--light-text); /* Fundo primário do site (branco/preto) */
+    border-radius: var(--border-radius); /* Borda global */
+    overflow: hidden;
+    box-shadow: var(--box-shadow); /* Sombra global */
+    position: relative;
 }
-.logo{ display:flex; align-items:center; gap:10px; color:var(--text-primary); font-weight:700; }
-.logo-img{ width:40px; height:40px; }
-.main-nav{ display:flex; gap:12px; }
-.main-nav a{ color:var(--text-primary); text-decoration:none; padding:8px 10px; border-radius:8px; font-weight:600; }
-.main-nav a.active{ background:var(--bg-hover); color:var(--primary-color); }
-.logout-btn{ color:var(--text-primary); text-decoration:none; font-weight:700; }
 
-.main-container{ max-width:1200px; margin:16px auto; padding:0 16px; }
-.feed{ display:flex; flex-direction:column; gap:16px; }
-.page-title{ display:flex; align-items:center; gap:8px; margin:0; color:var(--text-primary); }
-
-/* ======================================================
-   Container principal
-====================================================== */
-.messages-container{
-  display:flex; flex-direction:row; height:calc(100vh - 145px);
-  background:var(--bg-primary); border-radius:12px; overflow:hidden; box-shadow:var(--shadow);
-  position:relative;
+body.dark-mode .messages-container {
+    background: var(--dark-bg-secondary); /* Fundo secundário no dark mode */
 }
+
+/* Ajuste de altura para mobile (considerando nav inferior) */
+@media (max-width: 768px) {
+    body.mensagens-page .messages-container {
+        height: calc(100vh - 60px) !important; /* Altura total menos a barra de navegação inferior */
+    }
+     /* Esconde header global no mobile nesta página */
+    body.mensagens-page > header {
+        display: none !important;
+    }
+    body.mensagens-page {
+        padding-top: 0 !important; /* Remove espaço do header escondido */
+    }
+}
+
 
 /* ================= Lista de conversas ================= */
-.conversations-list{
-  flex:0 0 320px; border-right:1px solid var(--light-border); overflow-y:auto; background:var(--bg-primary);
-  display:flex; flex-direction:column;
+.conversations-list {
+    flex: 0 0 320px;
+    border-right: 1px solid var(--light-border); /* Borda global clara */
+    overflow-y: auto;
+    background: var(--light-text); /* Fundo primário */
+    display: flex;
+    flex-direction: column;
 }
-#conversations-items{ flex:1; }
 
-.conversation-item{
-  display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer;
-  border-bottom:1px solid var(--border-color); transition:background .2s;
+body.dark-mode .conversations-list {
+    background: var(--dark-bg-secondary); /* Fundo secundário */
+    border-right-color: var(--dark-border); /* Borda global escura */
 }
-.conversation-item:hover, .conversation-item.active{ background:var(--bg-hover); }
-.conversation-avatar{ width:48px; height:48px; border-radius:50%; object-fit:cover; }
-.conversation-info{ flex:1; min-width:0; }
-.conversation-name{ margin:0 0 4px; font-weight:700; color:var(--text-primary); }
-.conversation-last-message, .conversation-time{
-  margin:0; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+
+#conversations-items {
+    flex: 1;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--light-border); /* Borda global clara */
+    transition: background-color .2s;
+}
+
+body.dark-mode .conversation-item {
+    border-bottom-color: var(--dark-border); /* Borda global escura */
+}
+
+/* Cor de fundo no hover/ativo */
+.conversation-item:hover, .conversation-item.active {
+    background: var(--light-bg); /* Fundo de hover claro (lilás bem claro) */
+}
+body.dark-mode .conversation-item:hover, body.dark-mode .conversation-item.active {
+    background: var(--dark-bg-tertiary); /* Fundo de hover escuro */
+}
+
+.conversation-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversation-name {
+    margin: 0 0 4px;
+    font-weight: 700;
+    color: var(--dark-text); /* Texto primário global */
+}
+body.dark-mode .conversation-name {
+    color: var(--light-text); /* Texto primário global */
+}
+
+.conversation-last-message, .conversation-time {
+    margin: 0;
+    font-size: 12px;
+    color: var(--light-text-secondary); /* Texto secundário global */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.dark-mode .conversation-last-message, body.dark-mode .conversation-time {
+    color: var(--dark-text-secondary); /* Texto secundário global */
 }
 
 /* ================= Área do chat ================= */
-.chat-area{ flex:1; display:flex; flex-direction:column; }
-.chat-header{
-  display:flex; align-items:center; gap:12px; padding:12px 14px; border-bottom:1px solid var(--border-color);
-  background:var(--bg-secondary);
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
-.back-to-conversations{ display:none; background:none; border:none; font-size:1.2rem; color:var(--text-primary); cursor:pointer; }
-.chat-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
-.chat-user-name{ margin:0; font-weight:700; color:var(--text-primary); }
-.chat-user-status{ font-size:12px; color:var(--text-secondary); }
-.status-badge{ width:8px; height:8px; border-radius:50%; background:#4caf50; display:inline-block; margin-right:5px; }
 
-.chat-messages{
-  flex:1; padding:16px; overflow-y:auto; overflow-x:hidden; background:var(--bg-primary); display:flex; flex-direction:column;
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px; /* Reduzido padding vertical */
+    border-bottom: 1px solid var(--light-border); /* Borda global clara */
+    background: var(--light-bg-secondary); /* Fundo secundário claro (cinza claro #f0f0f0) */
 }
-.message{ display:flex; margin-bottom:12px; max-width:75%; position:relative; }
-.message-sent{ align-self:flex-end; justify-content:flex-end; }
-.message-received{ align-self:flex-start; justify-content:flex-start; }
-.message-content{ padding:10px 14px; border-radius:16px; word-wrap:break-word; white-space:pre-wrap; }
-.message-sent .message-content{ background:var(--primary-color); color:#fff; border-bottom-right-radius:6px; }
-.message-received .message-content{ background:#e9ecef; color:#222; border-bottom-left-radius:6px; }
-body.dark-mode .message-received .message-content{ background:#36373d; color:#fff; }
-.message-time{ font-size:10px; opacity:.7; margin-top:4px; text-align:right; }
 
-.chat-input-area{
-  display:flex; align-items:center; gap:8px; padding:12px 14px; border-top:1px solid var(--border-color); background:var(--bg-secondary);
-  position:relative;
+body.dark-mode .chat-header {
+    background: var(--dark-bg-tertiary); /* Fundo terciário escuro */
+    border-bottom-color: var(--dark-border); /* Borda global escura */
 }
-.chat-action-btn{ background:none; border:none; color:var(--text-secondary); font-size:1.2rem; cursor:pointer; padding:4px; border-radius:50%; }
-.chat-input{
-  flex:1; padding:12px 14px; border:1px solid var(--border-color); border-radius:20px; background:var(--bg-primary);
-  color:var(--text-primary); outline:none;
-}
-.chat-input:focus{ border-color:var(--primary-color); }
-.chat-send-btn{
-  background:var(--primary-color); color:#fff; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-}
-.chat-send-btn:hover{ background:var(--primary-color-dark); }
 
-.loading-conversations, .loading-messages, .no-conversations, .no-messages, .error-message{
-  color:var(--text-secondary); text-align:center; padding:20px;
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.chat-title {
+    flex-grow: 1;
+}
+
+.chat-title h3#chatName {
+    margin: 0;
+    font-size: 1rem; /* Tamanho consistente */
+    font-weight: 600; /* Peso consistente */
+    color: var(--dark-text); /* Cor primária */
+}
+body.dark-mode .chat-title h3#chatName {
+    color: var(--light-text); /* Cor primária */
+}
+
+.chat-status {
+    font-size: 0.8rem;
+    color: var(--light-text-secondary); /* Cor secundária */
+}
+body.dark-mode .chat-status {
+    color: var(--dark-text-secondary); /* Cor secundária */
+}
+
+.status-badge { /* Mantido como está */
+    width: 8px; height: 8px; border-radius: 50%; background:#4caf50; display:inline-block; margin-right:5px;
+}
+
+/* Botão de voltar (mobile) */
+.chat-back-btn#backBtn {
+    margin-left: auto; /* Joga para a direita */
+    background: transparent;
+    border: 0;
+    font-size: 1.2rem; /* Tamanho consistente */
+    color: var(--light-text-secondary); /* Cor secundária */
+    cursor: pointer;
+    padding: 5px;
+    display: none; /* Só aparece no mobile */
+}
+body.dark-mode .chat-back-btn#backBtn {
+    color: var(--dark-text-secondary);
+}
+@media (max-width: 768px){ .chat-back-btn#backBtn { display: block; } }
+
+
+/* === Mensagens === */
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--light-text); /* Fundo primário (branco) */
+    display: flex;
+    flex-direction: column;
+}
+body.dark-mode .chat-messages {
+    background: var(--dark-bg-secondary); /* Fundo secundário escuro */
+}
+
+.message {
+    display: flex;
+    margin-bottom: 12px;
+    max-width: 75%;
+    position: relative;
+    align-items: flex-end; /* Alinha o tempo na base */
+}
+
+.message-sent { align-self: flex-end; }
+.message-received { align-self: flex-start; }
+
+.message-content {
+    padding: 10px 14px;
+    border-radius: 16px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4; /* Melhora legibilidade */
+}
+
+/* Balão Enviado */
+.message-sent .message-content {
+    background: var(--primary-color); /* Cor primária (roxa) */
+    color: var(--light-text); /* Texto claro (branco) */
+    border-bottom-right-radius: 6px;
+}
+
+/* Balão Recebido */
+.message-received .message-content {
+    background: var(--light-bg-secondary); /* Fundo secundário claro (cinza claro #f0f0f0) */
+    color: var(--dark-text); /* Texto escuro */
+    border-bottom-left-radius: 6px;
+}
+body.dark-mode .message-received .message-content {
+    background: var(--dark-bg-tertiary); /* Fundo terciário escuro */
+    color: var(--light-text); /* Texto claro */
+}
+
+.message-time {
+    font-size: 10px;
+    color: var(--light-text-secondary); /* Cor secundária */
+    margin: 0 5px 2px 5px; /* Espaçamento em volta do tempo */
+    align-self: flex-end; /* Garante que fique na base */
+}
+body.dark-mode .message-time {
+    color: var(--dark-text-secondary); /* Cor secundária */
+}
+
+
+/* === Área de Input === */
+.chat-input-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px; /* Reduzido padding vertical */
+    border-top: 1px solid var(--light-border); /* Borda global clara */
+    background: var(--light-bg-secondary); /* Fundo secundário claro (#f0f0f0) */
+    position: relative;
+}
+body.dark-mode .chat-input-area {
+    background: var(--dark-bg-secondary); /* Fundo secundário escuro */
+    border-top-color: var(--dark-border); /* Borda global escura */
+}
+
+.chat-action-btn { /* Botão de Emoji */
+    background: none;
+    border: none;
+    color: var(--light-text-secondary); /* Cor secundária */
+    font-size: 1.25rem; /* Tamanho do ícone */
+    cursor: pointer;
+    padding: 8px; /* Área de clique maior */
+    border-radius: 50%;
+    transition: color 0.2s, background-color 0.2s;
+}
+body.dark-mode .chat-action-btn {
+    color: var(--dark-text-secondary);
+}
+.chat-action-btn:hover {
+    color: var(--primary-color); /* Cor primária no hover */
+    background-color: rgba(112, 33, 196, 0.1); /* Fundo roxo bem claro */
+}
+body.dark-mode .chat-action-btn:hover {
+    color: var(--primary-hover);
+    background-color: rgba(132, 131, 222, 0.1);
+}
+
+
+input#chatInput.chat-input {
+    flex: 1;
+    padding: 10px 15px; /* Padding interno */
+    border: 1px solid var(--light-border); /* Borda global clara */
+    border-radius: 20px; /* Bordas arredondadas */
+    background: var(--light-text); /* Fundo primário (branco) */
+    color: var(--dark-text); /* Texto primário */
+    outline: none;
+    font-size: 0.95rem; /* Tamanho da fonte */
+    transition: border-color 0.2s, background-color 0.2s;
+}
+body.dark-mode input#chatInput.chat-input {
+    background: var(--dark-bg-tertiary); /* Fundo terciário escuro */
+    border-color: var(--dark-border); /* Borda global escura */
+    color: var(--light-text); /* Texto primário */
+}
+input#chatInput.chat-input:focus {
+    border-color: var(--primary-color); /* Borda roxa ao focar */
+}
+
+
+button#sendBtn.chat-send-btn {
+    background: var(--primary-color); /* Cor primária (roxa) */
+    color: var(--light-text); /* Texto claro */
+    border: none;
+    width: 40px; /* Tamanho fixo */
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem; /* Tamanho do ícone */
+    transition: background-color 0.2s;
+}
+button#sendBtn.chat-send-btn:hover {
+    background: var(--primary-hover); /* Cor de hover (roxa mais clara) */
+}
+
+
+/* Mensagens de estado (Carregando, Sem mensagens, Erro) */
+.loading-conversations, .loading-messages, .no-conversations, .no-messages, .error-message {
+    color: var(--light-text-secondary); /* Cor secundária */
+    text-align: center;
+    padding: 30px 15px; /* Mais padding */
+    font-size: 0.9rem; /* Tamanho da fonte */
+}
+body.dark-mode .loading-conversations, body.dark-mode .loading-messages, body.dark-mode .no-conversations, body.dark-mode .no-messages, body.dark-mode .error-message {
+    color: var(--dark-text-secondary); /* Cor secundária */
+}
+.loading-conversations i, .loading-messages i {
+    margin-right: 8px;
 }
 
 /* Emoji picker */
-emoji-picker{
-  position:absolute; bottom:60px; left:14px; z-index:20; box-shadow:var(--shadow); border-radius:8px; display:none;
+emoji-picker { /* Mantido como está, mas verifique a compatibilidade com dark mode da biblioteca */
+    position:absolute; bottom:60px; left:14px; z-index:20; box-shadow:var(--box-shadow); border-radius:8px; display:none;
 }
+
 
 /* ================= Sugestões (iniciar conversa) ================= */
-#suggestions-container{
-  display:none; padding:15px; border-top:1px solid var(--border-color); flex-shrink:0;
+#suggestions-container {
+    display: none; /* Mantém escondido por padrão */
+    padding: 15px;
+    border-top: 1px solid var(--light-border); /* Borda global clara */
+    flex-shrink: 0;
+    background-color: var(--light-bg-secondary); /* Fundo secundário claro (#f0f0f0) */
 }
-.suggestions-title{ margin:0 0 5px; font-size:14px; font-weight:600; color:var(--text-primary); }
-.section-subtitle{ font-size:12px; color:var(--text-secondary); margin-bottom:12px; }
-#suggestions-list{ display:flex; flex-direction:column; gap:10px; }
-.suggestion-item-link{ text-decoration:none; color:inherit; display:block; }
-.suggestion-item{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; transition:background .2s; }
-.suggestion-item:hover{ background:var(--bg-hover); }
-.suggestion-photo{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
-.suggestion-info{ flex:1; min-width:0; }
-.suggestion-info h4{ margin:0; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-primary); }
-.suggestion-info .suggestion-sub{ margin:3px 0 0; font-size:12px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.start-chat-btn{ background:none; border:none; color:var(--primary-color); font-size:1.2rem; cursor:pointer; padding:5px; }
+body.dark-mode #suggestions-container {
+    border-top-color: var(--dark-border); /* Borda global escura */
+    background-color: var(--dark-bg-tertiary); /* Fundo terciário escuro */
+}
 
-/* ================= Mobile mágico ================= */
+.suggestions-title {
+    margin: 0 0 5px;
+    font-size: 0.9rem; /* Menor */
+    font-weight: 600;
+    color: var(--dark-text); /* Cor primária */
+}
+body.dark-mode .suggestions-title {
+    color: var(--light-text);
+}
+
+#suggestions-container .section-subtitle { /* Estilo herdado de home.css */
+    font-size: 0.8rem; /* Menor */
+    color: var(--light-text-secondary); /* Cor secundária */
+    margin-bottom: 12px;
+}
+body.dark-mode #suggestions-container .section-subtitle {
+    color: var(--dark-text-secondary);
+}
+
+#suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Adaptação do estilo de sugestão de home.css */
+.suggestion-item-link { text-decoration: none; color: inherit; display: block; }
+.suggestion-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--border-radius); transition:background-color .2s;
+}
+.suggestion-item:hover { background: var(--light-bg); } /* Lilás claro */
+body.dark-mode .suggestion-item:hover { background: var(--dark-bg-secondary); } /* Cinza escuro */
+
+.suggestion-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.suggestion-info { flex: 1; min-width: 0; }
+.suggestion-info h4.suggestion-name { margin: 0; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--dark-text); }
+body.dark-mode .suggestion-info h4.suggestion-name { color: var(--light-text); }
+.suggestion-info p.suggestion-sub { margin: 3px 0 0; font-size: 0.75rem; color: var(--light-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.dark-mode .suggestion-info p.suggestion-sub { color: var(--dark-text-secondary); }
+
+.start-chat-btn { background:none; border:none; color:var(--primary-color); font-size: 1.2rem; cursor:pointer; padding:5px; }
+body.dark-mode .start-chat-btn { color: var(--primary-hover); }
+
+
+/* ================= Mobile (Ajustes específicos para chat) ================= */
 @media (max-width: 768px){
-  .messages-container{ height:calc(100vh - 120px - 60px); }
-  .conversations-list, .chat-area{
-    width:100%; height:100%; position:absolute; top:0; left:0; transition:transform .3s ease-in-out;
-  }
-  .conversations-list{ transform:translateX(0); z-index:2; }
-  .chat-area{ transform:translateX(100%); z-index:3; }
-  /* Quando um chat é aberto */
-  .feed.chat-active .chat-area{ transform:translateX(0); }
-  .feed.chat-active .page-title{ display:none; }
-  .back-to-conversations{ display:block; }
+    .conversations-list, .chat-area {
+        width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: transform .3s ease-in-out;
+        /* Garante fundo consistente */
+        background-color: var(--light-text);
+    }
+    body.dark-mode .conversations-list, body.dark-mode .chat-area {
+        background-color: var(--dark-bg-secondary);
+    }
+
+    .conversations-list { transform: translateX(0); z-index: 2; }
+    .chat-area { transform: translateX(100%); z-index: 3; }
+
+    /* Quando um chat é aberto no mobile */
+    body.chat-open .chat-area { transform: translateX(0); }
+    body.chat-open .conversations-list { transform: translateX(-100%); } /* Esconde a lista */
+
+    /* Garante que o título da página não apareça quando o chat está aberto */
+    body.chat-open .page-title { display:none; }
 }
 
-/* ================= Scrollbar ================= */
-::-webkit-scrollbar{ width:8px; }
-::-webkit-scrollbar-track{ background:var(--bg-secondary); }
-::-webkit-scrollbar-thumb{ background-color:var(--border-color); border-radius:4px; }
-::-webkit-scrollbar-thumb:hover{ background-color:var(--primary-color); }
-body.dark-mode ::-webkit-scrollbar-track{ background:var(--bg-primary); }
-body.dark-mode ::-webkit-scrollbar-thumb{ background-color:#555; }
 
-/* ================= Mobile bottom nav ================= */
-#mobile-bottom-nav{ display:none; }
-@media (max-width:768px){
-  #mobile-bottom-nav{
-    display:flex; justify-content:space-around; align-items:center; position:fixed; bottom:0; left:0; width:100%; height:60px;
-    background:var(--bg-primary); box-shadow:0 -2px 6px rgba(0,0,0,.15); z-index:999;
-  }
-  .mobile-nav-item{ background:none; border:none; color:var(--text-primary); font-size:1.4rem; padding:8px; border-radius:50%; }
-  .mobile-nav-item.active, .mobile-nav-item:hover{ color:var(--primary-color); }
-}
-/* Mobile: quando um chat está aberto, esconda o header do site e use a altura cheia */
-@media (max-width: 768px) {
-  body.chat-open {
-    padding-top: 0 !important;         /* o header fixo some, tira o espaço */
-  }
-  body.chat-open > header {
-    display: none !important;          /* esconde APENAS o header global */
-  }
-  body.chat-open .messages-container {
-    height: calc(100vh - 60px);        /* 60px = bottom nav */
-  }
-}
+/* ================= Scrollbar (Usando variáveis globais) ================= */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--light-bg-secondary); } /* Cinza claro #f0f0f0 */
+::-webkit-scrollbar-thumb { background-color: #cccccc; border-radius: 4px; } /* Cinza médio */
+::-webkit-scrollbar-thumb:hover { background-color: #bbbbbb; } /* Cinza mais escuro no hover */
 
-/* Esconde o header SOMENTE na página de mensagens e SOMENTE no mobile */
-@media (max-width: 768px) {
-  body.mensagens-page.chat-open > header {
-    display: none !important;
-  }
-}
-/* === Mensagens: esconder o header no MOBILE, sempre, nesta página === */
-@media (max-width: 768px) {
-  body.mensagens-page > header {
-    display: none !important;
-  }
-  body.mensagens-page {
-    padding-top: 0 !important;         /* já que o header some, zera o espaço */
-  }
-  body.mensagens-page .messages-container {
-    height: calc(100vh - 60px) !important; /* 60px = mobile bottom nav */
-  }
-}
-/* Cor de fundo mais suave para o modo claro */
-body {
-  background-color: #f0f2f5; /* Um cinza muito claro e suave */
-}
+body.dark-mode ::-webkit-scrollbar-track { background: var(--dark-bg-tertiary); } /* Cinza bem escuro */
+body.dark-mode ::-webkit-scrollbar-thumb { background-color: #555; } /* Cinza escuro */
+body.dark-mode ::-webkit-scrollbar-thumb:hover { background-color: #777; } /* Cinza mais claro no hover */
 
-/* Garante que o container principal se destaque */
-.messages-container {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-/* === ESTILOS PARA O BOTÃO DE APAGAR MENSAGEM === */
 
-/* A linha da mensagem precisa ter posicionamento relativo */
-.message {
-  position: relative;
-  align-items: center; /* Alinha a lixeira com o balão */
-}
-
-/* Estilo da lixeira */
+/* ================= Botão de apagar mensagem ================= */
+/* (Mantido como estava) */
+.message { position: relative; align-items: center; }
 .message-delete-btn {
-  position: absolute;
-  left: -35px; /* Posição à esquerda do balão */
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: transparent;
-  border: none;
-  color: var(--light-text-secondary);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 0.9rem;
-  opacity: 0.5; /* Sempre visível, mas com transparência */
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute; left: -35px; top: 50%; transform: translateY(-50%);
+    background-color: transparent; border: none; color: var(--light-text-secondary);
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.9rem;
+    opacity: 0.5; transition: all 0.2s; display: flex; align-items: center; justify-content: center;
 }
-
-/* Efeito ao passar o mouse */
-.message.sent:hover .message-delete-btn {
-  opacity: 1; /* Opacidade total no hover da mensagem */
-}
-
-.message-delete-btn:hover {
-  background-color: #ff4d4d;
-  color: white;
-}
-
-/* Ajuste para modo escuro */
-body.dark-mode .message-delete-btn {
-  color: var(--dark-text-secondary);
-}
-body.dark-mode .message-delete-btn:hover {
-  background-color: #ff4d4d;
-  color: white;
-}
-
-/* Correção final para a cor do horário */
-
-/* Define uma cor escura para o horário no modo claro (padrão) */
-.message-time {
-  color: #666 !important; 
-}
-
-/* Garante que a cor do horário continue clara no modo escuro */
-body.dark-mode .message-time {
-  color: #999 !important;
-}
-.chat-header{
-  display:flex; align-items:center; gap:12px;
-  padding:10px 14px; border-bottom:1px solid #eaeaea;
-}
-.chat-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; }
-.chat-title h3{ margin:0; font-size:16px; }
-.chat-status{ font-size:12px; opacity:.8; }
-.status-badge{ display:inline-block; width:8px; height:8px; border-radius:50%; background:#4caf50; margin-right:6px; }
-.chat-back-btn{ margin-left:auto; background:transparent; border:0; font-size:18px; cursor:pointer; display:none; }
-@media (max-width: 768px){ .chat-back-btn{ display:block; } }
+body.dark-mode .message-delete-btn { color: var(--dark-text-secondary); }
+.message.message-sent:hover .message-delete-btn { opacity: 1; } /* Só aparece no hover da MENSAGEM ENVIADA */
+.message-delete-btn:hover { background-color: #ff4d4d; color: white; }
 
 
-/* === ESTILOS PARA O MENU DE DENÚNCIA NO CHAT === */
-.chat-header .chat-title {
-  flex-grow: 1;
-}
-.chat-options {
-  position: relative;
-  margin-left: 15px;
-}
+/* ================= Menu de Denúncia no Chat Header ================= */
+/* (Estilos mantidos, usando variáveis globais) */
+.chat-options { position: relative; margin-left: 10px; }
 .chat-options .options-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  padding: 8px 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+    background: none; border: none; color: var(--light-text-secondary); font-size: 1rem;
+    padding: 8px; border-radius: 50%; cursor: pointer; transition: background-color 0.2s, color 0.2s;
 }
-.chat-options .options-btn:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
+body.dark-mode .chat-options .options-btn { color: var(--dark-text-secondary); }
+.chat-options .options-btn:hover { background-color: var(--light-bg); color: var(--primary-color); }
+body.dark-mode .chat-options .options-btn:hover { background-color: var(--dark-bg-tertiary); color: var(--primary-hover); }
+
 .chat-options .options-dropdown {
-  display: none;
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  width: 180px;
-  z-index: 10;
-  overflow: hidden;
+    display: none; position: absolute; top: 110%; right: 0;
+    background-color: var(--light-text); border: 1px solid var(--light-border);
+    border-radius: var(--border-radius); box-shadow: var(--box-shadow);
+    width: 180px; z-index: 10; overflow: hidden;
 }
-.chat-options .options-dropdown.active {
-  display: block;
-}
+body.dark-mode .chat-options .options-dropdown { background-color: var(--dark-bg-secondary); border-color: var(--dark-border); }
+.chat-options .options-dropdown.active { display: block; }
+
 .chat-options .options-dropdown a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 15px;
-  color: var(--text-primary);
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+    display: flex; align-items: center; gap: 10px; padding: 12px 15px;
+    color: var(--dark-text); text-decoration: none; font-size: 0.9rem; transition: background-color 0.2s;
 }
-.chat-options .options-dropdown a:hover {
-  background-color: var(--bg-hover);
+body.dark-mode .chat-options .options-dropdown a { color: var(--light-text); }
+.chat-options .options-dropdown a:hover { background-color: var(--light-bg); }
+body.dark-mode .chat-options .options-dropdown a:hover { background-color: var(--dark-bg-tertiary); }
+
+/* Botão Denunciar Conversa (vermelho) */
+.chat-options .report-user-btn { color: #dc3545; font-weight: 600; }
+body.dark-mode .chat-options .report-user-btn { color: #ff5c5c; }
+.chat-options .report-user-btn:hover { background-color: rgba(220, 53, 69, 0.1); }
+body.dark-mode .chat-options .report-user-btn:hover { background-color: rgba(255, 92, 92, 0.15); }
+
+/* mensagen/mensagens.css */
+
+/* ... (Todo o CSS anterior) ... */
+
+/* ======================================================
+   CORREÇÃO: Cor do Ícone de Configurações (Engrenagem)
+====================================================== */
+
+header .user-actions a {
+    color: var(--dark-text); /* Cor padrão escura para o link/ícone */
+    padding: 8px; /* Adiciona um padding para área de clique */
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
 }
-.chat-options .report-user-btn {
-  color: #dc3545;
-  font-weight: 600;
+
+body.dark-mode header .user-actions a {
+    color: var(--light-text); /* Cor padrão clara para o link/ícone */
 }
-body.dark-mode .chat-options .report-user-btn {
-  color: #ff5c5c;
+
+/* Efeito hover consistente com home.css */
+header .user-actions a:hover {
+    background-color: var(--light-bg); /* Fundo lilás claro */
+    color: var(--primary-color); /* Ícone roxo */
 }
-.chat-options .report-user-btn:hover {
-  background-color: rgba(220, 53, 69, 0.1);
+
+body.dark-mode header .user-actions a:hover {
+    background-color: var(--dark-bg-tertiary); /* Fundo cinza escuro */
+    color: var(--primary-hover); /* Ícone roxo claro */
 }
-body.dark-mode .chat-options .report-user-btn:hover {
-  background-color: rgba(255, 92, 92, 0.15);
+
+/* Garante que o ícone dentro do link use a cor correta */
+header .user-actions a i {
+   font-size: 1.1rem; /* Ajuste o tamanho se necessário */
+   vertical-align: middle; /* Alinha o ícone verticalmente */
 }
