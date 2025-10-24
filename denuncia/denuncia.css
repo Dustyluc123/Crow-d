@@ -1,0 +1,167 @@
+/* denuncia.css - Estilos específicos para a página de denúncia */
+
+.report-container {
+    background-color: var(--light-text); /* Usa a cor de fundo clara definida no global.css */
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 25px 30px;
+    margin-top: 20px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+body.dark-mode .report-container {
+    background-color: var(--dark-bg-secondary); /* Cor de fundo escura */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.report-container .section-subtitle {
+    color: var(--light-text-secondary); /* Cor de texto secundária */
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+body.dark-mode .report-container .section-subtitle {
+    color: var(--dark-text-secondary);
+}
+
+#report-form .input-group {
+    margin-bottom: 25px;
+}
+
+#report-form label {
+    font-weight: 600;
+    color: var(--dark-text); /* Cor de texto principal (escura no modo claro) */
+    margin-bottom: 10px;
+    display: block;
+}
+
+body.dark-mode #report-form label {
+    color: var(--light-text); /* Cor de texto principal (clara no modo escuro) */
+}
+
+/* Estilização das opções de rádio */
+.report-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: var(--light-bg-secondary); /* Fundo levemente acinzentado */
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--light-border);
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+body.dark-mode .radio-option {
+    background-color: var(--dark-bg-tertiary); /* Fundo escuro terciário */
+    border-color: var(--dark-border);
+}
+
+.radio-option:hover {
+    border-color: var(--primary-color); /* Borda roxa ao passar o mouse */
+}
+
+.radio-option input[type="radio"] {
+    margin-right: 12px;
+    accent-color: var(--primary-color); /* Cor da bolinha quando selecionado */
+}
+
+.radio-option span {
+    flex: 1;
+    color: var(--dark-text);
+}
+
+body.dark-mode .radio-option span {
+    color: var(--light-text);
+}
+
+/* Textarea para detalhes */
+#report-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--light-border);
+    border-radius: var(--border-radius);
+    background-color: var(--light-bg-secondary);
+    color: var(--dark-text);
+    font-size: 1rem;
+    min-height: 100px;
+    resize: vertical;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+body.dark-mode #report-form textarea {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+    color: var(--light-text);
+}
+
+#report-form textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Botões de ação */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* Botão secundário (Cancelar) - Reutiliza estilo global */
+.secondary-btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    background-color: var(--light-bg-secondary);
+    color: var(--dark-text);
+    border: 1px solid var(--light-border);
+    transition: background-color 0.2s;
+}
+.secondary-btn:hover {
+    background-color: #e0e0e0;
+}
+
+body.dark-mode .secondary-btn {
+    background-color: var(--dark-bg-tertiary);
+    color: var(--light-text);
+    border-color: var(--dark-border);
+}
+body.dark-mode .secondary-btn:hover {
+    background-color: #4a4b50;
+}
+
+/* Botão de perigo (Enviar Denúncia) - Reutiliza estilo global */
+.danger-btn {
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    background-color: #dc3545; /* Vermelho */
+    color: white;
+    border: none;
+    transition: background-color 0.2s;
+}
+.danger-btn:hover {
+    background-color: #c82333; /* Vermelho mais escuro */
+}
+
+/* --- Responsividade --- */
+@media (max-width: 768px) {
+    .report-container {
+        padding: 20px;
+    }
+    .form-actions {
+        flex-direction: column;
+    }
+    .form-actions button {
+        width: 100%;
+    }
+}

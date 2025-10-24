@@ -969,8 +969,7 @@ async function createPost(content) {
 
 
     // =======================================================================================
-    // FUNÇÃO addPostToDOM CORRIGIDA
-    // A única alteração foi adicionar a lógica do menu de denúncia no lugar correto.
+    // FUNÇÃO addPostToDOM - ÚNICA SEÇÃO MODIFICADA
     // =======================================================================================
     function addPostToDOM(post, isSingleView = false) {
         if (!postTemplate) {
@@ -1085,9 +1084,7 @@ async function createPost(content) {
             const shareBtn = postElement.querySelector(".share-btn");
             const deleteBtn = postElement.querySelector('.post-delete-btn');
     
-            // ### O CÓDIGO DE DENÚNCIA QUE VOCÊ AINDA NÃO QUER USAR ESTÁ AQUI DENTRO ###
-            // Ele não vai quebrar nada, mas a funcionalidade está desativada por enquanto
-            // pois você pediu para voltar ao início.
+            // ### INÍCIO DA MODIFICAÇÃO PARA O NOVO SISTEMA DE DENÚNCIA ###
             const optionsBtn = postElement.querySelector(".options-btn");
             const dropdown = postElement.querySelector(".options-dropdown");
             const reportBtn = postElement.querySelector(".report-btn");
@@ -1104,36 +1101,24 @@ async function createPost(content) {
                 });
             }
     
+            // Substituímos o listener antigo (que criava um report direto)
+            // por este novo listener que redireciona para a página 'denuncia.html'
             if (reportBtn) {
-                reportBtn.addEventListener('click', async (e) => {
+                reportBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     dropdown.classList.remove('active'); 
-    
-                    const confirmed = await showConfirmationModal(
-                        "Denunciar Publicação",
-                        "Você tem certeza que deseja denunciar esta publicação? Esta ação é anônima e será analisada por nossa equipe.",
-                        "Confirmar Denúncia",
-                        "Cancelar"
-                    );
-    
-                    if (confirmed) {
-                        try {
-                            await db.collection('reports').add({
-                                postId: post.id,
-                                reportedBy: currentUser.uid,
-                                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                status: "pending"
-                            });
-                            showToast("Denúncia enviada com sucesso. Agradecemos sua colaboração!", "success");
-                        } catch (error) {
-                            console.error("Erro ao registrar denúncia: ", error);
-                            showCustomAlert("Não foi possível enviar sua denúncia. Tente novamente.");
-                        }
-                    }
+
+                    // 'baseId' foi definido no início desta função (linha 923)
+                    // Ele é o ID do post original (ou o próprio ID se não for repost)
+                    const postIdToReport = baseId; 
+                    
+                    // Redireciona para a página de denúncia com os parâmetros corretos
+                    // Assumindo que 'denuncia/denuncia.html' está na raiz do projeto.
+                    window.location.href = `denuncia/denuncia.html?type=post&id=${postIdToReport}`;
                 });
             }
-            // ### FIM DO CÓDIGO DE DENÚNCIA ###
+            // ### FIM DA MODIFICAÇÃO ###
     
     
             const isLiked = !!(currentUser && basePost.likedBy?.includes(currentUser.uid));
@@ -1212,6 +1197,10 @@ async function createPost(content) {
         }
         return postElement;
     }
+    // =======================================================================================
+    // FIM DA FUNÇÃO MODIFICADA
+    // =======================================================================================
+
 
     async function showSinglePostView(postId) {
         detachPostsListener();
