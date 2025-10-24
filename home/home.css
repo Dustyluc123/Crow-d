@@ -78,15 +78,17 @@
   }
   body.dark-mode .quoted-text { color: var(--light-text); }
   
-.feed-tabs {
-    position: relative;
-    display: flex;
-    justify-content: center;
+  .feed-tabs {
+    position: relative; 
+    display: flex; 
+    align-items: stretch;
+    
+    /* Removemos o max-width e margin: 0 auto */
+    margin-bottom: 25px; 
+
+    border-radius: 50px; 
+    padding: 4px; 
     background-color: var(--light-bg-secondary);
-    border-radius: 50px;
-    padding: 4px; /* Reduzido para um visual mais fino */
-    margin: 0 auto 25px;
-    max-width: 450px; /* Mais estreito para parecer mais horizontal */
     border: 1px solid var(--light-border);
 }
 
@@ -129,28 +131,29 @@ body.dark-mode .feed-tabs {
 }
 .feed-tab-slider {
     position: absolute;
-    top: 4px; /* Ajustado ao novo padding */
-    left: 4px; /* Ajustado ao novo padding */
-    height: calc(100% - 8px); /* Ajustado ao novo padding */
-    width: calc((100% - 8px) / 3); /* Ajustado ao novo padding */
+    top: 4px;
+    left: 4px;  /* <--- CORRIGIDO (de 40px para 4px) */
+    height: calc(100% - 8px);
+    width: calc((100% - 8px) / 3); /* <-- Correto para 3 abas */
     background-color: var(--primary-color);
-    border-radius: 50px;
+    border-radius: 50px; /* <-- Ajustado para 50px */
     box-shadow: 0 2px 8px rgba(112, 33, 196, 0.4);
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 1;
 }
 
 .feed-tab-btn {
-    flex: 1;
+    flex: 1; /* Garante que os botões dividam o espaço igualmente */
     background: none;
     border: none;
-    padding: 8px 15px; /* Altura do botão reduzida */
-    font-size: 0.85rem; /* Fonte um pouco menor */
+    padding: 8px 15px;
+    font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     color: var(--light-text-secondary);
     transition: color 0.3s ease;
-    z-index: 2;
+    z-index: 2; /* Fica acima do slider */
+    text-align: center; /* Centraliza o texto */
 }
 
 body.dark-mode .feed-tab-btn {
@@ -158,12 +161,14 @@ body.dark-mode .feed-tab-btn {
 }
 
 .feed-tab-btn.active {
-    color: #ffffff;
+    color: #ffffff; /* Cor do texto quando ativo */
 }
 
 /* Move a pílula com base no botão ativo */
+.feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
 .feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
 .feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
+/* A regra antiga para nth-child(4) deve ser removida */
 .info-message {
     text-align: center;
     padding: 30px;
@@ -3236,22 +3241,18 @@ body.dark-mode .hashtag {
     color: var(--light-text-secondary);
 }
 .feed-tabs {
-    /* ... (outros estilos que você já tem) ... */
-    display: flex; /* Garante que os itens fiquem em linha */
-    justify-content: center; /* Centraliza os botões no container */
-    align-items: stretch; /* Faz com que todos os botões tenham a mesma altura */
-    max-width: 600px; /* Ajuste a largura máxima conforme necessário */
-    margin: 0 auto 25px; /* Centraliza o container na página */
-    border-radius: 50px; /* Mantém as bordas arredondadas */
-    padding: 4px; /* Espaçamento interno */
-    background-color: var(--light-bg-secondary);
-    border: 1px solid var(--light-border);
-    position: relative; /* Necessário para o slider */
+   /* ... (outros estilos que você já tem) ... */
+   display: flex; 
+   justify-content: center; 
+   align-items: stretch; 
+   max-width: 600px; /* <-- PROBLEMA */
+   margin: 0 auto 25px; /* <-- PROBLEMA */
+   /* ... (mais estilos) ... */
 }
 
 /* Modifica o botão para usar flexbox e ter largura igual */
 .feed-tab-btn {
-    flex: 1 1 0; /* Distribui o espaço igualmente entre os botões */
+    flex: 1 1 0;
     text-align: center; /* Centraliza o texto dentro do botão */
     background: none;
     border: none;
@@ -3271,7 +3272,7 @@ body.dark-mode .hashtag {
 .feed-tab-slider {
     /* ... (outros estilos do slider) ... */
     /* Agora temos 4 botões */
-    width: calc((100% - 8px) / 4);
+    width: calc((100% - 60px) /3); /* <-- PROBLEMA */
 }
 /* Estilo para destacar hashtags dentro do conteúdo do post */
 .post-text .hashtag-link {
@@ -3295,7 +3296,6 @@ body.dark-mode .post-text .hashtag-link {
 .feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
 .feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
 .feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
-.feed-tab-btn:nth-child(4).active ~ .feed-tab-slider { transform: translateX(300%); } /* Novo */
 
 /* Modo escuro (ajustes se necessário) */
 body.dark-mode .feed-tabs {
