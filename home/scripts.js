@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const confirmHobbiesBtn = document.getElementById("confirm-hobbies-btn");
     const hobbyListContainer = document.getElementById("hobby-list-container");
     const selectedHobbiesContainer = document.getElementById("selected-hobbies-container");
+    const postEditor = document.getElementById("post-content-editor"); // <== ADICIONE ESTA
     const replyTargetByPost = new Map();
 
     let selectedHobbiesForPost = [];
@@ -54,7 +55,12 @@ document.addEventListener("DOMContentLoaded", function () {
         "📚 Cultura Pop": ["Filmes", "Séries", "Animes", "Livros", "Quadrinhos/Mangás", "Ficção Científica", "Fantasia", "Poesia"],
         "🌍 Estilo de Vida & Outros": ["Culinária", "Viagens", "Idiomas", "Voluntariado", "Jardinagem", "Acampar", "Astronomia", "Animais de Estimação"]
     };
+// home/scripts.js
 
+    // Adicione este listener
+    if (postEditor) {
+        postEditor.addEventListener('input', highlightHashtags);
+    }
     function renderHobbyList() {
         hobbyListContainer.innerHTML = '';
         if (document.getElementById('hobby-search-input')) {
@@ -503,19 +509,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    if (postButton && postInput) {
-        postButton.addEventListener("click", function () {
-            const content = postInput.value.trim();
-            createPost(content);
-        });
+   // home/scripts.js (NOVO CÓDIGO - SUBSTITUA O BLOCO ACIMA POR ESTE)
 
-        postInput.addEventListener("keypress", function (e) {
-            if (e.key === "Enter") {
-                const content = postInput.value.trim();
-                createPost(content);
-            }
-        });
-    }
+// Substitua o listener do postButton
+if (postButton && postEditor) { // <--- AGORA USA 'postEditor'
+    postButton.addEventListener("click", function () {
+        // Não passamos mais o 'content', pois a createPost agora pega direto do editor
+        createPost(); // <--- Chama createPost SEM o 'content'
+    });
+
+    // Este listener do "Enter" fica mais complexo, podemos desativá-lo por enquanto
+    // ou mantê-lo simples, mas ele não vai destacar hashtags ao pressionar Enter
+    /*
+    postEditor.addEventListener("keypress", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) { // Se pressionar Enter sem Shift
+            e.preventDefault(); // Impede a quebra de linha
+            createPost(); // Chama a função de criar post
+        }
+    });
+    */
+}
 
     async function loadUserProfile(userId) {
         try {
@@ -626,7 +639,116 @@ document.addEventListener("DOMContentLoaded", function () {
             type: d.type || (isRepost ? 'repost' : 'post')
         };
     }
+// home/scripts.js
 
+// --- FUNÇÃO ATUALIZADA (v4) PARA COLORIR HASHTAGS E RESTAURAR CURSOR ---
+function highlightHashtags() {
+    const editor = document.getElementById('post-content-editor');
+    if (!editor) return;
+
+    // 1. Salva a posição do cursor (índice de caracteres)
+    const selection = window.getSelection();
+    let charIndex = -1;
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const preCaretRange = document.createRange();
+        preCaretRange.selectNodeContents(editor);
+        // Garante que o fim do range não exceda o conteúdo do nó final
+        if (range.endContainer.nodeType === Node.TEXT_NODE && range.endOffset > range.endContainer.textContent.length) {
+             preCaretRange.setEnd(range.endContainer, range.endContainer.textContent.length);
+        } else {
+             preCaretRange.setEnd(range.endContainer, range.endOffset);
+        }
+        charIndex = preCaretRange.toString().length;
+    }
+
+    // Pega o texto puro atual
+    let currentText = editor.innerText;
+
+    // Define o texto puro no input oculto (se existir)
+    const postInput = document.getElementById("post-content");
+    if (postInput) postInput.value = currentText.trim();
+
+    // Expressão regular para encontrar hashtags (incluindo acentos e ç)
+    const hashtagRegex = /(#[\wáàãâéêíóõôúçÁÀÃÂÉÊÍÓÕÔÚÇ]+)/g;
+
+    // Gera o novo HTML com highlights
+    // Usa textContent para segurança e depois substitui \n por <br> e aplica o highlight
+    const tempDiv = document.createElement('div');
+    tempDiv.textContent = currentText; // Insere texto puro para escapar HTML
+    let newHtml = tempDiv.innerHTML.replace(/\n/g, '<br>'); // Converte quebras de linha
+    newHtml = newHtml.replace(hashtagRegex, `<span class="hashtag-highlight">$1</span>`); // $1 é o grupo (#palavra)
+
+    // *** MODIFICAÇÃO PRINCIPAL: SÓ ATUALIZA SE O HTML FOR DIFERENTE ***
+    // Isso evita re-renderizações desnecessárias que causam o bug
+    if (editor.innerHTML !== newHtml) {
+        editor.innerHTML = newHtml;
+
+        // 2. Restaura a posição do cursor SOMENTE se o HTML foi modificado
+        editor.focus(); // Garante que o editor esteja focado
+        if (charIndex !== -1) {
+            try {
+                // Tenta encontrar o nó de texto e o offset correspondente ao charIndex
+                let currentPos = 0;
+                const nodeIterator = document.createNodeIterator(editor, NodeFilter.SHOW_TEXT);
+                let targetNode = null;
+                let targetOffset = 0;
+
+                let currentNode;
+                while (currentNode = nodeIterator.nextNode()) {
+                    const nodeLength = currentNode.textContent.length;
+                    if (currentPos + nodeLength >= charIndex) {
+                        targetNode = currentNode;
+                        targetOffset = charIndex - currentPos;
+                        break; // Encontrou o nó
+                    }
+                    currentPos += nodeLength;
+                }
+
+                // Se não encontrou um nó (ex: editor vazio ou erro), usa o editor como fallback
+                if (!targetNode) {
+                    targetNode = editor;
+                    targetOffset = editor.childNodes.length > 0 ? 1 : 0; // Tenta colocar após o último filho ou no início
+                }
+                // Garante que o offset não seja maior que o conteúdo do nó
+                 if (targetNode.nodeType === Node.TEXT_NODE && targetOffset > targetNode.textContent.length) {
+                    targetOffset = targetNode.textContent.length;
+                } else if (targetNode === editor && targetOffset > editor.childNodes.length) {
+                    targetOffset = editor.childNodes.length;
+                }
+
+
+                const newRange = document.createRange();
+                 // Verifica se targetNode é válido antes de chamar setStart
+                if (targetNode) {
+                    newRange.setStart(targetNode, targetOffset);
+                    newRange.collapse(true); // Cria um cursor (sem seleção)
+                    selection.removeAllRanges(); // Limpa seleções antigas
+                    selection.addRange(newRange); // Adiciona o novo cursor
+                } else {
+                     throw new Error("Target node not found for cursor restoration.");
+                }
+
+
+            } catch (error) {
+                console.error("Erro ao restaurar cursor pelo índice:", error);
+                // Fallback SUPER SEGURO: colocar no final
+                const finalFallbackRange = document.createRange();
+                finalFallbackRange.selectNodeContents(editor);
+                finalFallbackRange.collapse(false); // false = ir para o final
+                selection.removeAllRanges();
+                selection.addRange(finalFallbackRange);
+            }
+        } else {
+            // Fallback se não conseguiu salvar o índice original: Coloca no final
+            const rangeFallback = document.createRange();
+            rangeFallback.selectNodeContents(editor);
+            rangeFallback.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(rangeFallback);
+        }
+    } // Fim do if (editor.innerHTML !== newHtml)
+}
     async function fetchOriginalIfNeeded(db, post) {
         if (!post.isRepost) return post;
         if (post.originalPost || !post.originalPostId) return post;
@@ -898,11 +1020,20 @@ document.addEventListener("DOMContentLoaded", function () {
             loadMorePosts();
         }
     }
-   // Em home/scripts.js, substitua a função createPost por esta:
-async function createPost(content) {
+// home/scripts.js
+
+async function createPost() { // Removemos o parâmetro 'content'
+    // --- PEGA O TEXTO DO NOVO EDITOR ---
+    const editor = document.getElementById("post-content-editor");
+    const postInput = document.getElementById("post-content"); // Input oculto
+    const postButton = document.getElementById("publish-btn"); // Botão publicar
+    
+    // Pega o texto puro do editor, removendo espaços extras no início/fim
+    const contentFromEditor = editor.innerText.trim(); 
+
     // --- INÍCIO DA MODIFICAÇÃO PARA O EASTER EGG ---
     const secretPhrase = "Eu te amo Manu.C";
-    if (content.trim() === secretPhrase) {
+    if (contentFromEditor === secretPhrase) {
         // Se o texto for a frase secreta, redireciona para a página de homenagem
         window.location.href = 'homenagem/homenagem.html';
         return; // Impede que o resto da função (de criar o post) seja executado
@@ -915,8 +1046,8 @@ async function createPost(content) {
             return;
         }
 
-        // Validação que inclui texto, imagem ou hobbies
-        if (!content && !postImageBase64 && selectedHobbiesForPost.length === 0) {
+        // Validação que inclui texto (do editor), imagem ou hobbies
+        if (!contentFromEditor && !postImageBase64 && selectedHobbiesForPost.length === 0) {
             showCustomAlert("Escreva algo, adicione uma imagem ou selecione um hobby para publicar.");
             return;
         }
@@ -926,8 +1057,9 @@ async function createPost(content) {
             postButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
         }
 
+        // --- USA O TEXTO DO EDITOR ---
         const postData = {
-            content,
+            content: contentFromEditor, // <-- Usa o texto do editor
             authorId: currentUser.uid,
             authorName: currentUserProfile.nickname || "Usuário",
             authorPhoto: currentUserProfile.photoURL || null,
@@ -935,8 +1067,8 @@ async function createPost(content) {
             likes: 0,
             likedBy: [],
             commentCount: 0,
-            imageURL: postImageBase64,
-            hobbies: selectedHobbiesForPost // Inclui os hobbies no post
+            imageURL: postImageBase64, // Mantém a lógica da imagem
+            hobbies: selectedHobbiesForPost // Mantém a lógica dos hobbies
         };
 
         const docRef = await db.collection("posts").add(postData);
@@ -952,8 +1084,10 @@ async function createPost(content) {
         }
 
         // 3. Limpa os campos do formulário
-        postInput.value = "";
-        clearPostImage(); // Esta função já limpa a imagem e os hobbies
+        editor.innerHTML = "";      // <-- Limpa o conteúdo visual do editor
+        if(postInput) postInput.value = ""; // Limpa o valor do input oculto (se existir)
+        highlightHashtags();        // Chama a função para remover highlights e mostrar placeholder
+        clearPostImage();           // Esta função já limpa a imagem e os hobbies selecionados
 
     } catch (error) {
         console.error("Erro ao criar post:", error);
@@ -1012,7 +1146,21 @@ async function createPost(content) {
     
         postElement.querySelector(".post-author-photo").src = basePost.authorPhoto || 'img/Design sem nome2.png';
         postElement.querySelector(".post-author-name").textContent = basePost.authorName || 'Usuário';
-        postElement.querySelector(".post-text").textContent = basePost.content || '';
+        // --- INÍCIO DA LÓGICA DAS HASHTAGS ---
+        const postTextElement = postElement.querySelector(".post-text");
+        let contentHTML = basePost.content || '';
+
+        // Expressão regular para encontrar hashtags
+        const hashtagRegex = /#([a-zA-Z0-9_áàãâéêíóõôúçÁÀÃÂÉÊÍÓÕÔÚÇ]+)/g;
+        
+        // Substitui todas as hashtags por um link roxo
+        contentHTML = contentHTML.replace(hashtagRegex, (match, hashtag) => {
+            // "match" é a string inteira (ex: #Programação)
+            // "hashtag" é apenas o texto (ex: Programação)
+            return `<a href="#" class="hashtag-link" data-hashtag="${hashtag}">${match}</a>`;
+        });
+        
+        postTextElement.innerHTML = contentHTML;
         if (basePost.timestamp?.toDate) {
             postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
         }

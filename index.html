@@ -80,11 +80,16 @@
             <div id="feed-view">
                 <main class="feed">
                     <div class="create-post">
-                        <div class="post-input">
-                            <img src="img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic"
-                                id="current-user-photo">
-                            <input type="text" placeholder="O que você está pensando?" id="post-content">
-                        </div>
+                    <div class="post-input">
+    <img src="img/Design sem nome2.png" alt="Foto de perfil" class="profile-pic"
+        id="current-user-photo">
+    
+    <div id="post-content-editor" class="post-content-editor" 
+         contenteditable="true" 
+         data-placeholder="O que você está pensando?"></div>
+    
+    <input type="hidden" id="post-content">
+</div>
 
                         <div id="selected-hobbies-container" class="selected-hobbies-preview"></div>
                         <div class="image-preview-container" id="post-image-preview-container" style="display: none;">

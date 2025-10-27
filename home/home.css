@@ -78,20 +78,6 @@
     color: var(--dark-text);
   }
   body.dark-mode .quoted-text { color: var(--light-text); }
-  
-  .feed-tabs {
-    position: relative; 
-    display: flex; 
-    align-items: stretch;
-    
-    /* Removemos o max-width e margin: 0 auto */
-    margin-bottom: 25px; 
-
-    border-radius: 50px; 
-    padding: 4px; 
-    background-color: var(--light-bg-secondary);
-    border: 1px solid var(--light-border);
-}
 
 body.dark-mode .feed-tabs {
     background-color: var(--dark-bg-tertiary);
@@ -355,7 +341,7 @@ body.dark-mode .logout-btn:hover {
 /* LAYOUT PRINCIPAL */
 .main-container {
     display: flex;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 20px auto;
     gap: 20px;
     padding: 0 20px;
@@ -392,6 +378,7 @@ body.dark-mode .sidebar {
 }
 
 .sidebar-section h3 {
+  color: white;
     margin-bottom: 15px;
     color: var(--dark-text);
     font-size: 1.1rem;
@@ -1348,6 +1335,7 @@ body.dark-mode .error-message {
 }
 
 .modal-header h2 {
+    color: white;
     margin: 0;
     font-size: 1.2rem;
 }
@@ -2484,13 +2472,14 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 
 /* Área com rolagem para a lista */
 #hobby-list-container {
-   
+     color: white;
     overflow-y: auto;
     padding: 1rem 1.5rem;
 }
 
 /* Título de cada categoria (Artes, Música, etc.) */ƒ
 .hobby-category h3 {
+
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-color-secondary);
@@ -2508,6 +2497,7 @@ body.dark-mode .sidebar::-webkit-scrollbar-thumb:hover {
 
 /* Estilo de cada hobby clicável ("tag") */
 .hobby-label {
+    color: white;
     display: flex;
     align-items: center;
     cursor: pointer;
@@ -2990,7 +2980,7 @@ body.dark-mode .options-dropdown .report-btn:hover {
 
     /* Ajustes para o seletor de feed em telas pequenas */
     .feed-tabs {
-        max-width: none; /* Ocupa a largura total */
+        max-width: 600px; /* Ocupa a largura total */
         width: 100%;
         margin-bottom: 20px;
     }
@@ -3123,7 +3113,7 @@ body.dark-mode .options-dropdown .report-btn:hover {
 
     /* --- ADICIONE ESTAS NOVAS REGRAS AQUI --- */
     .feed-tabs {
-        max-width: none; 
+        max-width: 700px; 
         width: 100%;
         margin-bottom: 20px;
     }
@@ -3206,8 +3196,7 @@ body.dark-mode .trending-list li:hover {
     min-width: 30px;
     text-align: right;
     background: none;
-    -webkit-background-clip: unset;
-    -webkit-text-fill-color: unset;
+
 }
 .trending-list li:nth-child(1)::before { color: #FFD700; }
 .trending-list li:nth-child(2)::before { color: #C0C0C0; }
@@ -3225,14 +3214,18 @@ body.dark-mode .hashtag {
 .count {
     color: var(--light-text-secondary);
 }
+/* Container principal das abas */
 .feed-tabs {
-   /* ... (outros estilos que você já tem) ... */
-   display: flex; 
-   justify-content: center; 
-   align-items: stretch; 
-   max-width: 600px; /* <-- PROBLEMA */
-   margin: 0 auto 25px; /* <-- PROBLEMA */
-   /* ... (mais estilos) ... */
+    display: flex;
+    position: relative;
+    background-color: var(--light-bg-secondary);
+    border-radius: 50px;
+    padding: 5px;
+    margin: 0 auto 25px;
+    max-width: 500px; /* <-- PONTO A ALTERAR */
+    border: 1px solid var(--light-border);
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Modifica o botão para usar flexbox e ter largura igual */
@@ -3312,3 +3305,76 @@ body.dark-mode .feed-tab-btn {
 body.dark-mode .feed-tab-btn.active {
     color: #ffffff;
 }   
+/* home/home.css */
+
+/* ... (resto do seu CSS) ... */
+
+/* Estilo para destacar hashtags dentro do conteúdo do post */
+.post-text .hashtag-link {
+    color: var(--primary-color); /* Sua cor roxa principal */
+    font-weight: bold;
+    cursor: pointer; /* Indica que é clicável */
+    text-decoration: none; /* Remove sublinhado padrão */
+}
+
+/* Efeito ao passar o mouse */
+.post-text .hashtag-link:hover {
+    text-decoration: underline; /* Adiciona sublinhado no hover */
+}
+
+/* Mantém a cor roxa no modo escuro */
+body.dark-mode .post-text .hashtag-link {
+    color: var(--primary-hover); /* Sua cor roxa para hover/dark mode */
+}
+/* home/home.css */
+
+/* ... (resto do seu CSS) ... */
+
+/* --- ESTILOS PARA O INPUT DE POST COM HASHTAGS --- */
+
+/* Estiliza o novo <div> editável para parecer com o input antigo */
+.post-content-editor {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid var(--light-border);
+    border-radius: 20px;
+    background-color: var(--light-text);
+    color: var(--dark-text);
+    min-height: 40px; /* Altura similar ao input */
+    line-height: 1.4;
+    cursor: text;
+    overflow-wrap: break-word; /* Quebra de linha */
+    word-wrap: break-word;
+}
+
+/* Placeholder (simulado com CSS) */
+.post-content-editor:empty:before {
+    content: attr(data-placeholder);
+    color: var(--light-text-secondary);
+    pointer-events: none;
+}
+
+/* Foco */
+.post-content-editor:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Cores do Modo Escuro */
+body.dark-mode .post-content-editor {
+    background-color: var(--dark-bg-tertiary);
+    border-color: var(--dark-border);
+    color: var(--light-text);
+}
+body.dark-mode .post-content-editor:empty:before {
+    color: var(--dark-text-secondary);
+}
+
+/* A CLASSE DA HASHTAG DENTRO DO EDITOR */
+.post-content-editor .hashtag-highlight {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+body.dark-mode .post-content-editor .hashtag-highlight {
+    color: var(--primary-hover);
+}
