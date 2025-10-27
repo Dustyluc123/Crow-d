@@ -21,6 +21,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 /* Hint quando estiver respondendo a alguém no campo de comentário */
 .replying-hint {
     font-size: .85rem;
@@ -129,18 +130,6 @@ body.dark-mode .feed-tabs {
 #reload-feed-btn i {
     margin-right: 8px;
 }
-.feed-tab-slider {
-    position: absolute;
-    top: 4px;
-    left: 4px;  /* <--- CORRIGIDO (de 40px para 4px) */
-    height: calc(100% - 8px);
-    width: calc((100% - 8px) / 3); /* <-- Correto para 3 abas */
-    background-color: var(--primary-color);
-    border-radius: 50px; /* <-- Ajustado para 50px */
-    box-shadow: 0 2px 8px rgba(112, 33, 196, 0.4);
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 1;
-}
 
 .feed-tab-btn {
     flex: 1; /* Garante que os botões dividam o espaço igualmente */
@@ -164,10 +153,6 @@ body.dark-mode .feed-tab-btn {
     color: #ffffff; /* Cor do texto quando ativo */
 }
 
-/* Move a pílula com base no botão ativo */
-.feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
-.feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
-.feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
 /* A regra antiga para nth-child(4) deve ser removida */
 .info-message {
     text-align: center;
@@ -3268,12 +3253,34 @@ body.dark-mode .hashtag {
     text-overflow: ellipsis; /* Adiciona "..." se o texto for muito longo */
 }
 
-/* Garante que o slider tenha a largura correta (1/4 do total) */
+/* home.css */
+
+/* ... (outros estilos) ... */
+
+/* O elemento deslizante (slider) roxo */
 .feed-tab-slider {
-    /* ... (outros estilos do slider) ... */
-    /* Agora temos 4 botões */
-    width: calc((100% - 60px) /3); /* <-- PROBLEMA */
+    position: absolute;
+    top: 5px; /* Alinha com o padding do container */
+    left: 5px; /* Alinha com o padding do container */
+    height: calc(100% - 10px); /* Altura igual ao botão (100% - padding superior e inferior) */
+    
+    /* === CORREÇÃO DA LARGURA === */
+    width: calc((100% - 10px) / 3); /* Largura = 1/3 do espaço interno (3 botões) */
+    
+    background-color: var(--primary-color); /* Cor roxa principal */
+    border-radius: 50px; /* Totalmente arredondado */
+    z-index: 1; /* Fica abaixo dos botões */
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animação suave */
+    box-shadow: 0 3px 8px rgba(112, 33, 196, 0.3); /* Sombra roxa sutil */
 }
+
+/* === CORREÇÃO DO MOVIMENTO (translateX para 3 botões) === */
+.feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
+.feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
+.feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
+/* Remover a regra antiga para nth-child(4) */
+
+/* ... (resto do CSS) ... */
 /* Estilo para destacar hashtags dentro do conteúdo do post */
 .post-text .hashtag-link {
     color: var(--primary-color); /* Sua cor roxa principal */
@@ -3292,12 +3299,7 @@ body.dark-mode .post-text .hashtag-link {
     color: var(--primary-hover); /* Sua cor roxa para hover/dark mode */
 }
 
-/* Ajusta a posição do slider para os 4 botões */
-.feed-tab-btn:nth-child(1).active ~ .feed-tab-slider { transform: translateX(0%); }
-.feed-tab-btn:nth-child(2).active ~ .feed-tab-slider { transform: translateX(100%); }
-.feed-tab-btn:nth-child(3).active ~ .feed-tab-slider { transform: translateX(200%); }
 
-/* Modo escuro (ajustes se necessário) */
 body.dark-mode .feed-tabs {
     background-color: var(--dark-bg-tertiary);
     border-color: var(--dark-border);
@@ -3309,4 +3311,4 @@ body.dark-mode .feed-tab-btn {
 
 body.dark-mode .feed-tab-btn.active {
     color: #ffffff;
-}
+}   
