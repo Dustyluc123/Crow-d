@@ -3206,7 +3206,7 @@ body.dark-mode .hashtag {
     background-color: var(--light-bg-secondary);
     border-radius: 50px;
     padding: 5px;
-    margin: 0 auto 25px;
+    margin: auto ;
     max-width: 500px; /* <-- PONTO A ALTERAR */
     border: 1px solid var(--light-border);
     overflow: hidden;
