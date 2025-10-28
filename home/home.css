@@ -1409,7 +1409,7 @@ body.dark-mode .modal-actions {
 
 /* Tipos de Toast para diferentes mensagens */
 .toast.success {
-    background-color: #28a745;
+    background-color:#8483de;
     /* Verde para sucesso */
 }
 
