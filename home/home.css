@@ -347,22 +347,6 @@ body.dark-mode .logout-btn:hover {
     padding: 0 20px;
 }
 
-/* BARRAS LATERAIS */
-.sidebar {
-    flex: 0 0 250px;
-    background-color: var(--light-text);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 20px;
-    height: fit-content;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    position: sticky;
-    top: 80px;
-    /* Linhas adicionadas para correção: */
-    max-height: calc(100vh - 100px);
-    /* Define uma altura máxima baseada na tela */
-
-}
 
 body.dark-mode .sidebar {
     background-color: var(--dark-bg-secondary);
@@ -1598,6 +1582,7 @@ body.dark-mode #focused-post-container .error-message {
 /* Adicione este código ao seu home.css */
 
 .central-content {
+    border-radius: 15px;
     flex: 1;
     /* Faz esta coluna central crescer e ocupar o espaço disponível */
     display: flex;
@@ -2354,7 +2339,7 @@ body.dark-mode .note-owner {
 
 
 .sidebar {
-    flex: 0 0 250px;
+    flex: 0 0 300px;
     background-color: var(--light-text);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
@@ -3495,4 +3480,105 @@ body.dark-mode .comment.is-reply {
 body.dark-mode .comment.is-reply::before {
     color: var(--dark-text-secondary);
     background-color: var(--dark-bg-secondary);
+}
+/* css/global.css */
+
+/* ... (Todo o seu CSS existente) ... */
+
+
+/* ======================================================
+   FUNDO ANIMADO GLOBAL (GRADIENTE)
+====================================================== */
+
+body {
+    position: relative; /* Necessário para posicionar o pseudo-elemento */
+    overflow-x: hidden; /* Evita barras de rolagem horizontais indesejadas */
+}
+
+body::before {
+    content: '';
+    position: fixed; /* Fixa o fundo para que não role com a página */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Coloca o gradiente ATRÁS de todo o conteúdo */
+
+    /* Gradiente para MODO CLARO - Mistura roxos e lilás */
+    background: linear-gradient(-45deg,
+        var(--primary-hover), /* Roxo mais claro */
+        var(--primary-color), /* Roxo principal */
+        var(--light-bg),      /* Lilás bem claro */
+        var(--primary-hover)  /* Roxo mais claro novamente */
+    );
+
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    opacity: 0.8; /* Leve transparência para não ser muito forte */
+}
+
+/* Gradiente para MODO ESCURO - Mistura roxos e fundo escuro */
+body.dark-mode::before {
+    background: linear-gradient(-45deg,
+        var(--primary-color),   /* Roxo principal */
+        var(--dark-bg),         /* Fundo escuro principal */
+        var(--primary-hover),   /* Roxo mais claro */
+        var(--dark-bg-secondary)/* Fundo escuro secundário */
+    );
+    background-size: 400% 400%; /* Precisa repetir aqui */
+    opacity: 0.6; /* Mais sutil no modo escuro */
+}
+
+/* Animação Keyframes (a mesma do seu exemplo) */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Garante que os containers principais tenham fundo sólido */
+/* (Verifique se esses seletores correspondem à sua estrutura) */
+.main-container > *,
+.sidebar,
+.feed > *, /* Seleciona filhos diretos do feed como .create-post, .post */
+.friends-section,
+.messages-container,
+.profile-card,
+.edit-profile-container,
+.config-section,
+.event-card,
+.group-card,
+.login-container, /* Adicione outros containers principais se necessário */
+.modal-content /* Garante que modais também tenham fundo sólido */
+{
+    /* Garante que tenham fundo para cobrir a animação */
+    background-color: var(--light-text);
+}
+
+body.dark-mode .main-container > *,
+body.dark-mode .sidebar,
+body.dark-mode .feed > *,
+body.dark-mode .friends-section,
+body.dark-mode .messages-container,
+body.dark-mode .profile-card,
+body.dark-mode .edit-profile-container,
+body.dark-mode .config-section,
+body.dark-mode .event-card,
+body.dark-mode .group-card,
+body.dark-mode .login-container,
+body.dark-mode .modal-content
+{
+     /* Cor de fundo secundária no modo escuro */
+    background-color: var(--dark-bg-secondary);
+}
+
+/* Exceção para o wrapper da animação de amigos (se ainda existir) */
+.animated-background-wrapper {
+    background-color: transparent !important; /* Garante que ele não cubra o gradiente */
 }
