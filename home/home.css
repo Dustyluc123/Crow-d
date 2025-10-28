@@ -3585,3 +3585,28 @@ body.dark-mode .modal-content
 .animated-background-wrapper {
     background-color: transparent !important; /* Garante que ele não cubra o gradiente */
 }
+/* ====================================================== */
+/* === ESTILO PARA BOTÃO DE CURTIR (POST) QUANDO ATIVO === */
+/* ====================================================== */
+
+/* Altera a cor do botão de curtir do post quando a classe .liked é adicionada */
+.post-action.like-btn.liked {
+    color: var(--primary-color); /* Usa sua cor roxa principal */
+    font-weight: bold; /* Deixa o texto (contador) em negrito */
+}
+
+/* Garante que o ícone (coração) também mude e fique preenchido */
+.post-action.like-btn.liked i {
+    font-family: "Font Awesome 6 Free"; /* Garante que está usando Font Awesome */
+    font-weight: 900; /* Isso seleciona o ícone sólido (coração preenchido) */
+    color: var(--primary-color);
+}
+
+/* Ajuste para o modo escuro (para usar a cor mais clara, se necessário) */
+body.dark-mode .post-action.like-btn.liked {
+    color: var(--primary-hover);
+}
+
+body.dark-mode .post-action.like-btn.liked i {
+    color: var(--primary-hover);
+}
