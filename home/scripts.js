@@ -1638,6 +1638,10 @@ async function createPost() { // Removemos o parâmetro 'content'
                 deleteComment(postId, comment.id);
             });
         }
+        const postElement = commentsList.closest('.post');
+    if (postElement) {
+        wireReplyButtonForComment(postElement, postId, commentElement, comment);
+    }
         commentsList.insertBefore(commentClone, commentsList.firstChild);
     }
     async function addComment(postId, content) {
