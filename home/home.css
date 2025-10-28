@@ -1409,7 +1409,7 @@ body.dark-mode .modal-actions {
 
 /* Tipos de Toast para diferentes mensagens */
 .toast.success {
-    background-color:#8483de;
+    background-color: #28a745;
     /* Verde para sucesso */
 }
 
@@ -2866,9 +2866,7 @@ body.dark-mode .options-dropdown .report-btn:hover {
     header .main-nav {
         display: none;
     }
-    .sidebar { /* Esconde AMBAS as sidebars */
-        display: none;
-    }
+  
 
     /* Ajusta container principal e conteúdo para ocupar 100% da largura */
      .main-container {
@@ -2996,10 +2994,7 @@ body.dark-mode .options-dropdown .report-btn:hover {
         padding-bottom: 70px;
     }
 
-    /* Esconde as sidebars e a navegação principal do topo */
-    .sidebar {
-        display: none;
-    }
+   
     header .main-nav {
         display: none;
     }
