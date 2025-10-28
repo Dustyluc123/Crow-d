@@ -1599,6 +1599,8 @@ async function createPost() { // Removemos o parâmetro 'content'
         const likeCount = commentClone.querySelector(".comment-like-count");
         const deleteCommentBtn = commentClone.querySelector('.comment-delete-btn');
 
+        contentElement.textContent = comment.content;
+
         likeButton.addEventListener("click", function () {
             toggleCommentLike(postId, comment.id);
         });
