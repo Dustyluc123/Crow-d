@@ -418,34 +418,46 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.addEventListener('DOMContentLoaded', wireSuggestionNavigationIndex);
 
-    function formatTimestamp(date) {
-        if (!(date instanceof Date) || isNaN(date)) {
-            return "Agora mesmo";
-        }
-        const now = new Date();
-        const diff = now - date;
-        if (diff < 60 * 1000) {
-            return "Agora mesmo";
-        }
-        if (diff < 60 * 60 * 1000) {
-            const minutes = Math.floor(diff / (60 * 1000));
-            return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
-        }
-        if (diff < 24 * 60 * 60 * 1000) {
-            const hours = Math.floor(diff / (60 * 60 * 1000));
-            return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
-        }
-        if (diff < 7 * 24 * 60 * 60 * 1000) {
-            const days = Math.floor(diff / (24 * 60 * 60 * 1000));
-            return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
-        }
-        const day = date.getDate().toString().padStart(2, "0");
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const year = date.getFullYear();
-        const hours = date.getHours().toString().padStart(2, "0");
-        const minutes = date.getMinutes().toString().padStart(2, "0");
-        return `${day}/${month}/${year} às ${hours}:${minutes}`;
+   function formatTimestamp(date) {
+    if (!(date instanceof Date) || isNaN(date)) {
+        return "Agora mesmo";
     }
+
+    const now = new Date();
+    const diff = now - date; // Diferença em milissegundos
+
+    // --- CORREÇÃO DEFINITIVA: JANELA DE TOLERÂNCIA ---
+    // Define uma janela de 3 minutos para considerar como "agora".
+    // Isso resolve o problema de dessincronização do relógio.
+    const gracePeriodInMinutes = 3;
+    if (diff < gracePeriodInMinutes * 60 * 1000) {
+        // Qualquer post feito dentro desta janela (seja a diferença positiva ou negativa)
+        // será considerado como "Agora mesmo".
+        return "Agora mesmo";
+    }
+
+    // A lógica abaixo permanece a mesma para calcular minutos, horas, etc.
+    if (diff < 60 * 60 * 1000) { // Menos de 1 hora
+        const minutes = Math.floor(diff / (60 * 1000));
+        return `${minutes} ${minutes === 1 ? "minuto" : "minutos"} atrás`;
+    }
+    if (diff < 24 * 60 * 60 * 1000) { // Menos de 24 horas
+        const hours = Math.floor(diff / (60 * 60 * 1000));
+        return `${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
+    }
+    if (diff < 7 * 24 * 60 * 60 * 1000) { // Menos de 7 dias
+        const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+        return `${days} ${days === 1 ? "dia" : "dias"} atrás`;
+    }
+
+    // Formato completo para datas mais antigas.
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${day}/${month}/${year} às ${hours}:${minutes}`;
+}
 
     async function prependPostById(docId) {
         const db = firebase.firestore();
@@ -1161,9 +1173,14 @@ async function createPost() { // Removemos o parâmetro 'content'
         });
         
         postTextElement.innerHTML = contentHTML;
-        if (basePost.timestamp?.toDate) {
-            postElement.querySelector(".post-timestamp").textContent = formatTimestamp(basePost.timestamp.toDate());
-        }
+        const timestampElement = postElement.querySelector(".post-timestamp");
+if (basePost.timestamp?.toDate) {
+    const postDate = basePost.timestamp.toDate();
+    // ▼▼▼ ADICIONE ESTA LINHA PARA ARMAZENAR A DATA ▼▼▼
+    timestampElement.setAttribute('data-timestamp', postDate.toISOString());
+    
+    timestampElement.textContent = formatTimestamp(postDate);
+}
     
         const authorPhotoEl = postElement.querySelector(".post-author-photo");
         const authorNameEl = postElement.querySelector(".post-author-name");
@@ -1571,7 +1588,7 @@ async function createPost() { // Removemos o parâmetro 'content'
             return () => { };
         }
         commentsListElement.innerHTML = '<div class="loading-comments"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
-        const query = db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc");
+        const query = db.collection("posts").doc(postId).collection("comments").orderBy("timestamp", "asc"); // Mantenha "asc"
         return query.onSnapshot(snapshot => {
             commentsListElement.innerHTML = '';
             if (snapshot.empty) {
@@ -1599,6 +1616,11 @@ async function createPost() { // Removemos o parâmetro 'content'
         const likeCount = commentClone.querySelector(".comment-like-count");
         const deleteCommentBtn = commentClone.querySelector('.comment-delete-btn');
 
+        // Verifica se o comentário tem um 'parentCommentId' para marcá-lo como uma resposta
+if (comment.parentCommentId) {
+    commentElement.classList.add('is-reply');
+}
+
         contentElement.textContent = comment.content;
 
         likeButton.addEventListener("click", function () {
@@ -1619,10 +1641,13 @@ async function createPost() { // Removemos o parâmetro 'content'
             redirectToUserProfile(comment.authorId);
         });
 
-        if (comment.timestamp) {
-            const date = comment.timestamp instanceof Date ? comment.timestamp : comment.timestamp.toDate();
-            timestampElement.textContent = formatTimestamp(date);
-        } else {
+       if (comment.timestamp) {
+    const date = comment.timestamp instanceof Date ? comment.timestamp : comment.timestamp.toDate();
+    // ▼▼▼ ADICIONE ESTA LINHA PARA ARMAZENAR A DATA ▼▼▼
+    timestampElement.setAttribute('data-timestamp', date.toISOString());
+    
+    timestampElement.textContent = formatTimestamp(date);
+} else {
             timestampElement.textContent = "Agora mesmo";
         }
 
@@ -1642,7 +1667,7 @@ async function createPost() { // Removemos o parâmetro 'content'
     if (postElement) {
         wireReplyButtonForComment(postElement, postId, commentElement, comment);
     }
-        commentsList.insertBefore(commentClone, commentsList.firstChild);
+        commentsList.appendChild(commentClone);
     }
     async function addComment(postId, content) {
         try {
@@ -2155,6 +2180,9 @@ async function createPost() { // Removemos o parâmetro 'content'
                             <i class="fas fa-retweet"></i> Republicar
                         </button>`;
     }
+    updateTimestamps();
+
+    setInterval(updateTimestamps, 30000);
 });
 
 document.addEventListener('click', async (e) => {
@@ -2171,3 +2199,25 @@ document.addEventListener('click', async (e) => {
         console.error(err);
     }
 });
+
+function updateTimestamps() {
+    // 1. Encontra todos os elementos de tempo que têm nosso atributo especial
+    const timeElements = document.querySelectorAll('[data-timestamp]');
+
+    // 2. Percorre cada um deles
+    timeElements.forEach(element => {
+        const timestampString = element.getAttribute('data-timestamp');
+        if (!timestampString) return;
+
+        // 3. Converte a data armazenada de volta para um objeto Date
+        const date = new Date(timestampString);
+
+        // 4. Usa nossa função já existente para recalcular o tempo decorrido
+        const newTimeAgo = formatTimestamp(date);
+
+        // 5. Atualiza o texto na tela apenas se ele for diferente do atual
+        if (element.textContent !== newTimeAgo) {
+            element.textContent = newTimeAgo;
+        }
+    });
+}
