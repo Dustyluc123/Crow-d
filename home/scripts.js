@@ -45,7 +45,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const selectedHobbiesContainer = document.getElementById("selected-hobbies-container");
     const postEditor = document.getElementById("post-content-editor"); // <== ADICIONE ESTA
     const replyTargetByPost = new Map();
-
+const particleContainer = document.getElementById("particle-background-container");
+    
+    if (particleContainer) {
+        const particleCount = 200; // O número de partículas do seu SCSS
+        let particleHtml = '';
+        
+        for (let i = 0; i < particleCount; i++) {
+            particleHtml += '<div class="circle-container"><div class="circle"></div></div>';
+        }
+        
+        particleContainer.innerHTML = particleHtml;
+    }
     let selectedHobbiesForPost = [];
 
     const hobbiesList = {

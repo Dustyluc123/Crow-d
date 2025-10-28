@@ -17,6 +17,7 @@
 }
 
 * {
+
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -429,6 +430,8 @@ body.dark-mode .sidebar ul li a:hover {
 
 /* FEED CENTRAL */
 .feed {
+    padding: 12px;
+    border-radius: 15px;
     flex: 1;
     display: flex;
     flex-direction: column;
